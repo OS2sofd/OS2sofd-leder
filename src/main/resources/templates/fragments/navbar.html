@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<body>
+	<nav th:fragment="navbar-header" class="navbar navbar-static-top" role="navigation" style="color: #000000 !important; background-color: #FDFEFF !important; height: 50px;">
+        <div class="navbar-header">
+        </div>
+        
+        <ul class="nav navbar-top-links navbar-right">
+            <li sec:authorize="isAuthenticated()" class="dropdown show">
+            	<a  data-toggle="dropdown" href="#" aria-expanded="true" id="userMenuTopbar"><i class="fa fa-user"></i>&nbsp;<span th:if="${session.SESSION_CONTEXT_NAME != null}" th:text="${session.SESSION_CONTEXT_ROLE == T(dk.digitalidentity.service.SOFDManagerService.ContextRole).MANAGER} ? 'Leder ' + ${session.SESSION_CONTEXT_NAME} : (${session.SESSION_CONTEXT_ROLE == T(dk.digitalidentity.service.SOFDManagerService.ContextRole).ADMIN} ? 'Administrator ' + ${session.SESSION_CONTEXT_NAME} : 'Stedfortræder for ' + ${session.SESSION_CONTEXT_NAME})"></span></a>
+                <ul class="dropdown-menu" style="width: 250px;">
+               		<li>
+                    	<div class="list-group">
+			                <div class="list-group-item">
+								<span style="font-size: medium;">Log ind som:</span>
+								<ul id="contextList" style="padding-left: 0px;"/>
+							</div>
+							
+							<div sec:authorize="hasRole('ROLE_ADMIN')" class="list-group-item">
+								<ul style="padding-left: 0px;">
+									<li>
+			                            <a th:href="@{/admin/welcome/edit}" style="color: black; border: none; font-size: small;">
+			                                <i class="fa fa-pencil"></i> &nbsp; Rediger velkomsttekst
+			                            </a>
+			                        </li>
+			                    </ul>
+			                </div>
+								
+							<div class="list-group-item">
+								<ul style="padding-left: 0px;">
+									<li>
+			                            <a th:href="@{/saml/logout}" style="color: black; font-size: medium;">
+			                                <i class="fa fa-sign-out"></i> &nbsp; Log ud
+			                            </a>
+			                        </li>
+			                    </ul>
+			                </div>
+                    	</div>
+                    </li>
+          		</ul>
+        	</li>
+        </ul>
+
+    </nav>
+
+	<nav th:fragment="navbar-aside" class="navbar-default navbar-static-side navbar-expand" role="navigation" style="color: #000000 !important; background-color: #FDFEFF !important;box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.1), 0 6px 20px 0 rgba(1, 0, 0, 0.19); width: 275px;">
+        <div class="sidebar-collapse">
+            <ul class="nav metismenu" id="side-menu" style="margin-top: 90px;">
+                <li th:classappend="${page == 'welcome'} ? 'active' : ''">
+                    <a href="/"><div><span class="nav-label"><em class="fa fa-home"></em> &nbsp; Velkommen</span></div></a>
+                </li>
+                <th:block sec:authorize="isAuthenticated()">
+                	<li id="functionsNav" th:classappend="${page == 'functionAssignments'} ? 'active' : ''">
+	                    <a sec:authorize="hasRole('ROLE_MANAGER') or hasRole('ROLE_SUBSTITUTE') or hasRole('ROLE_ADMIN')" href="#"><div><span class="nav-label"><em class="fa fa-list"></em> &nbsp; Medarbejderfunktioner</span></div></a>
+	                	<ul class="nav nav-second-level" style="color: #000000 !important; background-color: #FDFEFF !important;">
+	                    	<li th:each="function : ${@SOFDFunctionAssignmentService.getFunctionsAndFacets()}" th:classappend="${subpage == function.id} ? 'active' : ''">
+	                    		<a style="padding-left: 45px; padding-top: 5px; padding-bottom: 5px;" th:href="'/functionassignments?function=' + ${function.id}">
+	                    			<span th:text="${function.name}"></span>
+	                    		</a>
+	                    	</li>
+	                    </ul>
+	                </li>
+	                <li th:classappend="${page == 'substitutes'} ? 'active' : ''">
+	                    <a sec:authorize="hasRole('ROLE_MANAGER')" href="/substitutes"><div><span class="nav-label"><em class="fa fa-users"></em> &nbsp; Stedfortrædere</span></div></a>
+	                </li>
+                </th:block>
+                <li>
+                	<a sec:authorize="!isAuthenticated()" href="/saml/login"><span class="nav-label"><em class="fa fa-sign-in"></em> &nbsp; Login</span></a>
+                </li>
+            </ul>
+        </div>
+  	</nav>
+		
+</body>
+</html>

@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html>
+<head th:replace="fragments/header :: header(datatables = true, checkbox = true, datepicker = true, jstree = true)" />
+<body class="top-navigation">
+	<div id="wrapper">
+		<nav th:replace="fragments/navbar :: navbar-aside(page='functionAssignments', subpage = ${function.id})" />
+	    <div id="page-wrapper" class="gray-bg">
+	    	<nav th:replace="fragments/navbar :: navbar-header" />
+
+	        <div class="wrapper wrapper-content">
+	            <div class="row">
+	                <div class="col-lg-12">
+                        <div class="ibox">
+                            <div class="ibox-title">
+                                <h5><em class="fa fa-list"></em> &nbsp; <span th:text="${function.name}"></span></h5>
+                            </div>
+		
+                            <div class="ibox-content" >
+                           		<button class="btn btn-primary" style="margin-bottom: 10px;" onclick="functionService.openCreateModal();">
+                               		<em class="fa fa-fw fa-user-plus"></em>
+									<span>Tilføj medarbejderfunktion</span>
+								</button>
+								<br/>
+	                        	<table id="functionAssignments" class="table table-hover col-lg-12">
+			                		<thead>
+										<tr>
+											<th>Medarbejder</th>
+											<th>Startdato</th>
+											<th>Stopdato</th>
+											<th th:each="facet : ${function.facets}" th:text="${facet.name}"/>
+											<th>Handlinger</th>
+										</tr>
+									</thead>
+					                <tbody>
+						                <tr th:each="assignment: ${functionAssignments}">
+						                	<td th:text="${assignment.affiliationPersonUserId} == null ? ${assignment.affiliationPersonName} : (${assignment.affiliationPersonName} + ' (' + ${assignment.affiliationPersonUserId} + ')')"></td>
+						                	<td th:text="${#dates.format(assignment.startDate, 'yyyy-MM-dd')}"/>
+						                	<td th:text="${#dates.format(assignment.stopDate, 'yyyy-MM-dd')}"/>
+											<td th:each="value : ${assignment.facetValues}">
+												<span th:if="${value.text != null && value.text != ''}" th:text="${value.text}"></span>
+												<span th:if="${value.facetListItem != null && value.facetListItem != ''}" th:text="${value.facetListItem}"></span>
+												<span th:if="${value.facetValueOrgunitNames != null && value.facetValueOrgunitNames != '' && value.facetValueOrgunitNames.length > 100}" th:text="${#strings.substring(value.facetValueOrgunitNames,0,100)} + '...'" th:title="${value.facetValueOrgunitNames}"></span>
+												<span th:if="${value.facetValueOrgunitNames != null && value.facetValueOrgunitNames != '' && value.facetValueOrgunitNames.length <= 100}" th:text="${value.facetValueOrgunitNames}"></span>
+											</td>
+											<td>
+												<a href="#" onclick="functionService.removeFunctionAssignment(this);" th:attr="data-assignmentid=${assignment.id}">
+													<em style="color: black;" class="fa fa-fw fa-times"></em>
+												</a> &nbsp;
+												<em onclick="functionService.openEditModal(this);"  th:attr="data-id=${assignment.id}" style="color: black;" class="fa fa-fw fa-pencil"></em>
+											</td>
+										</tr>
+					                </tbody>
+			                	</table>
+	                        </div>
+	                    </div>
+	                </div>
+	            </div>
+	        </div>
+	    </div>
+	</div>
+	
+	<!-- add functionAssignment modal -->
+	<div class="modal fade" id="modal-add-functionAssignment" role="dialog">
+		<div class="form-horizontal modal-dialog modal-lg">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4>Tilføj medarbejderfunktion</h4>
+				</div>
+	
+				<div class="modal-body">
+					<div class="form-group row">
+						<label class="col-lg-2 control-label">Medarbejder</label>
+						<div class="col-lg-8">
+							<input type="text" class="form-control cleanup" id="employee_add" autocomplete="off" placeholder="Søg"/>
+							<div id="dropdownResultInternal" class="dropdown" data-toggle="dropdown">
+						  		<ul id="searchResultDropDownMenuInternal" class="dropdown-menu" style="width: 100%; padding-left: 15px; padding-right: 15px; line-height: 25px; top: -2px !important;">
+						  		</ul>
+							</div>
+							<input id="realPersonField" class="cleanup" type="hidden" />
+						</div>
+					</div>
+					<div class="form-group row">
+						<label class="col-lg-2 control-label">Start dato</label>
+						<div class="col-lg-8">
+							<input id="startDate_add" class="form-control date cleanup">
+						</div>
+					</div>
+					<div class="form-group row">
+						<label class="col-lg-2 control-label">Stop dato</label>
+						<div class="col-lg-8">
+							<input id="stopDate_add" class="form-control date cleanup">
+						</div>
+					</div>
+					<div class="form-group row">
+						<label class="col-lg-2 control-label">Funktion</label>
+						<div class="col-lg-8">
+							<select class="form-control" id="function_add">
+								<option th:each="function : ${functions}" th:value="${function.id}" th:text="${function.name}"></option>
+							</select>
+						</div>
+					</div>
+					
+					<div class="functionform" th:each="function : ${functions}" th:id="'function' + ${function.id}" style="display: none;">
+						<th:block th:each="facet : ${function.facets}">
+							<th:block th:if="${facet.type == 'FREETEXT'}">
+								<div class="form-group row">
+									<label class="col-lg-2 control-label" th:text="${facet.name}" style="word-break: break-all;"></label>
+									<div class="col-lg-8">
+										<input th:id="'function' + ${function.id} + 'facet' + ${facet.id}" th:attr="data-type=${facet.type}, data-facetId=${facet.id}, data-functionid=${function.id}, data-pattern=${facet.pattern}, data-name=${facet.name}" class="form-control facetValue_add cleanup">
+									</div>
+								</div>
+							</th:block>
+							<th:block th:if="${facet.type == 'LIST'}">
+								<div class="form-group row">
+									<label class="col-lg-2 control-label" th:text="${facet.name}" style="word-break: break-all;"></label>
+									<div class="col-lg-8">
+										<select th:id="'function' + ${function.id} + 'facet' + ${facet.id}" th:attr="data-type=${facet.type}, data-facetId=${facet.id}, data-functionid=${function.id}" class="form-control facetValue_add cleanup">
+											<option th:each="item : ${facet.listItems}" th:value="${item}" th:text="${item}"/>
+										</select>
+									</div>
+								</div>
+							</th:block>
+							<th:block th:if="${facet.type == 'ORG'}">
+								<div class="form-group row">
+									<label class="col-lg-2 control-label" th:text="${facet.name}" style="word-break: break-all;"></label>
+									<div class="col-lg-8">
+										<input th:id="'function' + ${function.id} + 'facet' + ${facet.id} + 'names'" class="form-control cleanup" readonly="readonly">
+										<input th:id="'function' + ${function.id} + 'facet' + ${facet.id}" th:attr="data-type=${facet.type}, data-facetId=${facet.id}, data-functionid=${function.id}" class="form-control facetValue_add cleanup" hidden>
+									</div>
+									<button class="btn btn-primary chooseOuBtn_add col-lg-2" th:attr="data-functionid=${function.id}, data-facetid=${facet.id}">Vælg enheder</button>
+								</div>
+							</th:block>
+						</th:block>
+					</div>
+				</div>
+	
+				<div class="modal-footer">
+					<button type="button" class="btn btn-primary" onclick="functionService.addFunctionAssignment()">Tilføj</button>
+					<button type="button" class="btn btn-danger" data-dismiss="modal">Annuller</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<!-- edit functionAssignment modal -->
+	<div class="modal fade" id="modal-edit-functionAssignment" role="dialog">
+		<div class="form-horizontal modal-dialog modal-lg">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4 id="header_edit">Rediger medarbejderfunktion</h4>
+				</div>
+	
+				<div class="modal-body">
+					<input id="functionId_edit" hidden>
+					<input id="assignmentId_edit" hidden>
+					<div class="form-group row">
+						<label class="col-lg-2 control-label">Medarbejder</label>
+						<div class="col-lg-8">
+							<input type="text" class="form-control cleanup" id="employee_edit" disabled="disabled"/>
+						</div>
+					</div>
+					<div class="form-group row">
+						<label class="col-lg-2 control-label">Start dato</label>
+						<div class="col-lg-8">
+							<input id="startDate_edit" class="form-control date cleanup">
+						</div>
+					</div>
+					<div class="form-group row">
+						<label class="col-lg-2 control-label">Stop dato</label>
+						<div class="col-lg-8">
+							<input id="stopDate_edit" class="form-control date cleanup">
+						</div>
+					</div>
+					
+					<div id="functionform_edit">
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-primary" onclick="functionService.editFunctionAssignment()">Tilføj</button>
+					<button type="button" class="btn btn-danger" data-dismiss="modal">Annuller</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<div class="modal fade" id="modal-ou" role="dialog">
+		<div class="modal-dialog modal-lg">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4>Vælg enheder</h4>
+					<button type="button" class="close" data-dismiss="modal">&times;</button>
+				</div>
+
+				<div class="modal-body">
+					<input id="ouModalFunctionId" hidden>
+					<input id="ouModalFacetId" hidden>
+					<input class="form-control" id="ou-tree-search" style="margin-bottom: 5px;" placeholder="Søg"/>
+					<div id="ou-tree"></div>
+				</div>
+
+				<div class="modal-footer">
+					<button type="button" id="save_add" class="btn btn-primary" onclick="ouService.saveOUs(false)">Gem</button>
+					<button type="button" id="save_edit" class="btn btn-primary" onclick="ouService.saveOUs(true)">Gem</button>
+					<button type="button" class="btn btn-danger" data-dismiss="modal">Annuller</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<style>
+		.chooseOuBtn_add {
+			height: calc(1.5em + 0.75rem + 2px);
+		}
+		
+		.chooseOuBtn_edit {
+			height: calc(1.5em + 0.75rem + 2px);
+		}
+	</style>
+	
+	<div th:replace="fragments/footer :: scripts(datatables = true, checkbox = true, datepicker = true, jstree = true)"></div>
+	<script th:inline="javascript">
+		/*<![CDATA[*/
+		
+			/*[+
+				var functionRestUrl = [[@{/rest/functionassignment}]];
+				var ous = [[${ous}]];
+				var functionAssignments = [[${functionAssignments}]];
+				var functionId = [[${function.id}]];
+			+]*/
+			
+			var token = $("meta[name='_csrf']").attr("content");
+			var functionService, searchService, ouService;
+			$(document).ready(function () {
+				functionService = new FunctionService();
+				searchService = new SearchService();
+				ouService = new OUService();
+				
+				functionService.init();
+				searchService.init();
+				ouService.init();
+			});
+			
+			function FunctionService() {
+				
+				this.init = function() {
+					$('#function_add').change(functionService.handleFunctionChange);
+					
+					// show chosen
+					$('#function' + $("#function_add").val()).show();
+					
+					$('.date').datepicker({
+						forceParse: false,
+						autoclose: true,
+						weekStart: 1,
+						format: "yyyy-mm-dd",
+						orientation: "bottom",
+						enableOnReadonly: false,
+						language: "da"
+					});
+					
+					var lastColIndex = $("#functionAssignments").find("th").length - 1;
+					
+					var table = $('#functionAssignments').DataTable({
+						"pageLength" : 50,
+						"bLengthChange": false,
+						"responsive" : true,
+						"autoWidth": false,
+						"columnDefs": [
+							{ "orderable": false, "searchable": false, "targets": lastColIndex }
+						  ],
+						"order": [ 0, 'asc' ],
+						"language" : {
+							"search" : "Søg",
+							"lengthMenu" : "_MENU_ medarbejderfunktioner per side",
+							"info" : "Viser _START_ til _END_ af _TOTAL_ medarbejderfunktioner",
+							"zeroRecords" : "Ingen data...",
+							"infoEmpty" : "",
+							"infoFiltered" : "(ud af _MAX_ medarbejderfunktioner)",
+							"paginate" : {
+								"previous" : "Forrige",
+								"next" : "Næste"
+							}
+						}
+					});
+					
+				}
+				
+				this.handleFunctionChange = function() {
+					// hide all
+					$('.functionform').hide();
+					// show chosen
+					$('#function' + $("#function_add").val()).show();
+				}
+
+				this.removeFunctionAssignment = function(elem) {
+					var assignmentId = $(elem).data('assignmentid');
+
+					swal({
+						html : true,
+						title : "Fjern medarbejderfunktion",
+						text : "Vil du fjerne denne medarbejderfunktion?",
+						type : "warning",
+						showCancelButton : true,
+						confirmButtonColor : "#DD6B55",
+						confirmButtonText : "Slet",
+						cancelButtonText : "Annuller",
+						closeOnConfirm : true,
+						closeOnCancel : true
+					},
+					function(isConfirm) {
+						if (isConfirm) {
+							$.ajax({
+								method : "POST",
+								url: functionRestUrl + "/delete/" + assignmentId,
+								headers: {
+									'X-CSRF-TOKEN': token
+								}
+							}).done(function (data) {
+								location.reload(true);
+							}).fail(function (jqXHR, textStatus, errorThrown) {
+								toastr.error("Der opstod en fejl. Kunne ikke fjerne medarbejderfunktion.")
+							});
+						}
+					});
+				}
+				
+				this.openCreateModal = function() {
+					$('#employee_add').val("");
+					$('.cleanup').val("");
+					//$('#function_add').children().eq(0).prop('selected', true);
+					$('#function_add option[value="' + functionId + '"]').attr("selected", "selected");
+					functionService.handleFunctionChange();
+					$('#modal-add-functionAssignment').modal('show'); 
+				}
+				
+				this.openEditModal = function(elem) {
+					var id = $(elem).data('id');
+					
+					functionAssignments.forEach(function(item) {
+						if (item.id == id) {
+							$("#header_edit").text("Rediger " + item.function.name);
+							$("#assignmentId_edit").val(id);
+							$("#functionId_edit").val(item.function.id);
+							$("#employee_edit").val(item.affiliationPersonName);
+							$("#startDate_edit").datepicker("update", new Date(item.startDate));
+							$("#stopDate_edit").datepicker("update", new Date(item.stopDate));
+							
+							$("#functionform_edit").html("");
+							
+							item.function.facets.forEach(function(facet) {
+								item.facetValues.forEach(function(value) {
+									if (facet.id == value.facetId) {
+										if (facet.type == "FREETEXT") {
+											$("#functionform_edit").append('<div class=\"form-group row\">' +
+																				'<label class=\"col-lg-2 control-label\" style=\"word-break: break-all;\">' + facet.name + '</label>' +
+																				'<div class="col-lg-8">' +
+																					'<input id=\"function' + item.function.id + 'facet' + facet.id + '_edit\" data-type=\"' + facet.type + '\" data-facetId=\"' + facet.id + '\" data-functionid=\"' + item.function.id + '\" data-pattern=\"' + facet.pattern + '\" data-name=\"' + facet.name + '\" class=\"form-control facetValue_edit cleanup\" value=\"' + value.text + '\">' +
+																				'</div>' +
+																			'</div>');
+										} else if (facet.type == "ORG") {
+											var orgString = value.facetValueOrgunitUuids.join(",");
+											$("#functionform_edit").append('<div class=\"form-group row\">' +
+																				'<label class=\"col-lg-2 control-label\" style=\"word-break: break-all;\">' + facet.name + '</label>' +
+																				'<div class="col-lg-8">' +
+																					'<input id=\"function' + item.function.id + 'facet' + facet.id + 'names_edit\" class=\"form-control cleanup\" readonly=\"readonly\">' +
+																					'<input id=\"function' + item.function.id + 'facet' + facet.id + '_edit\" data-type=\"' + facet.type + '\" data-facetId=\"' + facet.id + '\" data-functionid=\"' + item.function.id + '\" class=\"form-control facetValue_edit cleanup\" value=\"' + orgString + '\" style=\"display: none;\">' +
+																				'</div>' +
+																				'<button class=\"btn btn-primary chooseOuBtn_edit col-lg-2" data-functionid=\"' + item.function.id + '\" data-facetid=\"' + facet.id + '\">Vælg enheder</button>' +
+																			'</div>');
+											ouService.getNamesHack(item.function.id, facet.id);
+										} else if (facet.type == "LIST") {
+											var html = '<div class=\"form-group row\">' +
+															'<label class=\"col-lg-2 control-label\" style=\"word-break: break-all;\">' + facet.name + '</label>' +
+															'<div class="col-lg-8">' +
+																'<select id=\"function' + item.function.id + 'facet' + facet.id + '_edit\" data-type=\"' + facet.type + '\" data-facetId=\"' + facet.id + '\" data-functionid=\"' + item.function.id + '\" class="form-control facetValue_edit cleanup">';
+							
+											facet.listItems.forEach(function(listItem) {
+												if (listItem == value.facetListItem) {
+													html +=				'<option value=\"' + listItem + '\" selected=\"selected\">' + listItem + '</option>';
+												} else {
+													html +=				'<option value=\"' + listItem + '\">' + listItem + '</option>';
+												}
+											});					
+																
+											html += 			'</select>' + 
+															'</div>' +
+														'</div>';
+											
+											$("#functionform_edit").append(html);
+										}										
+									}
+								});
+							});
+							
+							ouService.initEditOUBtn();
+						}
+					});
+					
+					$("#modal-edit-functionAssignment").modal("show");
+				}
+				
+				this.addFunctionAssignment = function() {
+					var error = false;
+					var selectedFunctionId = $("#function_add").val();
+					var startDate = $("#startDate_add").val();
+					var stopDate = $("#stopDate_add").val();
+					var affiliationUuid = $("#realPersonField").val();
+					
+					if (startDate == null || startDate == "") {
+						toastr.error("Start dato skal have en værdi.")
+						return;
+					}
+					if (stopDate == null || stopDate == "") {
+						toastr.error("Stop dato skal have en værdi.")
+						return;
+					}
+					if (affiliationUuid == null || affiliationUuid == "") {
+						toastr.error("Der skal vælges en medarbejder.")
+						return;
+					}
+					if (selectedFunctionId == null || selectedFunctionId == "") {
+						toastr.error("Der skal vælges en funktion.")
+						return;
+					}
+					
+					var payload = {
+						startDate : startDate,
+						stopDate : stopDate,
+						affiliationUuid : affiliationUuid,
+						functionId : selectedFunctionId,
+						facetValues : []
+					};
+
+					$(".facetValue_add").each(function() {
+						var functionId = $(this).data('functionid');
+						var facetId = $(this).data('facetid');
+						var type = $(this).data('type');
+						
+						if (functionId == selectedFunctionId) {
+							if (type == "ORG") {
+								var obj = {
+									facetId : facetId,
+									facetValueOrgunitUuids : $("#function" + functionId + "facet" + facetId).val().split(",")
+								};
+								
+								payload.facetValues.push(obj);
+							} else if (type == "LIST") {
+								var obj = {
+									facetId : facetId,
+									facetListItem : $("#function" + functionId + "facet" + facetId).val()
+								};
+								
+								payload.facetValues.push(obj);
+							} else if (type == "FREETEXT") {
+								var pattern = new RegExp($(this).data('pattern'));
+								var name = $(this).data('name');
+								var value = $("#function" + functionId + "facet" + facetId).val();
+								if (pattern != null && pattern != "") {
+									if (!pattern.test(value)) {
+										toastr.error(name + " er ikke udfyldt korrekt");
+										error = true;
+									}
+								}
+								
+								var obj = {
+									facetId : facetId,
+									text : value
+								};
+								
+								payload.facetValues.push(obj);
+							} else {
+								toastr.error("Ukendt funktionsfacettype.")
+								return;
+							}
+						}
+					});
+
+					if (!error) {
+						$.ajax({
+							contentType: 'application/json',
+							url: functionRestUrl + "/add",
+							method : "POST",
+							data: JSON.stringify(payload),
+							headers: {
+								'X-CSRF-TOKEN': token
+							},
+							error: function(jqXHR, textStatus, errorThrown) {
+								toastr.error("Der opstod en fejl. Tjek dine indtastninger og prøv igen.")
+							},
+							success: function(response) {
+								window.location.href="/functionassignments?function=" + payload.functionId
+							}
+						});
+					}
+				}
+				
+				this.editFunctionAssignment = function() {
+					var error = false;
+					var assignmentId = $("#assignmentId_edit").val();
+					var selectedFunctionId = $("#functionId_edit").val();
+					var payload = {
+						startDate : $("#startDate_edit").val(),
+						stopDate : $("#stopDate_edit").val(),
+						facetValues : []
+					};
+
+					$(".facetValue_edit").each(function() {
+						var functionId = $(this).data('functionid');
+						var facetId = $(this).data('facetid');
+						var type = $(this).data('type');
+						
+						if (functionId == selectedFunctionId) {
+							if (type == "ORG") {
+								var obj = {
+									facetId : facetId,
+									facetValueOrgunitUuids : $("#function" + functionId + "facet" + facetId + "_edit").val().split(",")
+								};
+								
+								payload.facetValues.push(obj);
+							} else if (type == "LIST") {
+								var obj = {
+									facetId : facetId,
+									facetListItem : $("#function" + functionId + "facet" + facetId + "_edit").val()
+								};
+								
+								payload.facetValues.push(obj);
+							} else if (type == "FREETEXT") {
+								var pattern = new RegExp("^" + $(this).data('pattern') + "$");
+								var name = $(this).data('name');
+								var value = $("#function" + functionId + "facet" + facetId + "_edit").val();
+								if (pattern != null && pattern != "") {
+									if (!pattern.test(value)) {
+										toastr.error("Funktionsfacet " + name + " matcher ikke pattern " + pattern);
+										error = true;
+									}
+								}
+								
+								var obj = {
+									facetId : facetId,
+									text : value
+								};
+								
+								payload.facetValues.push(obj);
+							} else {
+								toastr.error("Ukendt funktionsfacettype.")
+								return;
+							}
+						}
+					});
+
+					if (!error) {
+						$.ajax({
+							contentType: 'application/json',
+							url: functionRestUrl + "/" + assignmentId + "/edit",
+							method : "POST",
+							data: JSON.stringify(payload),
+							headers: {
+								'X-CSRF-TOKEN': token
+							},
+							error: function(jqXHR, textStatus, errorThrown) {
+								toastr.error("Der opstod en fejl. Tjek dine indtastninger og prøv igen.")
+							},
+							success: function(response) {
+								location.reload(true);
+							}
+						});
+					}
+				}
+			}
+			
+			function SearchService() {
+				this.init = function() {
+					$('#employee_add').on('input', function() {
+						searchService.executeQuery();
+					});
+				}
+				
+				this.executeQuery = function() {
+					$('#inputAddonInternal').show();
+					var value = $('#employee_add').val();
+					if (value.length >= 2) {					
+						$.ajax({
+							url: functionRestUrl + "/search/person?query=" + $('#employee_add').val(),
+							method: "get",
+							success: function(response) {
+								if (response == null || response.length < 1) {
+									searchService.updateDropdown(null);
+								}
+								
+								var resultSet = [];
+
+								for (var j = 0; j < response.length; j++) {
+
+									var hit = { value: response[j].value, uuid: response[j].data};
+									resultSet.push(hit);
+								}
+								
+								searchService.updateDropdown(resultSet);
+							}
+						});
+					}
+					else {
+						searchService.updateDropdown(null);
+					}
+				}
+				
+				this.updateDropdown = function (resultSet) {
+					if (resultSet && resultSet.length > 0) {
+						$("#searchResultDropDownMenuInternal").empty();
+						
+						for (var i = 0; i < resultSet.length; i++) {
+							
+							var guiValue = resultSet[i].value;
+							var uuid = resultSet[i].uuid;
+							$("#searchResultDropDownMenuInternal").append("<a href='#' style='color: black;' onclick=\"searchService.select('" + uuid + "','" + guiValue + "')\"><li>" + guiValue + "</li></a>");
+						}
+						
+						$("#searchResultDropDownMenuInternal").addClass("show");
+					}
+					else {
+						$("#searchResultDropDownMenuInternal").removeClass("show");
+					}
+				}
+				
+				this.select = function(uuid, gui) {
+					$("#realPersonField").val(uuid);
+					$('#employee_add').val(gui);
+					
+					window.setTimeout(function(){
+						searchService.updateDropdown(null);
+					}, 100);
+					
+				}
+			}
+			
+			function OUService() {
+				this.init = function() {
+					$('#modal-ou').on('shown.bs.modal', function () {
+						$('#ou-tree-search').focus();
+					});
+					
+					$(".chooseOuBtn_add").on('click', function () {
+						var functionId = $(this).data('functionid');
+						var facetId = $(this).data('facetid');
+						$("#ouModalFunctionId").val(functionId);
+						$("#ouModalFacetId").val(facetId);
+						
+						$('#ou-tree').jstree("deselect_all");
+						var selectedOus = $("#function" + functionId + "facet" + facetId).val().split(",");
+						selectedOus.forEach(function(item) {
+							$('#ou-tree').jstree('select_node', item);
+						});
+						
+						$("#save_add").show();
+						$("#save_edit").hide();
+						
+						$('#modal-ou').modal('show');
+					});
+					
+					ouService.initJSTree();
+				}
+				
+				this.initEditOUBtn = function() {
+					$(".chooseOuBtn_edit").on('click', function () {
+						var functionId = $(this).data('functionid');
+						var facetId = $(this).data('facetid');
+						$("#ouModalFunctionId").val(functionId);
+						$("#ouModalFacetId").val(facetId);
+						
+						$('#ou-tree').jstree("deselect_all");
+						var selectedOus = $("#function" + functionId + "facet" + facetId + "_edit").val().split(",");
+						selectedOus.forEach(function(item) {
+							$('#ou-tree').jstree('select_node', item);
+						});
+						
+						$("#save_add").hide();
+						$("#save_edit").show();
+						
+						$('#modal-ou').modal('show');
+					});
+				}
+				
+				this.getNamesHack = function(functionId, facetId) {
+					$("#ouModalFunctionId").val(functionId);
+					$("#ouModalFacetId").val(facetId);
+					$('#ou-tree').jstree("deselect_all");
+					var selectedOus = $("#function" + functionId + "facet" + facetId + "_edit").val().split(",");
+					selectedOus.forEach(function(item) {
+						$('#ou-tree').jstree('select_node', item);
+					});
+					
+					ouService.saveOUs(true);
+				}
+				
+				this.saveOUs = function(edit) {
+					var functionId = $("#ouModalFunctionId").val();
+					var facetId = $("#ouModalFacetId").val();
+
+					var codes = $('#ou-tree').jstree('get_selected',true);
+					$("#orgUnits").empty();
+					$("#fakeOrgUnits").empty();
+					var selectedIds = "";
+					var selectedNames = "";
+					for(var i=0; i < codes.length; i++){
+						if (i == 0) {
+							selectedIds += codes[i].id;
+							selectedNames += codes[i].text;
+						} else {
+							selectedIds += "," + codes[i].id;
+							selectedNames += ", " + codes[i].text;
+						}
+					}
+					
+					if (edit) {
+						$("#function" + functionId + "facet" + facetId + "names_edit").val(selectedNames);
+						$("#function" + functionId + "facet" + facetId + "_edit").val(selectedIds);
+					} else {
+						$("#function" + functionId + "facet" + facetId + "names").val(selectedNames);
+						$("#function" + functionId + "facet" + facetId).val(selectedIds);
+					}
+					
+					$('#modal-ou').modal('hide');
+				}
+				
+				this.initJSTree = function() {
+					$('#ou-tree').jstree({
+							"core": {
+								"data": ous,
+								"themes": {
+									"icons": false
+								}
+							},
+							"search" : {
+								"show_only_matches": true,
+								"search_callback": function(str, node) {
+									return (node.text.toUpperCase().includes(str.toUpperCase()));
+								}
+							},
+							"plugins" : ["search", "checkbox"]
+					}).on('loaded.jstree', function() {
+						$("#ou-tree").jstree('open_all');
+						$($('#ou-tree').jstree().get_json($('#ou-tree'), {
+						      flat: true
+						    }))
+						    .each(function(index, value) {
+						    	var node = $('#ou-tree').jstree().get_node(this.id);
+						      
+						    	if (!node.original.open) {
+						    		$("#ou-tree").jstree().close_node(node, false);
+						      	}
+						    });
+					});
+
+					// searching in the JSTree
+					var to = false;
+					$('#ou-tree-search').keyup(function() {
+						if (to) {
+							clearTimeout(to);
+						}
+
+						to = setTimeout(function() {
+							var v = $('#ou-tree-search').val();
+
+							$('#ou-tree').jstree(true).search(v);
+						}, 400);
+					});
+				};
+			}
+			
+		/*]]>*/
+	</script>
+</body>
+</html>

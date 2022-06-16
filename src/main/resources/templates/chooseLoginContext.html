@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head th:replace="fragments/header :: header" />
+<body class="top-navigation">
+	<div id="wrapper">
+	    <div id="page-wrapper" class="gray-bg">
+	        <div class="wrapper wrapper-content">
+	            <div class="row">
+	                <div class="col-lg-10 offset-lg-1">
+                        <div class="ibox">
+                            <div class="ibox-title">
+                                <h5><em class="fa fa-users"></em> &nbsp; Vælg login kontekst</h5>
+                            </div>
+		
+                            <div class="ibox-content" >
+                            	<select id="context" class="form-control">
+                            		<option th:each="context : ${loginContexts}" th:attr="data-role=${context.role}, data-name=${context.name}, data-uuid=${context.uuid}, data-ous=${context.ouUuids}" th:text="${context.role == T(dk.digitalidentity.service.SOFDManagerService.ContextRole).MANAGER} ? 'Leder ' + ${context.name} : (${context.role == T(dk.digitalidentity.service.SOFDManagerService.ContextRole).ADMIN} ? 'Administrator ' + ${context.name} : 'Stedfortræder for ' + ${context.name})"></option>
+                            	</select>
+                            	
+                            	<br/>
+                            	<button onclick="contextService.choose();" class="btn btn-primary offset-lg-1 col-lg-5">Vælg</button>
+                            	<a href="/saml/logout" class="btn btn-danger col-lg-5">Logud</a>
+	                        </div>
+	                    </div>
+	                </div>
+	            </div>
+	        </div>
+	    </div>
+	</div>
+
+	<div th:replace="fragments/footer :: scripts"></div>
+	<script th:inline="javascript">
+		/*<![CDATA[*/
+		
+			/*[+
+				var substituteRestUrl = [[@{/rest/substituteAssignment}]];
+			+]*/
+			
+			var contextService;
+			$(document).ready(function () {
+				contextService = new ContextService();
+			});
+			
+			function ContextService() {
+				
+				this.choose = function() {
+					var select = $("#context").find(':selected');
+					var uuid = select.data("uuid");
+					var name = select.data("name");
+					var role = select.data("role");
+					var ous = select.data("ous");
+					
+					window.location.href = "/choosecontext?uuid=" + uuid + "&name=" + name + "&role=" + role + "&ous=" + ous;
+				}
+			}
+			
+		/*]]>*/
+	</script>
+</body>
+</html>
