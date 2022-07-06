@@ -35,10 +35,9 @@ public class SOFDFunctionAssignmentService {
 	@Autowired
 	private SOFDFunctionAssignmentService self;
 
-	@Cacheable("functions")
-
 	public record FunctionDTO(long id, String name, String description, List<FacetDTO> facets) {}
 	public record FacetDTO(long id, String name, String description, String type, String pattern, List<String> listItems) {}
+	@Cacheable("functions")
 	public List<FunctionDTO> getFunctionsAndFacets() {
 		HttpEntity<String> request = new HttpEntity<>(getHeaders());
 		String url = config.getSofdBaseUrl();
@@ -63,12 +62,16 @@ public class SOFDFunctionAssignmentService {
 	}
 
 	public record FunctionAssignmentDTO(long id, Date startDate, Date stopDate, String affiliationUuid, String affiliationPersonName, String affiliationPersonUserId, FunctionDTO function, List<FacetValueDTO> facetValues) {}
-	public record FacetValueDTO(long facetId, String text, String facetListItem, List<String> facetValueOrgunitUuids, String facetValueOrgunitNames) {}
+	public record FacetValueDTO(long facetId, String facetName, String text, String facetListItem, List<String> facetValueOrgunitUuids, String facetValueOrgunitNames, String facetValueAffiliationUuid, String facetValueAffiliationPersonName) {}
+	@Cacheable("functionAssignments")
 	public List<FunctionAssignmentDTO> getFunctionAssignments(String ouUuids) {
 		HttpEntity<String> request = new HttpEntity<>(getHeaders());
 		String url = config.getSofdBaseUrl();
 
-		String query = "/api/functionhierarchy/functionassignments?ous=" + ouUuids;
+		String query = "/api/functionhierarchy/functionassignments";
+		if (ouUuids != null) {
+			query += "?ous=" + ouUuids;
+		}
 
 		List<FunctionAssignmentDTO> result = new ArrayList<>();
 
@@ -96,6 +99,7 @@ public class SOFDFunctionAssignmentService {
 
 		ResponseEntity<String> response = restTemplate.exchange(url + query, HttpMethod.POST, request, String.class);
 		if (response.getStatusCode().equals(HttpStatus.OK)) {
+			self.cleanUpFunctionAssignments();
 			return true;
 		}
 
@@ -112,6 +116,7 @@ public class SOFDFunctionAssignmentService {
 
 		ResponseEntity<String> response = restTemplate.exchange(url + query, HttpMethod.POST, request, String.class);
 		if (response.getStatusCode().equals(HttpStatus.OK)) {
+			self.cleanUpFunctionAssignments();
 			return true;
 		}
 
@@ -128,6 +133,7 @@ public class SOFDFunctionAssignmentService {
 
 		ResponseEntity<String> response = restTemplate.exchange(url + query, HttpMethod.POST, request, String.class);
 		if (response.getStatusCode().equals(HttpStatus.OK)) {
+			self.cleanUpFunctionAssignments();
 			return true;
 		}
 
@@ -137,18 +143,18 @@ public class SOFDFunctionAssignmentService {
 
 	public record AutoCompleteResult(List<ValueData> suggestions) {}
 	public record ValueData(String value, String data) {}
-	@Cacheable(value = "autocomplete")
-	public AutoCompleteResult getAutoCompleteResultFunctionAssignmentPersons(String term, String ous) {
+	@Cacheable(value = "autocompleteAll")
+	public AutoCompleteResult getAllAutoCompleteResultFunctionAssignmentPersons(String ous) {
 		HttpEntity<String> request = new HttpEntity<>(getHeaders());
 		String url = config.getSofdBaseUrl();
 
 		String userUuid = SecurityUtil.getUserUuid();
-		String query = "/api/functionhierarchy/search/person/?query=" + term + "&ous=" + ous;
+		String query = "/api/functionhierarchy/search/all/?ous=" + ous;
 		AutoCompleteResult result = null;
 
 		ResponseEntity<AutoCompleteResult> response = restTemplate.exchange(url + query, HttpMethod.GET, request, AutoCompleteResult.class);
 		if (!response.getStatusCode().equals(HttpStatus.OK)) {
-			log.warn("Failed to fetch AutoCompleteResultFunctionAssignmentPersons for person with uuid " + userUuid + ". " + response.getStatusCodeValue() + ", response=" + response.getBody());
+			log.warn("Failed to fetch all AutoCompleteResultFunctionAssignmentPersons for person with uuid " + userUuid + ". " + response.getStatusCodeValue() + ", response=" + response.getBody());
 			return null;
 		}
 
@@ -156,7 +162,7 @@ public class SOFDFunctionAssignmentService {
 			result = response.getBody();
 		}
 		else {
-			log.warn("Response body was null when fetching AutoCompleteResultFunctionAssignmentPersons for person with uuid " + userUuid);
+			log.warn("Response body was null when fetching all AutoCompleteResultFunctionAssignmentPersons for person with uuid " + userUuid);
 		}
 
 		return result;
@@ -187,7 +193,7 @@ public class SOFDFunctionAssignmentService {
 	}
 
 	public List<OUTreeFormDto> getOus(List<String> ouUuids) throws Exception {
-		var allOus = getAllOus();
+		var allOus = self.getAllOus();
 		var topNode = allOus.stream().filter(o -> o.getParent().equals("#")).findFirst();
 		if (!topNode.isPresent()) {
 			throw new Exception("No top OU node was found");
@@ -216,7 +222,7 @@ public class SOFDFunctionAssignmentService {
 	}
 
 	public String getParentOUUuid() throws Exception {
-		var allOus = getAllOus();
+		var allOus = self.getAllOus();
 		var topNode = allOus.stream().filter(o -> o.getParent().equals("#")).findFirst();
 		if (!topNode.isPresent()) {
 			throw new Exception("No top OU node was found");
@@ -240,14 +246,19 @@ public class SOFDFunctionAssignmentService {
 	public void cleanUpFunctions() {
 	}
 
-	@CacheEvict(value = "autocomplete", allEntries = true)
-	public void cleanUpAutocomplete() {
+	@CacheEvict(value = "functionAssignments", allEntries = true)
+	public void cleanUpFunctionAssignments() {
+	}
+
+	@CacheEvict(value = "autocompleteAll", allEntries = true)
+	public void cleanUpAllAutocomplete() {
 	}
 
 	@Scheduled(fixedRate = 10 * 60 * 1000)
 	public void cleanUpTask() {
 		self.cleanUpOus();
 		self.cleanUpFunctions();
-		self.cleanUpAutocomplete();
+		self.cleanUpFunctionAssignments();
+		self.cleanUpAllAutocomplete();
 	}
 }

@@ -6,6 +6,11 @@
 	background-color: #FDFEFF !important;
 }
 
+
+.tooltip {
+    z-index: 10000;
+}
+
 /*Rules for viewing on a smaller device*/
 @media only screen and (max-width: 990px) {
 

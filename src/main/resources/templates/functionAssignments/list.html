@@ -16,9 +16,10 @@
                             </div>
 		
                             <div class="ibox-content" >
+								<p th:text="${function.description}"></p>
                            		<button class="btn btn-primary" style="margin-bottom: 10px;" onclick="functionService.openCreateModal();">
                                		<em class="fa fa-fw fa-user-plus"></em>
-									<span>Tilføj medarbejderfunktion</span>
+									<span>Tilføj <span th:text="${function.name}"></span></span>
 								</button>
 								<br/>
 	                        	<table id="functionAssignments" class="table table-hover col-lg-12">
@@ -41,6 +42,7 @@
 												<span th:if="${value.facetListItem != null && value.facetListItem != ''}" th:text="${value.facetListItem}"></span>
 												<span th:if="${value.facetValueOrgunitNames != null && value.facetValueOrgunitNames != '' && value.facetValueOrgunitNames.length > 100}" th:text="${#strings.substring(value.facetValueOrgunitNames,0,100)} + '...'" th:title="${value.facetValueOrgunitNames}"></span>
 												<span th:if="${value.facetValueOrgunitNames != null && value.facetValueOrgunitNames != '' && value.facetValueOrgunitNames.length <= 100}" th:text="${value.facetValueOrgunitNames}"></span>
+												<span th:if="${value.facetValueAffiliationPersonName != null && value.facetValueAffiliationPersonName != ''}" th:text="${value.facetValueAffiliationPersonName}"></span>
 											</td>
 											<td>
 												<a href="#" onclick="functionService.removeFunctionAssignment(this);" th:attr="data-assignmentid=${assignment.id}">
@@ -64,12 +66,13 @@
 		<div class="form-horizontal modal-dialog modal-lg">
 			<div class="modal-content">
 				<div class="modal-header">
-					<h4>Tilføj medarbejderfunktion</h4>
+					<h4 id="header_create">Tilføj medarbejderfunktion</h4>
 				</div>
 	
 				<div class="modal-body">
 					<div class="form-group row">
 						<label class="col-lg-2 control-label">Medarbejder</label>
+						<span style="width: 10px;"></span>
 						<div class="col-lg-8">
 							<input type="text" class="form-control cleanup" id="employee_add" autocomplete="off" placeholder="Søg"/>
 							<div id="dropdownResultInternal" class="dropdown" data-toggle="dropdown">
@@ -81,18 +84,21 @@
 					</div>
 					<div class="form-group row">
 						<label class="col-lg-2 control-label">Start dato</label>
+						<span style="width: 10px;"></span>
 						<div class="col-lg-8">
 							<input id="startDate_add" class="form-control date cleanup">
 						</div>
 					</div>
 					<div class="form-group row">
 						<label class="col-lg-2 control-label">Stop dato</label>
+						<span style="width: 10px;"></span>
 						<div class="col-lg-8">
 							<input id="stopDate_add" class="form-control date cleanup">
 						</div>
 					</div>
-					<div class="form-group row">
+					<div class="form-group row" hidden>
 						<label class="col-lg-2 control-label">Funktion</label>
+						<span style="width: 10px;"></span>
 						<div class="col-lg-8">
 							<select class="form-control" id="function_add">
 								<option th:each="function : ${functions}" th:value="${function.id}" th:text="${function.name}"></option>
@@ -104,7 +110,9 @@
 						<th:block th:each="facet : ${function.facets}">
 							<th:block th:if="${facet.type == 'FREETEXT'}">
 								<div class="form-group row">
-									<label class="col-lg-2 control-label" th:text="${facet.name}" style="word-break: break-all;"></label>
+									<label class="col-lg-2 control-label" th:text="${facet.name}" style="word-break: break-word;"></label>
+									<i th:if="${facet.description != null && facet.description != ''}" style="width: 10px;" class="fa fa-question" data-toggle="tooltip" data-placement="right" th:title="${facet.description}"></i>
+									<span th:unless="${facet.description != null && facet.description != ''}" style="width: 10px;"></span>
 									<div class="col-lg-8">
 										<input th:id="'function' + ${function.id} + 'facet' + ${facet.id}" th:attr="data-type=${facet.type}, data-facetId=${facet.id}, data-functionid=${function.id}, data-pattern=${facet.pattern}, data-name=${facet.name}" class="form-control facetValue_add cleanup">
 									</div>
@@ -112,7 +120,9 @@
 							</th:block>
 							<th:block th:if="${facet.type == 'LIST'}">
 								<div class="form-group row">
-									<label class="col-lg-2 control-label" th:text="${facet.name}" style="word-break: break-all;"></label>
+									<label class="col-lg-2 control-label" th:text="${facet.name}" style="word-break: break-word;"></label>
+									<i th:if="${facet.description != null && facet.description != ''}" style="width: 10px;" class="fa fa-question" data-toggle="tooltip" data-placement="right" th:title="${facet.description}"></i>
+									<span th:unless="${facet.description != null && facet.description != ''}" style="width: 10px;"></span>
 									<div class="col-lg-8">
 										<select th:id="'function' + ${function.id} + 'facet' + ${facet.id}" th:attr="data-type=${facet.type}, data-facetId=${facet.id}, data-functionid=${function.id}" class="form-control facetValue_add cleanup">
 											<option th:each="item : ${facet.listItems}" th:value="${item}" th:text="${item}"/>
@@ -122,12 +132,29 @@
 							</th:block>
 							<th:block th:if="${facet.type == 'ORG'}">
 								<div class="form-group row">
-									<label class="col-lg-2 control-label" th:text="${facet.name}" style="word-break: break-all;"></label>
-									<div class="col-lg-8">
+									<label class="col-lg-2 control-label" th:text="${facet.name}" style="word-break: break-word;"></label>
+									<i th:if="${facet.description != null && facet.description != ''}" style="width: 10px;" class="fa fa-question" data-toggle="tooltip" data-placement="right" th:title="${facet.description}"></i>
+									<span th:unless="${facet.description != null && facet.description != ''}" style="width: 10px;"></span>
+									<div class="col-lg-7">
 										<input th:id="'function' + ${function.id} + 'facet' + ${facet.id} + 'names'" class="form-control cleanup" readonly="readonly">
 										<input th:id="'function' + ${function.id} + 'facet' + ${facet.id}" th:attr="data-type=${facet.type}, data-facetId=${facet.id}, data-functionid=${function.id}" class="form-control facetValue_add cleanup" hidden>
 									</div>
 									<button class="btn btn-primary chooseOuBtn_add col-lg-2" th:attr="data-functionid=${function.id}, data-facetid=${facet.id}">Vælg enheder</button>
+								</div>
+							</th:block>
+							<th:block th:if="${facet.type == 'EMPLOYEE'}">
+								<div class="form-group row">
+									<label class="col-lg-2 control-label" th:text="${facet.name}" style="word-break: break-word;"></label>
+									<i th:if="${facet.description != null && facet.description != ''}" style="width: 10px;" class="fa fa-question" data-toggle="tooltip" data-placement="right" th:title="${facet.description}"></i>
+									<span th:unless="${facet.description != null && facet.description != ''}" style="width: 10px;"></span>
+									<div class="col-lg-8">
+										<input type="text" class="form-control cleanup employeeFacetSearch" th:id="'function' + ${function.id} + 'facet' + ${facet.id} + 'facetValueEmployeeSearch'" th:attr="data-functionid=${function.id}, data-facetid=${facet.id}" autocomplete="off" placeholder="Søg"/>
+										<div th:id="'function' + ${function.id} + 'facet' + ${facet.id} + 'facetValueEmployeeDropdownResultInternal'" class="dropdown" data-toggle="dropdown">
+											<ul th:id="'function' + ${function.id} + 'facet' + ${facet.id} + 'facetValueEmployeeSearchResultDropDownMenuInternal'" class="dropdown-menu" style="width: 100%; padding-left: 15px; padding-right: 15px; line-height: 25px; top: -2px !important;">
+											</ul>
+										</div>
+										<input th:id="'function' + ${function.id} + 'facet' + ${facet.id}" class="facetValue_add cleanup" th:attr="data-type=${facet.type}, data-facetId=${facet.id}, data-functionid=${function.id}" type="hidden" />
+									</div>
 								</div>
 							</th:block>
 						</th:block>
@@ -155,18 +182,21 @@
 					<input id="assignmentId_edit" hidden>
 					<div class="form-group row">
 						<label class="col-lg-2 control-label">Medarbejder</label>
+						<span style="width: 10px;"></span>
 						<div class="col-lg-8">
 							<input type="text" class="form-control cleanup" id="employee_edit" disabled="disabled"/>
 						</div>
 					</div>
 					<div class="form-group row">
 						<label class="col-lg-2 control-label">Start dato</label>
+						<span style="width: 10px;"></span>
 						<div class="col-lg-8">
 							<input id="startDate_edit" class="form-control date cleanup">
 						</div>
 					</div>
 					<div class="form-group row">
 						<label class="col-lg-2 control-label">Stop dato</label>
+						<span style="width: 10px;"></span>
 						<div class="col-lg-8">
 							<input id="stopDate_edit" class="form-control date cleanup">
 						</div>
@@ -226,6 +256,7 @@
 				var ous = [[${ous}]];
 				var functionAssignments = [[${functionAssignments}]];
 				var functionId = [[${function.id}]];
+				var functionName = [[${function.name}]];
 			+]*/
 			
 			var token = $("meta[name='_csrf']").attr("content");
@@ -282,7 +313,15 @@
 							}
 						}
 					});
-					
+
+					$('#modal-add-functionAssignment').on('shown.bs.modal', function() {
+						$('[data-toggle="tooltip"]').tooltip();
+						searchService.init();
+					});
+
+					$('#modal-edit-functionAssignment').on('shown.bs.modal', function() {
+						$('[data-toggle="tooltip"]').tooltip();
+					});
 				}
 				
 				this.handleFunctionChange = function() {
@@ -325,12 +364,14 @@
 				}
 				
 				this.openCreateModal = function() {
+					$(".dropdown-menu").removeClass("show");
+					$("#header_create").text("Tilføj " + functionName);
 					$('#employee_add').val("");
 					$('.cleanup').val("");
 					//$('#function_add').children().eq(0).prop('selected', true);
 					$('#function_add option[value="' + functionId + '"]').attr("selected", "selected");
 					functionService.handleFunctionChange();
-					$('#modal-add-functionAssignment').modal('show'); 
+					$('#modal-add-functionAssignment').modal('show');
 				}
 				
 				this.openEditModal = function(elem) {
@@ -338,6 +379,7 @@
 					
 					functionAssignments.forEach(function(item) {
 						if (item.id == id) {
+							$(".dropdown-menu").removeClass("show");
 							$("#header_edit").text("Rediger " + item.function.name);
 							$("#assignmentId_edit").val(id);
 							$("#functionId_edit").val(item.function.id);
@@ -351,28 +393,53 @@
 								item.facetValues.forEach(function(value) {
 									if (facet.id == value.facetId) {
 										if (facet.type == "FREETEXT") {
-											$("#functionform_edit").append('<div class=\"form-group row\">' +
-																				'<label class=\"col-lg-2 control-label\" style=\"word-break: break-all;\">' + facet.name + '</label>' +
-																				'<div class="col-lg-8">' +
-																					'<input id=\"function' + item.function.id + 'facet' + facet.id + '_edit\" data-type=\"' + facet.type + '\" data-facetId=\"' + facet.id + '\" data-functionid=\"' + item.function.id + '\" data-pattern=\"' + facet.pattern + '\" data-name=\"' + facet.name + '\" class=\"form-control facetValue_edit cleanup\" value=\"' + value.text + '\">' +
-																				'</div>' +
-																			'</div>');
+											var html = '<div class=\"form-group row\">' +
+															'<label class=\"col-lg-2 control-label\" style=\"word-break: break-word;\">' + facet.name + '</label>';
+
+											if (facet.description != null && facet.description != "") {
+												html = html + '<i class=\"fa fa-question\" style=\"width: 10px;\" data-toggle=\"tooltip\" data-placement=\"right\" title=\"' + facet.description + '\"></i>'
+											} else {
+												html = html + '<span style=\"width: 10px;\"></span>';
+											}
+
+											html = html + '<div class="col-lg-8">' +
+																'<input id=\"function' + item.function.id + 'facet' + facet.id + '_edit\" data-type=\"' + facet.type + '\" data-facetId=\"' + facet.id + '\" data-functionid=\"' + item.function.id + '\" data-pattern=\"' + facet.pattern + '\" data-name=\"' + facet.name + '\" class=\"form-control facetValue_edit cleanup\" value=\"' + value.text + '\">' +
+															'</div>' +
+														'</div>'
+
+											$("#functionform_edit").append(html);
 										} else if (facet.type == "ORG") {
 											var orgString = value.facetValueOrgunitUuids.join(",");
-											$("#functionform_edit").append('<div class=\"form-group row\">' +
-																				'<label class=\"col-lg-2 control-label\" style=\"word-break: break-all;\">' + facet.name + '</label>' +
-																				'<div class="col-lg-8">' +
-																					'<input id=\"function' + item.function.id + 'facet' + facet.id + 'names_edit\" class=\"form-control cleanup\" readonly=\"readonly\">' +
-																					'<input id=\"function' + item.function.id + 'facet' + facet.id + '_edit\" data-type=\"' + facet.type + '\" data-facetId=\"' + facet.id + '\" data-functionid=\"' + item.function.id + '\" class=\"form-control facetValue_edit cleanup\" value=\"' + orgString + '\" style=\"display: none;\">' +
-																				'</div>' +
-																				'<button class=\"btn btn-primary chooseOuBtn_edit col-lg-2" data-functionid=\"' + item.function.id + '\" data-facetid=\"' + facet.id + '\">Vælg enheder</button>' +
-																			'</div>');
+											var html = '<div class=\"form-group row\">' +
+															'<label class=\"col-lg-2 control-label\" style=\"word-break: break-word;\">' + facet.name + '</label>';
+
+											if (facet.description != null && facet.description != "") {
+												html = html + '<i class=\"fa fa-question\" style=\"width: 10px;\" data-toggle=\"tooltip\" data-placement=\"right\" title=\"' + facet.description + '\"></i>'
+											} else {
+												html = html + '<span style=\"width: 10px;\"></span>';
+											}
+
+											html = html + '<div class="col-lg-7">' +
+																'<input id=\"function' + item.function.id + 'facet' + facet.id + 'names_edit\" class=\"form-control cleanup\" readonly=\"readonly\">' +
+																'<input id=\"function' + item.function.id + 'facet' + facet.id + '_edit\" data-type=\"' + facet.type + '\" data-facetId=\"' + facet.id + '\" data-functionid=\"' + item.function.id + '\" class=\"form-control facetValue_edit cleanup\" value=\"' + orgString + '\" style=\"display: none;\">' +
+															'</div>' +
+															'<button class=\"btn btn-primary chooseOuBtn_edit col-lg-2" data-functionid=\"' + item.function.id + '\" data-facetid=\"' + facet.id + '\">Vælg enheder</button>' +
+														'</div>';
+
+											$("#functionform_edit").append(html);
 											ouService.getNamesHack(item.function.id, facet.id);
 										} else if (facet.type == "LIST") {
 											var html = '<div class=\"form-group row\">' +
-															'<label class=\"col-lg-2 control-label\" style=\"word-break: break-all;\">' + facet.name + '</label>' +
-															'<div class="col-lg-8">' +
-																'<select id=\"function' + item.function.id + 'facet' + facet.id + '_edit\" data-type=\"' + facet.type + '\" data-facetId=\"' + facet.id + '\" data-functionid=\"' + item.function.id + '\" class="form-control facetValue_edit cleanup">';
+															'<label class=\"col-lg-2 control-label\" style=\"word-break: break-word;\">' + facet.name + '</label>';
+
+											if (facet.description != null && facet.description != "") {
+												html = html + '<i class=\"fa fa-question\" style=\"width: 10px;\" data-toggle=\"tooltip\" data-placement=\"right\" title=\"' + facet.description + '\"></i>'
+											} else {
+												html = html + '<span style=\"width: 10px;\"></span>';
+											}
+
+											html = html + '<div class="col-lg-8">' +
+														  	'<select id=\"function' + item.function.id + 'facet' + facet.id + '_edit\" data-type=\"' + facet.type + '\" data-facetId=\"' + facet.id + '\" data-functionid=\"' + item.function.id + '\" class="form-control facetValue_edit cleanup">';
 							
 											facet.listItems.forEach(function(listItem) {
 												if (listItem == value.facetListItem) {
@@ -387,15 +454,39 @@
 														'</div>';
 											
 											$("#functionform_edit").append(html);
-										}										
+										} else if (facet.type == "EMPLOYEE") {
+											var uuid = value.facetValueAffiliationUuid;
+											var name = value.facetValueAffiliationPersonName == null ? "" : value.facetValueAffiliationPersonName;
+
+											var html = '<div class=\"form-group row\">' +
+															'<label class=\"col-lg-2 control-label\" style=\"word-break: break-word;\">' + facet.name + '</label>';
+
+											if (facet.description != null && facet.description != "") {
+												html = html + '<i class=\"fa fa-question\" style=\"width: 10px;\" data-toggle=\"tooltip\" data-placement=\"right\" title=\"' + facet.description + '\"></i>'
+											} else {
+												html = html + '<span style=\"width: 10px;\"></span>';
+											}
+
+											html = html + '<div class="col-lg-8">' +
+																'<input id=\"function' + item.function.id + 'facet' + facet.id + 'facetValueEmployeeSearch_edit\" class=\"form-control cleanup employeeFacetSearch_edit\" data-facetId=\"' + facet.id + '\" data-functionid=\"' + item.function.id + '\" autocomplete=\"off\" placeholder=\"Søg\" value=\"' + name + '\">' +
+																'<div id=\"function' + item.function.id + 'facet' + facet.id + 'facetValueEmployeeDropdownResultInternal_edit\" class=\"dropdown\" data-toggle=\"dropdown\">' +
+																	'<ul id=\"function' + item.function.id + 'facet' + facet.id + 'facetValueEmployeeSearchResultDropDownMenuInternal_edit\" class=\"dropdown-menu\" style=\"width: 100%; padding-left: 15px; padding-right: 15px; line-height: 25px; top: -2px !important;\"></ul>' +
+																'</div>' +
+																'<input id=\"function' + item.function.id + 'facet' + facet.id + '_edit\" data-type=\"' + facet.type + '\" data-facetId=\"' + facet.id + '\" data-functionid=\"' + item.function.id + '\" class=\"form-control facetValue_edit cleanup\" value=\"' + uuid + '\" style=\"display: none;\">' +
+															'</div>' +
+														'</div>';
+
+											$("#functionform_edit").append(html);
+										}
 									}
 								});
 							});
-							
+
 							ouService.initEditOUBtn();
 						}
 					});
-					
+
+					searchService.init();
 					$("#modal-edit-functionAssignment").modal("show");
 				}
 				
@@ -450,6 +541,13 @@
 									facetListItem : $("#function" + functionId + "facet" + facetId).val()
 								};
 								
+								payload.facetValues.push(obj);
+							} else if (type == "EMPLOYEE") {
+								var obj = {
+									facetId : facetId,
+									facetValueAffiliationUuid : $("#function" + functionId + "facet" + facetId).val()
+								};
+
 								payload.facetValues.push(obj);
 							} else if (type == "FREETEXT") {
 								var pattern = new RegExp($(this).data('pattern'));
@@ -524,13 +622,20 @@
 								};
 								
 								payload.facetValues.push(obj);
+							} else if (type == "EMPLOYEE") {
+								var obj = {
+									facetId : facetId,
+									facetValueAffiliationUuid : $("#function" + functionId + "facet" + facetId + "_edit").val()
+								};
+
+								payload.facetValues.push(obj);
 							} else if (type == "FREETEXT") {
-								var pattern = new RegExp("^" + $(this).data('pattern') + "$");
+								var pattern = new RegExp($(this).data('pattern'));
 								var name = $(this).data('name');
 								var value = $("#function" + functionId + "facet" + facetId + "_edit").val();
 								if (pattern != null && pattern != "") {
 									if (!pattern.test(value)) {
-										toastr.error("Funktionsfacet " + name + " matcher ikke pattern " + pattern);
+										toastr.error(name + " er ikke udfyldt korrekt");
 										error = true;
 									}
 								}
@@ -571,22 +676,41 @@
 			function SearchService() {
 				this.init = function() {
 					$('#employee_add').on('input', function() {
-						searchService.executeQuery();
+						searchService.executeQuery(null, null, "normalSearch");
+					});
+
+					$('.employeeFacetSearch').on('input', function() {
+						searchService.executeQuery($(this).data("functionid"), $(this).data("facetid"), "facetValueCreateSearch");
+					});
+
+					$('.employeeFacetSearch_edit').on('input', function() {
+						searchService.executeQuery($(this).data("functionid"), $(this).data("facetid"), "facetValueEditSearch");
 					});
 				}
-				
-				this.executeQuery = function() {
-					$('#inputAddonInternal').show();
-					var value = $('#employee_add').val();
-					if (value.length >= 2) {					
+
+				this.executeQuery = function(functionId, facetId, action) {
+					var value = "";
+					var dropdown = "";
+					if (action == "facetValueCreateSearch") {
+						value = $('#function' + functionId + 'facet' + facetId + 'facetValueEmployeeSearch').val();
+						dropdown = "function" + functionId + "facet" + facetId + "facetValueEmployeeSearchResultDropDownMenuInternal";
+					} else if (action == "facetValueEditSearch") {
+						value = $('#function' + functionId + 'facet' + facetId + 'facetValueEmployeeSearch_edit').val();
+						dropdown = "function" + functionId + "facet" + facetId + "facetValueEmployeeSearchResultDropDownMenuInternal_edit";
+					} else if (action == "normalSearch") {
+						value = $('#employee_add').val();
+						dropdown = "searchResultDropDownMenuInternal";
+					}
+
+					if (value.length >= 2) {
 						$.ajax({
-							url: functionRestUrl + "/search/person?query=" + $('#employee_add').val(),
+							url: functionRestUrl + "/search/person?query=" + value,
 							method: "get",
 							success: function(response) {
 								if (response == null || response.length < 1) {
-									searchService.updateDropdown(null);
+									searchService.updateDropdown(dropdown, null, functionId, facetId);
 								}
-								
+
 								var resultSet = [];
 
 								for (var j = 0; j < response.length; j++) {
@@ -594,31 +718,37 @@
 									var hit = { value: response[j].value, uuid: response[j].data};
 									resultSet.push(hit);
 								}
-								
-								searchService.updateDropdown(resultSet);
+
+								searchService.updateDropdown(dropdown, resultSet, functionId, facetId);
 							}
 						});
 					}
 					else {
-						searchService.updateDropdown(null);
+						searchService.updateDropdown(dropdown, null, functionId, facetId);
 					}
 				}
 				
-				this.updateDropdown = function (resultSet) {
+				this.updateDropdown = function (dropdown, resultSet, functionId, facetId) {
 					if (resultSet && resultSet.length > 0) {
-						$("#searchResultDropDownMenuInternal").empty();
+						$("#" + dropdown).empty();
 						
 						for (var i = 0; i < resultSet.length; i++) {
 							
 							var guiValue = resultSet[i].value;
 							var uuid = resultSet[i].uuid;
-							$("#searchResultDropDownMenuInternal").append("<a href='#' style='color: black;' onclick=\"searchService.select('" + uuid + "','" + guiValue + "')\"><li>" + guiValue + "</li></a>");
+
+							if (dropdown == "searchResultDropDownMenuInternal") {
+								$("#" + dropdown).append("<a href='#' style='color: black;' onclick=\"searchService.select('" + uuid + "','" + guiValue + "')\"><li>" + guiValue + "</li></a>");
+							} else if (dropdown.endsWith("_edit")) {
+								$("#" + dropdown).append("<a href='#' style='color: black;' onclick=\"searchService.selectFacetValueEdit('" + uuid + "','" + guiValue + "','" + functionId + "','" + facetId + "')\"><li>" + guiValue + "</li></a>");
+							} else {
+								$("#" + dropdown).append("<a href='#' style='color: black;' onclick=\"searchService.selectFacetValue('" + uuid + "','" + guiValue + "','" + functionId + "','" + facetId + "')\"><li>" + guiValue + "</li></a>");
+							}
 						}
-						
-						$("#searchResultDropDownMenuInternal").addClass("show");
+						$("#" + dropdown).addClass("show");
 					}
 					else {
-						$("#searchResultDropDownMenuInternal").removeClass("show");
+						$("#" + dropdown).removeClass("show");
 					}
 				}
 				
@@ -627,9 +757,29 @@
 					$('#employee_add').val(gui);
 					
 					window.setTimeout(function(){
-						searchService.updateDropdown(null);
+						searchService.updateDropdown("searchResultDropDownMenuInternal", null, null, null);
 					}, 100);
 					
+				}
+
+				this.selectFacetValue = function(uuid, gui, functionId, facetId) {
+					$("#function" + functionId + "facet" + facetId).val(uuid);
+					$("#function" + functionId + "facet" + facetId + "facetValueEmployeeSearch").val(gui);
+
+					window.setTimeout(function(){
+						searchService.updateDropdown("function" + functionId + "facet" + facetId + "facetValueEmployeeSearchResultDropDownMenuInternal", null, null, null);
+					}, 100);
+
+				}
+
+				this.selectFacetValueEdit = function(uuid, gui, functionId, facetId) {
+					$("#function" + functionId + "facet" + facetId + "_edit").val(uuid);
+					$("#function" + functionId + "facet" + facetId + "facetValueEmployeeSearch_edit").val(gui);
+
+					window.setTimeout(function(){
+						searchService.updateDropdown("function" + functionId + "facet" + facetId + "facetValueEmployeeSearchResultDropDownMenuInternal_edit", null, null, null);
+					}, 100);
+
 				}
 			}
 			

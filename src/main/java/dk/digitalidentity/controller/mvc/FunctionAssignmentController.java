@@ -1,9 +1,6 @@
 package dk.digitalidentity.controller.mvc;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
@@ -51,16 +48,30 @@ public class FunctionAssignmentController {
 		
 		String ousString = (String) request.getSession().getAttribute(SessionConstants.SESSION_CONTEXT_OUS);
 		List<String> ouUuids = Arrays.asList(ousString.split(","));
-		
-		List<FunctionAssignmentDTO> functionAssignments = sofdFunctionAssignmentService.getFunctionAssignments(ousString).stream().filter(f -> f.function().id() == functionId).collect(Collectors.toList());
+
+		List<FunctionAssignmentDTO> functionAssignments = new ArrayList<>();
+		try {
+			if (ousString.equals(sofdFunctionAssignmentService.getParentOUUuid())) {
+				functionAssignments = sofdFunctionAssignmentService.getFunctionAssignments(null).stream().filter(f -> f.function().id() == functionId).collect(Collectors.toList());
+			} else {
+				functionAssignments = sofdFunctionAssignmentService.getFunctionAssignments(ousString).stream().filter(f -> f.function().id() == functionId).collect(Collectors.toList());
+			}
+		} catch (Exception e) {
+			functionAssignments = sofdFunctionAssignmentService.getFunctionAssignments(ousString).stream().filter(f -> f.function().id() == functionId).collect(Collectors.toList());
+		}
+
 		for (FunctionAssignmentDTO dto : functionAssignments) {
-			Collections.sort(dto.facetValues(), Comparator.comparingLong(FacetValueDTO :: facetId));
+			Collections.sort(dto.facetValues(), Comparator.comparing(FacetValueDTO :: facetName));
+		}
+
+		for (FunctionDTO dto : functionsAndFacets) {
+			Collections.sort(dto.facets(), Comparator.comparing(FacetDTO :: name));
 		}
 		
 		model.addAttribute("functionAssignments", functionAssignments);
 		model.addAttribute("functions", functionsAndFacets);
 		model.addAttribute("function", function);
-		
+
 		try {
 			model.addAttribute("ous", sofdFunctionAssignmentService.getOus(ouUuids));
 		} catch (Exception e) {

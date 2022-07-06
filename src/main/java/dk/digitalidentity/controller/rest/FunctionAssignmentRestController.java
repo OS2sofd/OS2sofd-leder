@@ -21,6 +21,9 @@ import dk.digitalidentity.service.SOFDFunctionAssignmentService.AddFunctionAssig
 import dk.digitalidentity.service.SOFDFunctionAssignmentService.AutoCompleteResult;
 import dk.digitalidentity.service.SOFDFunctionAssignmentService.FunctionAssignmentEditDTO;
 
+import java.util.Locale;
+import java.util.stream.Collectors;
+
 @RequireSubstituteOrManagerOrAdminAccess
 @RestController
 public class FunctionAssignmentRestController {
@@ -43,8 +46,8 @@ public class FunctionAssignmentRestController {
 	public ResponseEntity<?> searchPerson(@RequestParam("query") String query, HttpServletRequest request) {
 		String ousString = (String) request.getSession().getAttribute(SessionConstants.SESSION_CONTEXT_OUS);
 		
-		AutoCompleteResult result = sofdFunctionAssignmentService.getAutoCompleteResultFunctionAssignmentPersons(query, ousString);
-		return new ResponseEntity<>(result.suggestions(), HttpStatus.OK);
+		AutoCompleteResult result = sofdFunctionAssignmentService.getAllAutoCompleteResultFunctionAssignmentPersons(ousString);
+		return new ResponseEntity<>(result.suggestions().stream().filter(s -> s.value().toLowerCase().contains(query)).collect(Collectors.toList()), HttpStatus.OK);
 	}
 	
 	@ResponseBody

@@ -76,12 +76,14 @@ public class DefaultController implements ErrorController {
 		
 		// tried to save List<ContextDTO> on session, but can't retrieve it in DefaultRestController
 		//request.getSession().setAttribute(SessionConstants.SESSION_CONTEXT_LIST, contexts);
-		
+
+		sofdFunctionAssignmentService.cleanUpTask();
 		if (loginContext != null) {
+			sofdFunctionAssignmentService.getAllAutoCompleteResultFunctionAssignmentPersons(loginContext.ouUuids());
 			chooseContext(request, loginContext);
 			return "redirect:/";
 		}
-		
+
 		log.warn("Person with uuid " + SecurityUtil.getUserUuid() + " logged in to the manager ui, but is not an admin, manager or substitute.");
 		return "error";
 	}
@@ -105,6 +107,8 @@ public class DefaultController implements ErrorController {
 	
 	@GetMapping("/choosecontext")
 	public String chooseContext(Model model, HttpServletRequest request, @RequestParam String uuid, @RequestParam String name, @RequestParam String ous, @RequestParam ContextRole role) {
+		sofdFunctionAssignmentService.cleanUpTask();
+
 		request.getSession().setAttribute(SessionConstants.SESSION_CONTEXT_NAME, name);
 		request.getSession().setAttribute(SessionConstants.SESSION_CONTEXT_UUID, uuid);
 		request.getSession().setAttribute(SessionConstants.SESSION_CONTEXT_OUS, ous);
@@ -125,6 +129,8 @@ public class DefaultController implements ErrorController {
 			log.error("Unknown ContextRole " + role.toString());
 			return "error";
 		}
+
+		sofdFunctionAssignmentService.getAllAutoCompleteResultFunctionAssignmentPersons(ous);
 		
 		return "redirect:/";
 	}
