@@ -19,7 +19,6 @@ public class AdminController {
 	public record TextDTO(String value) {}
 	@GetMapping("/admin/welcome/edit")
 	public String EditWelcomeText(Model model) {
-		System.out.println("start");
 		model.addAttribute("TextDTO", new TextDTO(textService.getWelcomeText()));
 		return "admin/welcome_edit";
 	}
@@ -35,6 +34,27 @@ public class AdminController {
 		}
 		
 		textService.setWelcomeText(textDTO.value());
+
+		return "redirect:/";
+	}
+
+	@GetMapping("/admin/helptext/edit")
+	public String EditHelpText(Model model) {
+		model.addAttribute("helpText", new TextDTO(textService.getSubstituteHelptext()));
+		return "admin/helptext_edit";
+	}
+	
+	@PostMapping("/admin/helptext/edit")
+	public String EditHelpTextPost(Model model, TextDTO helpTextDTO) {
+		if (helpTextDTO.value().length() > 65536) {
+			TextDTO dto = new TextDTO(helpTextDTO.value());
+			model.addAttribute("helpText", dto);
+			model.addAttribute("showError", true);
+
+			return "admin/helptext_edit";
+		}
+		
+		textService.setSubstituteHelptext(helpTextDTO.value());
 
 		return "redirect:/";
 	}

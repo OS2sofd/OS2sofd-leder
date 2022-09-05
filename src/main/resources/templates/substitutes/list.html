@@ -14,8 +14,9 @@
                             <div class="ibox-title">
                                 <h5><em class="fa fa-users"></em> &nbsp; Stedfortrædere</h5>
                             </div>
-		
                             <div class="ibox-content" >
+								<div th:utext="${@textService.getSubstituteHelptext()}"></div>
+
                            		<button class="btn btn-primary" style="margin-bottom: 10px;" onclick="substituteService.openCreateModal();">
                                		<em class="fa fa-fw fa-user-plus"></em>
 									<span>Tilføj stedfortræder</span>
@@ -189,6 +190,8 @@
 			var token = $("meta[name='_csrf']").attr("content");
 			var substituteService, searchService;
 			$(document).ready(function () {
+				$(".helpTextPopover").popover();
+				
 				substituteService = new SubstituteService();
 				searchService = new SearchService();
 				

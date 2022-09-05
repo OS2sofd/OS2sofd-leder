@@ -25,7 +25,17 @@
 			                        </li>
 			                    </ul>
 			                </div>
-								
+
+							<div sec:authorize="hasRole('ROLE_ADMIN')" class="list-group-item">
+								<ul style="padding-left: 0px;">
+									<li>
+			                            <a th:href="@{/admin/helptext/edit}" style="color: black; border: none; font-size: small;">
+			                                <i class="fa fa-pencil"></i> &nbsp; Rediger hjælpetekster
+			                            </a>
+			                        </li>
+			                    </ul>
+			                </div>
+
 							<div class="list-group-item">
 								<ul style="padding-left: 0px;">
 									<li>
@@ -50,7 +60,7 @@
                     <a href="/"><div><span class="nav-label"><em class="fa fa-home"></em> &nbsp; Velkommen</span></div></a>
                 </li>
                 <th:block sec:authorize="isAuthenticated()">
-                	<li id="functionsNav" th:classappend="${page == 'functionAssignments'} ? 'active' : ''">
+                	<li id="functionsNav" th:classappend="${page == 'functionAssignments'} ? 'active' : 'active'">
 	                    <a sec:authorize="hasRole('ROLE_MANAGER') or hasRole('ROLE_SUBSTITUTE') or hasRole('ROLE_ADMIN')" href="#"><div><span class="nav-label"><em class="fa fa-list"></em> &nbsp; Medarbejderfunktioner</span></div></a>
 	                	<ul class="nav nav-second-level" style="color: #000000 !important; background-color: #FDFEFF !important;">
 	                    	<li th:each="function : ${@SOFDFunctionAssignmentService.getFunctionsAndFacets()}" th:classappend="${subpage == function.id} ? 'active' : ''">
