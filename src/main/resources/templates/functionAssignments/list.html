@@ -124,7 +124,7 @@
 									<i th:if="${facet.description != null && facet.description != ''}" style="width: 10px;" class="fa fa-question" data-toggle="tooltip" data-placement="right" th:title="${facet.description}"></i>
 									<span th:unless="${facet.description != null && facet.description != ''}" style="width: 10px;"></span>
 									<div class="col-lg-8">
-										<select th:id="'function' + ${function.id} + 'facet' + ${facet.id}" th:attr="data-type=${facet.type}, data-facetId=${facet.id}, data-functionid=${function.id}" class="form-control facetValue_add cleanup">
+										<select th:id="'function' + ${function.id} + 'facet' + ${facet.id}" th:attr="data-type=${facet.type}, data-facetId=${facet.id}, data-functionid=${function.id}, data-name=${facet.name}" class="form-control facetValue_add cleanup">
 											<option th:each="item : ${facet.listItems}" th:value="${item}" th:text="${item}"/>
 										</select>
 									</div>
@@ -162,7 +162,7 @@
 				</div>
 	
 				<div class="modal-footer">
-					<button type="button" class="btn btn-primary" onclick="functionService.addFunctionAssignment()">Tilføj</button>
+					<button type="button" class="btn btn-primary" onclick="functionService.addFunctionAssignment()">Gem</button>
 					<button type="button" class="btn btn-danger" data-dismiss="modal">Annuller</button>
 				</div>
 			</div>
@@ -206,7 +206,7 @@
 					</div>
 				</div>
 				<div class="modal-footer">
-					<button type="button" class="btn btn-primary" onclick="functionService.editFunctionAssignment()">Tilføj</button>
+					<button type="button" class="btn btn-primary" onclick="functionService.editFunctionAssignment()">Gem</button>
 					<button type="button" class="btn btn-danger" data-dismiss="modal">Annuller</button>
 				</div>
 			</div>
@@ -439,7 +439,7 @@
 											}
 
 											html = html + '<div class="col-lg-8">' +
-														  	'<select id=\"function' + item.function.id + 'facet' + facet.id + '_edit\" data-type=\"' + facet.type + '\" data-facetId=\"' + facet.id + '\" data-functionid=\"' + item.function.id + '\" class="form-control facetValue_edit cleanup">';
+														  	'<select id=\"function' + item.function.id + 'facet' + facet.id + '_edit\" data-type=\"' + facet.type + '\" data-facetId=\"' + facet.id + '\" data-functionid=\"' + item.function.id + '\" data-name=\"' + facet.name + '\" class="form-control facetValue_edit cleanup">';
 							
 											facet.listItems.forEach(function(listItem) {
 												if (listItem == value.facetListItem) {
@@ -536,9 +536,16 @@
 								
 								payload.facetValues.push(obj);
 							} else if (type == "LIST") {
+								var listValue = $("#function" + functionId + "facet" + facetId).val();
+								if (listValue == null) {
+									var name = $(this).data('name');
+									toastr.error(name + " skal have en værdi!");
+									error = true;
+								}
+								
 								var obj = {
 									facetId : facetId,
-									facetListItem : $("#function" + functionId + "facet" + facetId).val()
+									facetListItem : listValue
 								};
 								
 								payload.facetValues.push(obj);
@@ -616,9 +623,16 @@
 								
 								payload.facetValues.push(obj);
 							} else if (type == "LIST") {
+								var listValue = $("#function" + functionId + "facet" + facetId + "_edit").val();
+								if (listValue == null) {
+									var name = $(this).data('name');
+									toastr.error(name + " skal have en værdi!");
+									error = true;
+								}
+								
 								var obj = {
 									facetId : facetId,
-									facetListItem : $("#function" + functionId + "facet" + facetId + "_edit").val()
+									facetListItem : listValue
 								};
 								
 								payload.facetValues.push(obj);

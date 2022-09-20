@@ -47,6 +47,10 @@ public class FunctionAssignmentController {
 		Collections.sort(function.facets(), Comparator.comparingLong(FacetDTO :: id));
 		
 		String ousString = (String) request.getSession().getAttribute(SessionConstants.SESSION_CONTEXT_OUS);
+		if (ousString == null) {
+			return "error";
+		}
+
 		List<String> ouUuids = Arrays.asList(ousString.split(","));
 
 		List<FunctionAssignmentDTO> functionAssignments = new ArrayList<>();
