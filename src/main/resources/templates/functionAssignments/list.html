@@ -35,8 +35,8 @@
 					                <tbody>
 						                <tr th:each="assignment: ${functionAssignments}">
 						                	<td th:text="${assignment.affiliationPersonUserId} == null ? ${assignment.affiliationPersonName} : (${assignment.affiliationPersonName} + ' (' + ${assignment.affiliationPersonUserId} + ')')"></td>
-						                	<td th:text="${#dates.format(assignment.startDate, 'yyyy-MM-dd')}"/>
-						                	<td th:text="${#dates.format(assignment.stopDate, 'yyyy-MM-dd')}"/>
+						                	<td th:text="${#temporals.format(assignment.startDate, 'dd/MM/yyyy')}"/>
+						                	<td th:text="${#temporals.format(assignment.stopDate, 'dd/MM/yyyy')}"/>
 											<td th:each="value : ${assignment.facetValues}">
 												<span th:if="${value.text != null && value.text != ''}" th:text="${value.text}"></span>
 												<span th:if="${value.facetListItem != null && value.facetListItem != ''}" th:text="${value.facetListItem}"></span>
@@ -248,6 +248,28 @@
 	</style>
 	
 	<div th:replace="fragments/footer :: scripts(datatables = true, checkbox = true, datepicker = true, jstree = true)"></div>
+	<!-- Taken from https://datatables.net/plug-ins/type-detection/date-uk
+	<script th:inline="javascript">
+		/**
+		 * Automatically detect British (`dd/mm/yyyy`) date types. Goes with the UK
+		 * date sorting plug-in.
+		 *
+		 *  @name Date (`dd/mm/yyyy`)
+		 *  @summary Detect data which is in the date format `dd/mm/yyyy`
+		 *  @author Andy McMaster
+		 */
+
+		jQuery.fn.dataTableExt.aTypes.unshift(
+			function ( sData )
+			{
+				if (sData !== null && sData.match(/^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[012])\/(19|20|21)\d\d$/))
+				{
+					return 'date-uk';
+				}
+				return null;
+			}
+		);
+	</script>-->
 	<script th:inline="javascript">
 		/*<![CDATA[*/
 		
@@ -269,6 +291,20 @@
 				functionService.init();
 				searchService.init();
 				ouService.init();
+
+				// sorts dd/mm/yyyy dates
+				// from https://datatables.net/forums/discussion/32647/how-to-use-the-plugin-date-uk-to-sort-dates-in-the-format-dd-mm-yyyy
+				$.extend( jQuery.fn.dataTableExt.oSort, {
+					"date-uk-pre": function (a){
+						return parseInt(moment(a, "DD/MM/YYYY").format("X"), 10);
+					},
+					"date-uk-asc": function (a, b) {
+						return a - b;
+					},
+					"date-uk-desc": function (a, b) {
+						return b - a;
+					}
+				});
 			});
 			
 			function FunctionService() {
@@ -283,7 +319,7 @@
 						forceParse: false,
 						autoclose: true,
 						weekStart: 1,
-						format: "yyyy-mm-dd",
+						format: "dd/mm/yyyy",
 						orientation: "bottom",
 						enableOnReadonly: false,
 						language: "da"
@@ -297,7 +333,8 @@
 						"responsive" : true,
 						"autoWidth": false,
 						"columnDefs": [
-							{ "orderable": false, "searchable": false, "targets": lastColIndex }
+							{ "orderable": false, "searchable": false, "targets": lastColIndex },
+							{ "type": "date-uk", targets: [1,2] }
 						  ],
 						"order": [ 0, 'asc' ],
 						"language" : {

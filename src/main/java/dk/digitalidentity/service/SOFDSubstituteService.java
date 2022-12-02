@@ -41,7 +41,9 @@ public class SOFDSubstituteService {
 		}
 		
 		if (response.getBody() != null) {
-			result = Arrays.asList(response.getBody());
+			result = new ArrayList<>(Arrays.asList(response.getBody()));
+			// remove the global context
+			result.removeIf(c -> c.identifier.equalsIgnoreCase("global"));
 		} else {
 			log.warn("Response body was null when fetching a list of substitute contexts");
 		}
@@ -67,7 +69,11 @@ public class SOFDSubstituteService {
 		}
 		
 		if (response.getBody() != null) {
-			result = Arrays.asList(response.getBody());
+			result = new ArrayList<>(Arrays.asList(response.getBody()));
+
+			// remove the global context assignments
+			// todo: get the identifier out as well so we can compare on that instead of name. "Global" should be pretty static though.
+			result.removeIf(a -> a.substituteContextName.equalsIgnoreCase("Global"));
 		} else {
 			log.warn("Response body was null when fetching a list of substitute assignmentfor person with uuid " + userUuid);
 		}

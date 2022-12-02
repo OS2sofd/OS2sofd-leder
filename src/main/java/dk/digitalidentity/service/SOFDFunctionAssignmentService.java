@@ -14,9 +14,9 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -61,7 +61,7 @@ public class SOFDFunctionAssignmentService {
 		return result;
 	}
 
-	public record FunctionAssignmentDTO(long id, Date startDate, Date stopDate, String affiliationUuid, String affiliationPersonName, String affiliationPersonUserId, FunctionDTO function, List<FacetValueDTO> facetValues) {}
+	public record FunctionAssignmentDTO(long id, LocalDate startDate, LocalDate stopDate, String affiliationUuid, String affiliationPersonName, String affiliationPersonUserId, FunctionDTO function, List<FacetValueDTO> facetValues) {}
 	public record FacetValueDTO(long facetId, String facetName, String text, String facetListItem, List<String> facetValueOrgunitUuids, String facetValueOrgunitNames, String facetValueAffiliationUuid, String facetValueAffiliationPersonName) {}
 	@Cacheable("functionAssignments")
 	public List<FunctionAssignmentDTO> getFunctionAssignments(String ouUuids) {
@@ -107,12 +107,12 @@ public class SOFDFunctionAssignmentService {
 		return false;
 	}
 
-	public record AddFunctionAssignmentDTO(Date startDate, Date stopDate, String affiliationUuid, long functionId, List<FacetValueDTO> facetValues) {}
-	public boolean addFunctionAssignment(AddFunctionAssignmentDTO dto) {
+	public record AddFunctionAssignmentRequestDTO(LocalDate startDate, LocalDate stopDate, String affiliationUuid, long functionId, List<FacetValueDTO> facetValues) {}
+	public boolean addFunctionAssignment(AddFunctionAssignmentRequestDTO dto) {
 		String url = config.getSofdBaseUrl();
 		String query = "/api/functionhierarchy/functionassignments/create";
 
-		HttpEntity<AddFunctionAssignmentDTO> request = new HttpEntity<>(dto, getHeaders());
+		HttpEntity<AddFunctionAssignmentRequestDTO> request = new HttpEntity<>(dto, getHeaders());
 
 		ResponseEntity<String> response = restTemplate.exchange(url + query, HttpMethod.POST, request, String.class);
 		if (response.getStatusCode().equals(HttpStatus.OK)) {
@@ -124,12 +124,13 @@ public class SOFDFunctionAssignmentService {
 		return false;
 	}
 
-	public record FunctionAssignmentEditDTO(Date startDate, Date stopDate, List<FacetValueDTO> facetValues) {}
-	public boolean editFunctionAssignment(long id, FunctionAssignmentEditDTO dto) {
+
+	public record FunctionAssignmentEditRequestDTO(LocalDate startDate, LocalDate stopDate, List<FacetValueDTO> facetValues) {}
+	public boolean editFunctionAssignment(long id, FunctionAssignmentEditRequestDTO dto) {
 		String url = config.getSofdBaseUrl();
 		String query = "/api/functionhierarchy/functionassignments/" + id + "/edit";
 
-		HttpEntity<FunctionAssignmentEditDTO> request = new HttpEntity<>(dto, getHeaders());
+		HttpEntity<FunctionAssignmentEditRequestDTO> request = new HttpEntity<>(dto, getHeaders());
 
 		ResponseEntity<String> response = restTemplate.exchange(url + query, HttpMethod.POST, request, String.class);
 		if (response.getStatusCode().equals(HttpStatus.OK)) {

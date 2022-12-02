@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <body>
-	<nav th:fragment="navbar-header" class="navbar navbar-static-top" role="navigation" style="color: #000000 !important; background-color: #FDFEFF !important; height: 50px;">
+	<nav th:fragment="navbar-header" class="navbar navbar-static-top" role="navigation" style="color: #000000 !important; background-color: #FDFEFF !important; height: 70px;">
         <div class="navbar-header">
         </div>
         
@@ -55,13 +55,17 @@
 
 	<nav th:fragment="navbar-aside" class="navbar-default navbar-static-side navbar-expand" role="navigation" style="color: #000000 !important; background-color: #FDFEFF !important; width: 275px;">
         <div class="sidebar-collapse">
-            <ul class="nav metismenu" id="side-menu" style="margin-top: 90px;">
+			<a href="/">
+				<img src="custom/logo.svg" alt="logo" style="margin: 10px 20px 5px 20px">
+			</a>
+
+            <ul class="nav metismenu" id="side-menu" style="margin-top: 25px;">
                 <li th:classappend="${page == 'welcome'} ? 'active' : ''">
                     <a href="/"><div><span class="nav-label"><em class="fa fa-home"></em> &nbsp; Velkommen</span></div></a>
                 </li>
                 <th:block sec:authorize="isAuthenticated()">
                 	<li id="functionsNav" th:classappend="${page == 'functionAssignments'} ? 'active' : 'active'">
-	                    <a sec:authorize="hasRole('ROLE_MANAGER') or hasRole('ROLE_SUBSTITUTE') or hasRole('ROLE_ADMIN')" href="#"><div><span class="nav-label"><em class="fa fa-list"></em> &nbsp; Medarbejderfunktioner</span></div></a>
+	                    <a sec:authorize="hasRole('ROLE_MANAGER') or hasRole('ROLE_SUBSTITUTE') or hasRole('ROLE_ADMIN')" href="#"><div><span class="nav-label"><em class="fa fa-list"></em> &nbsp;<span th:text="${@managerConfiguration.html.functionsNavbarTitle}"></span></span></div></a>
 	                	<ul class="nav nav-second-level" style="color: #000000 !important; background-color: #FDFEFF !important;">
 	                    	<li th:each="function : ${@SOFDFunctionAssignmentService.getFunctionsAndFacets()}" th:classappend="${subpage == function.id} ? 'active' : ''">
 	                    		<a style="padding-left: 45px; padding-top: 5px; padding-bottom: 5px;" th:href="'/functionassignments?function=' + ${function.id}">

@@ -15,4 +15,5 @@ public class ManagerConfiguration {
 	private Modules modules;
 	private String sofdBaseUrl;
 	private String sofdApiKey;
+	private HTMLConfig html;
 }

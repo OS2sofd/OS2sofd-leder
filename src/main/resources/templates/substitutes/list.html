@@ -70,7 +70,10 @@
 						<label class="col-sm-2 control-label">Kontekst</label>
 						<div class="col-sm-8">
 							<select class="form-control" id="addSubstituteSelectedContext" onchange="substituteService.handleSubstituteContextChange();">
-								<option th:each="subContext : ${substituteContexts}" th:value="${subContext.id}" th:attr="data-supportsconstraints=${subContext.supportsConstraints}" th:text="${subContext.name}"></option>
+								<option th:each="subContext : ${substituteContexts}" th:value="${subContext.id}" th:attr="data-supportsconstraints=${subContext.supportsConstraints}">
+									<span th:if="${subContext.identifier} == 'SOFD'" th:text="${@managerConfiguration.html.sofdSubstituteContextName}"></span>
+									<span th:unless="${subContext.identifier} == 'SOFD'" th:text="${subContext.name}"></span>
+								</option>
 							</select>
 						</div>
 					</div>
@@ -86,7 +89,9 @@
 						</div>
 					</div>
 					<div class="form-group row">
-						<label class="col-sm-2 control-label">Afgrænsning</label>
+						<label class="col-sm-2 control-label">Afdelinger
+							<i style="width: 10px;" class="fa fa-question" data-toggle="tooltip" data-placement="right" title="Her kan du afgrænse stedfortræderen til udvalgte afdelinger. Hvis ingen afdeling er valgt, fungerer stedfortræderen på alle afdelinger."></i>
+						</label>
 						<div class="col-sm-8">
 							<input id="chbxSubstituteContextConstraints" type="checkbox" class="i-checks">
 						</div>
@@ -145,7 +150,9 @@
 						</div>
 					</div>
 					<div class="form-group row">
-						<label class="col-sm-2 control-label">Afgrænsning</label>
+						<label class="col-sm-2 control-label">Afdelinger
+							<i style="width: 10px;" class="fa fa-question" data-toggle="tooltip" data-placement="right" title="Her kan du afgrænse stedfortræderen til udvalgte afdelinger. Hvis ingen afdeling er valgt, fungerer stedfortræderen på alle afdelinger."></i>
+						</label>
 						<div class="col-sm-8">
 							<input id="chbxSubstituteContextConstraintsEdit" type="checkbox" class="i-checks">
 						</div>
@@ -202,6 +209,13 @@
 			function SubstituteService() {
 				
 				this.init = function() {
+					$('#modal-add-substitute').on('shown.bs.modal', function() {
+						$('[data-toggle="tooltip"]').tooltip();
+					});
+					$('#modal-edit-substitute').on('shown.bs.modal', function() {
+						$('[data-toggle="tooltip"]').tooltip();
+					});
+
 					$("#chbxSubstituteContextConstraints").on('ifChecked', function(event){
 						$("#subConstraintOrgUnitsTable").show();
 					});

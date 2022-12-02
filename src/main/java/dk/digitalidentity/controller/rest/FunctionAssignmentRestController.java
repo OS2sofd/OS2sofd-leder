@@ -2,6 +2,7 @@ package dk.digitalidentity.controller.rest;
 
 import javax.servlet.http.HttpServletRequest;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
@@ -17,11 +18,12 @@ import org.springframework.web.bind.annotation.RestController;
 import dk.digitalidentity.config.SessionConstants;
 import dk.digitalidentity.security.RequireSubstituteOrManagerOrAdminAccess;
 import dk.digitalidentity.service.SOFDFunctionAssignmentService;
-import dk.digitalidentity.service.SOFDFunctionAssignmentService.AddFunctionAssignmentDTO;
 import dk.digitalidentity.service.SOFDFunctionAssignmentService.AutoCompleteResult;
-import dk.digitalidentity.service.SOFDFunctionAssignmentService.FunctionAssignmentEditDTO;
 
-import java.util.Locale;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @RequireSubstituteOrManagerOrAdminAccess
@@ -47,13 +49,15 @@ public class FunctionAssignmentRestController {
 		String ousString = (String) request.getSession().getAttribute(SessionConstants.SESSION_CONTEXT_OUS);
 		
 		AutoCompleteResult result = sofdFunctionAssignmentService.getAllAutoCompleteResultFunctionAssignmentPersons(ousString);
-		return new ResponseEntity<>(result.suggestions().stream().filter(s -> s.value().toLowerCase().contains(query)).collect(Collectors.toList()), HttpStatus.OK);
+		return new ResponseEntity<>(result.suggestions().stream().filter(s -> s.value().toLowerCase().contains(query.toLowerCase())).collect(Collectors.toList()), HttpStatus.OK);
 	}
-	
+
+	private record AddFunctionAssignmentDTO(@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy") LocalDate startDate, @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy") LocalDate stopDate, String affiliationUuid, long functionId, List<SOFDFunctionAssignmentService.FacetValueDTO> facetValues) {}
 	@ResponseBody
 	@PostMapping(value = "/rest/functionassignment/add")
 	public HttpEntity<?> createSubstituteAssignment(@RequestBody AddFunctionAssignmentDTO dto) {
-		boolean success = sofdFunctionAssignmentService.addFunctionAssignment(dto);
+		SOFDFunctionAssignmentService.AddFunctionAssignmentRequestDTO body = new SOFDFunctionAssignmentService.AddFunctionAssignmentRequestDTO(dto.startDate(), dto.stopDate(), dto.affiliationUuid(), dto.functionId(), dto.facetValues());
+		boolean success = sofdFunctionAssignmentService.addFunctionAssignment(body);
 
 		if (!success) {
 			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
@@ -61,11 +65,13 @@ public class FunctionAssignmentRestController {
 		
 		return new ResponseEntity<>(HttpStatus.OK);
 	}
-	
+
+	private record FunctionAssignmentEditDTO(@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy") LocalDate startDate, @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy") LocalDate stopDate, List<SOFDFunctionAssignmentService.FacetValueDTO> facetValues) {}
 	@ResponseBody
 	@PostMapping(value = "/rest/functionassignment/{id}/edit")
-	public HttpEntity<?> createSubstituteAssignment(@PathVariable long id, @RequestBody FunctionAssignmentEditDTO dto) {
-		boolean success = sofdFunctionAssignmentService.editFunctionAssignment(id, dto);
+	public HttpEntity<?> editSubstituteAssignment(@PathVariable long id, @RequestBody FunctionAssignmentEditDTO dto) {
+		SOFDFunctionAssignmentService.FunctionAssignmentEditRequestDTO body = new SOFDFunctionAssignmentService.FunctionAssignmentEditRequestDTO(dto.startDate(), dto.stopDate(), dto.facetValues());
+		boolean success = sofdFunctionAssignmentService.editFunctionAssignment(id, body);
 
 		if (!success) {
 			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);

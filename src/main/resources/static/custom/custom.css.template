@@ -1,0 +1,54 @@
+:root {
+  --primary-color: #9D1D5E;
+  --darker-primary-color: #911655;
+  --danger-color: #c82333;
+  --darker-danger-color: #bd2130;
+}
+
+/* buttons */
+.btn-primary{
+    background-color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+}
+
+.btn-primary:hover, .btn-primary:focus, .btn-primary.focus {
+    background-color: var(--darker-primary-color) !important;
+    border-color: var(--darker-primary-color) !important;
+}
+
+.btn-danger {
+    background-color: var(--danger-color);
+    border-color: var(--danger-color);
+}
+
+.btn-danger:hover, .btn-danger:focus, .btn-danger.focus {
+    background-color: var(--darker-danger-color);
+    border-color: var(--darker-danger-color);
+}
+
+/* nav */
+.top-navigation .nav > li.active > a,
+.top-navigation .nav > li.active > a,
+.top-navigation .nav > li a:hover,
+.top-navigation .nav > li a:focus {
+    color: var(--primary-color) !important;
+}
+
+.nav > li.active {
+    border-left: 4px solid var(--primary-color) !important;
+}
+
+/* datatable */
+.page-item.active .page-link {
+    background-color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+}
+
+/* form */
+.form-control:focus, .single-line:focus {
+    border-color: var(--primary-color) !important;
+}
+
+#page-wrapper {
+  padding: 0 0 !important;
+}
