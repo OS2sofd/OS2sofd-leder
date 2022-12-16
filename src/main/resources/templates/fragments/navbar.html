@@ -56,7 +56,7 @@
 	<nav th:fragment="navbar-aside" class="navbar-default navbar-static-side navbar-expand" role="navigation" style="color: #000000 !important; background-color: #FDFEFF !important; width: 275px;">
         <div class="sidebar-collapse">
 			<a href="/">
-				<img src="custom/logo.svg" alt="logo" style="margin: 10px 20px 5px 20px">
+				<img th:src="@{custom/logo.svg(cache=${@buildProperties.getTime().getEpochSecond()})}" alt="logo" style="margin: 10px 20px 5px 20px">
 			</a>
 
             <ul class="nav metismenu" id="side-menu" style="margin-top: 25px;">

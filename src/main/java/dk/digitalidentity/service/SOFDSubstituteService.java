@@ -121,12 +121,12 @@ public class SOFDSubstituteService {
 	
 	public record AutoCompleteResult(List<ValueData> suggestions) {}
 	public record ValueData(String value, String data) {}
-	public AutoCompleteResult getAutoCompleteResult(String term) {
+	public AutoCompleteResult getAutoCompleteResult(String term, String ousString) {
 		HttpEntity<String> request = new HttpEntity<>(getHeaders());
 		String url = config.getSofdBaseUrl();
 
 		String userUuid = SecurityUtil.getUserUuid();
-		String query = "/api/substitutes/search/person/" + userUuid + "?query=" + term;
+		String query = "/api/substitutes/search/person/" + userUuid + "?query=" + term + (ousString != null ? "&ous="+ousString : "");
 		AutoCompleteResult result = null;
 
 		ResponseEntity<AutoCompleteResult> response = restTemplate.exchange(url + query, HttpMethod.GET, request, AutoCompleteResult.class);

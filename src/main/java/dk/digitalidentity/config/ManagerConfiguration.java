@@ -16,4 +16,5 @@ public class ManagerConfiguration {
 	private String sofdBaseUrl;
 	private String sofdApiKey;
 	private HTMLConfig html;
+	private boolean substituteAutoCompleteLimited = true;
 }

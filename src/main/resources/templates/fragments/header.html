@@ -15,7 +15,7 @@
 	<link rel="stylesheet" th:href="@{/webjars/inspinia/2.9.3/css/style.css}" />
     <link rel="stylesheet" th:href="@{/webjars/inspinia/2.9.3/css/plugins/sweetalert/sweetalert.css}" />
     <link rel="stylesheet" th:href="@{/webjars/inspinia/2.9.3/css/plugins/toastr/toastr.min.css}" />
-    <link rel="stylesheet" th:href="@{/css/bootstrap-select.min.css}" />
+    <link rel="stylesheet" th:href="@{/css/bootstrap-select.min.css(cache=${@buildProperties.getTime().getEpochSecond()})}" />
 	<style>
 		.toastr-buffer {
 			margin-top:60px;
@@ -66,8 +66,8 @@
 	</th:block>
 	
 	<!-- Ovveride default Inspinia style with custom UI -->
-	<link rel="stylesheet" th:href="@{/css/dedicatedManager.css}" />
-	<link rel="stylesheet" th:href="@{/custom/custom.css}" />
+	<link rel="stylesheet" th:href="@{/css/dedicatedManager.css(cache=${@buildProperties.getTime().getEpochSecond()})}" />
+	<link rel="stylesheet" th:href="@{/custom/custom.css(cache=${@buildProperties.getTime().getEpochSecond()})}" />
 </head>
 <body>
 </body>

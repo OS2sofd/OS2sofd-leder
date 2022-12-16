@@ -4,7 +4,7 @@
 	<div th:fragment="scripts">
 		<!-- minimum set of script files - always required -->
 		<script th:src="@{/webjars/inspinia/2.9.3/js/jquery-3.1.1.min.js}"></script>
-		<script th:src="@{/js/ajax/libs/moment/2.11.2/moment.min.js}"></script>
+		<script th:src="@{/js/ajax/libs/moment/2.11.2/moment.min.js(cache=${@buildProperties.getTime().getEpochSecond()})}"></script>
 		<script th:src="@{/webjars/inspinia/2.9.3/js/popper.min.js}"></script>
 		<script th:src="@{/webjars/inspinia/2.9.3/js/bootstrap.min.js}"></script>
 		<script th:src="@{/webjars/inspinia/2.9.3/js/plugins/metisMenu/jquery.metisMenu.js}"></script>
@@ -13,7 +13,7 @@
 		<script th:src="@{/webjars/inspinia/2.9.3/js/plugins/pace/pace.min.js}"></script>
 		<script th:src="@{/webjars/inspinia/2.9.3/js/plugins/sweetalert/sweetalert.min.js}"></script>
 		<script th:src="@{/webjars/inspinia/2.9.3/js/plugins/toastr/toastr.min.js}"></script>
-		<script th:src="@{/js/bootstrap-select.min.js}"></script>
+		<script th:src="@{/js/bootstrap-select.min.js(cache=${@buildProperties.getTime().getEpochSecond()})}"></script>
 		<script>
 			toastr.options = {
 			  "positionClass": "toast-top-right toastr-buffer"

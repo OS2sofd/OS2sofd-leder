@@ -1,8 +1,11 @@
 package dk.digitalidentity.controller.rest;
 
+import java.time.LocalDate;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import javax.servlet.http.HttpServletRequest;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
@@ -15,16 +18,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import dk.digitalidentity.config.SessionConstants;
 import dk.digitalidentity.security.RequireSubstituteOrManagerOrAdminAccess;
 import dk.digitalidentity.service.SOFDFunctionAssignmentService;
 import dk.digitalidentity.service.SOFDFunctionAssignmentService.AutoCompleteResult;
-
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.util.Date;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @RequireSubstituteOrManagerOrAdminAccess
 @RestController
