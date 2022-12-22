@@ -11,5 +11,4 @@ public class OUTreeFormDto {
 	private String id;
 	private String parent;
 	private String text;
-	private boolean open = false;
 }

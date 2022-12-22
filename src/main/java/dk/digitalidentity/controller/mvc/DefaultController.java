@@ -100,6 +100,7 @@ public class DefaultController implements ErrorController {
         } else if (context.role().equals(ContextRole.SUBSTITUTE)) {
             securityUtil.switchToSubstituteContext();
         } else if (context.role().equals(ContextRole.ADMIN)) {
+            request.getSession().setAttribute(SessionConstants.SESSION_CONTEXT_UUID, "ADMIN"+context.uuid());
             securityUtil.switchToAdminContext();
         } else {
             log.error("Unknown ContextRole " + context.role().toString());

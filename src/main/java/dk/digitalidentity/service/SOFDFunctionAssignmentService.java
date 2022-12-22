@@ -3,6 +3,7 @@ package dk.digitalidentity.service;
 import dk.digitalidentity.config.ManagerConfiguration;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.dto.OUTreeFormDto;
+import dk.digitalidentity.service.dto.OUTreeFormWithOpenDto;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
@@ -193,18 +194,18 @@ public class SOFDFunctionAssignmentService {
 		return result;
 	}
 
-	public List<OUTreeFormDto> getOus(List<String> ouUuids) throws Exception {
-		var allOus = self.getAllOus();
+	public List<OUTreeFormWithOpenDto> getOus(List<String> ouUuids) throws Exception {
+		var allOus = self.getAllOus().stream().map(o -> new OUTreeFormWithOpenDto(o)).toList();
 		var topNode = allOus.stream().filter(o -> o.getParent().equals("#")).findFirst();
 		if (!topNode.isPresent()) {
 			throw new Exception("No top OU node was found");
 		}
-		var filteredOus = new ArrayList<OUTreeFormDto>();
+		var filteredOus = new ArrayList<OUTreeFormWithOpenDto>();
 		filterOusRecursive(filteredOus, allOus, ouUuids, topNode.get());
 		return filteredOus;
 	}
 
-	private boolean filterOusRecursive(List<OUTreeFormDto> filteredOus, List<OUTreeFormDto> allOus, List<String> allowedOus, OUTreeFormDto node) {
+	private boolean filterOusRecursive(List<OUTreeFormWithOpenDto> filteredOus, List<OUTreeFormWithOpenDto> allOus, List<String> allowedOus, OUTreeFormWithOpenDto node) {
 		node.setOpen(node.isOpen() || allowedOus.contains(node.getId()));
 		var open = node.isOpen();
 		var children = allOus.stream().filter(o -> node.getId().equalsIgnoreCase(o.getParent())).collect(Collectors.toList());
