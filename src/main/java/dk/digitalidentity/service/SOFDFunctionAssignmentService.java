@@ -1,25 +1,33 @@
 package dk.digitalidentity.service;
 
-import dk.digitalidentity.config.ManagerConfiguration;
-import dk.digitalidentity.security.SecurityUtil;
-import dk.digitalidentity.service.dto.OUTreeFormDto;
-import dk.digitalidentity.service.dto.OUTreeFormWithOpenDto;
-import lombok.extern.slf4j.Slf4j;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.stream.Collectors;
+
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.EnableCaching;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
+import dk.digitalidentity.config.ManagerConfiguration;
+import dk.digitalidentity.security.SecurityUtil;
+import dk.digitalidentity.service.dto.OUTreeFormDto;
+import dk.digitalidentity.service.dto.OUTreeFormWithOpenDto;
+import lombok.extern.slf4j.Slf4j;
 
 @EnableCaching
 @EnableScheduling
@@ -36,7 +44,7 @@ public class SOFDFunctionAssignmentService {
 	@Autowired
 	private SOFDFunctionAssignmentService self;
 
-	public record FunctionDTO(long id, String name, String description, List<FacetDTO> facets) {}
+	public record FunctionDTO(long id, String name, String category, String description, List<FacetDTO> facets) {}
 	public record FacetDTO(long id, String name, String description, String type, String pattern, List<String> listItems) {}
 	@Cacheable("functions")
 	public List<FunctionDTO> getFunctionsAndFacets() {
@@ -231,6 +239,23 @@ public class SOFDFunctionAssignmentService {
 		}
 		return topNode.get().getId();
 	}
+	
+	@Cacheable("categories")
+	public Map<String, List<FunctionDTO>> getAllCategories() {
+		Map<String, List<FunctionDTO>> result = new TreeMap<>();
+		List<FunctionDTO> functions = self.getFunctionsAndFacets();
+		
+		for (FunctionDTO function : functions) {
+			if (!result.containsKey(StringUtils.capitalize(function.category()))) {
+				result.put(StringUtils.capitalize(function.category()), new ArrayList<>());
+			}
+			
+			result.get(StringUtils.capitalize(function.category())).add(function);
+		}
+		
+		return result;
+	}
+	
 
 	private HttpHeaders getHeaders() {
 		HttpHeaders headers = new HttpHeaders();
@@ -255,6 +280,10 @@ public class SOFDFunctionAssignmentService {
 	@CacheEvict(value = "autocompleteAll", allEntries = true)
 	public void cleanUpAllAutocomplete() {
 	}
+	
+	@CacheEvict(value = "categories", allEntries = true)
+	public void cleanUpAllCategories() {
+	}
 
 	@Scheduled(fixedRate = 10 * 60 * 1000)
 	public void cleanUpTask() {
@@ -262,5 +291,6 @@ public class SOFDFunctionAssignmentService {
 		self.cleanUpFunctions();
 		self.cleanUpFunctionAssignments();
 		self.cleanUpAllAutocomplete();
+		self.cleanUpAllCategories();
 	}
 }

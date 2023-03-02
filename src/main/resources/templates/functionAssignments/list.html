@@ -3,7 +3,7 @@
 <head th:replace="fragments/header :: header(datatables = true, checkbox = true, datepicker = true, jstree = true)" />
 <body class="top-navigation">
 	<div id="wrapper">
-		<nav th:replace="fragments/navbar :: navbar-aside(page='functionAssignments', subpage = ${function.id})" />
+		<nav th:replace="fragments/navbar :: navbar-aside(page = ${function.category}, subpage = ${function.id})" />
 	    <div id="page-wrapper" class="gray-bg">
 	    	<nav th:replace="fragments/navbar :: navbar-header" />
 
