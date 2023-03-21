@@ -4,6 +4,7 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
+import dk.digitalidentity.controller.mvc.SubstituteController;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
@@ -56,27 +57,111 @@ public class SubstituteRestController {
 	@ResponseBody
 	@PostMapping(value = "/rest/substituteAssignment/add")
 	public HttpEntity<?> createSubstituteAssignment(@RequestBody SubstituteAssignmentAddDTO dto) {
-		
-		boolean success = sofdSubstituteService.addSubstitute(dto.context(), dto.substitute(), dto.constraint());
-
-		if (!success) {
+		SOFDSubstituteService.SubstituteContext substituteContext = sofdSubstituteService.getSubstituteContexts().stream().filter(c -> c.id() == dto.context()).findAny().orElse(null);
+		if (substituteContext == null) {
 			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+		}
+
+		if (substituteContext.assignableToOrgunit()) {
+			if (dto.constraint() == null || dto.constraint().isEmpty()) {
+				return new ResponseEntity<>("Der skal vælges minimum en enhed", HttpStatus.BAD_REQUEST);
+			}
+
+			boolean anyFailed = false;
+			for (String constraintOUUuid : dto.constraint()) {
+				boolean status = sofdSubstituteService.addOrgUnitSubstitute(dto.context(), dto.substitute(), constraintOUUuid);
+				if (!status) {
+					anyFailed = true;
+				}
+			}
+			if (anyFailed) {
+				return new ResponseEntity<>("En eller flere stedfortræderetildelinger kunne ikke gemmes", HttpStatus.BAD_REQUEST);
+			}
+		} else {
+			boolean success = sofdSubstituteService.addSubstitute(dto.context(), dto.substitute(), dto.constraint());
+			if (!success) {
+				return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+			}
 		}
 		
 		return new ResponseEntity<>(HttpStatus.OK);
 	}
 	
-	record SubstituteAssignmentEditDTO(long id, List<String> constraint) {}
+	record SubstituteAssignmentEditDTO(long id, boolean orgUnitAssignment, String substituteUuid, long contextId, boolean contextIsAssignableToOrgUnit, List<String> constraints) {}
 	@ResponseBody
 	@PostMapping(value = "/rest/substituteAssignment/edit")
 	public HttpEntity<?> editSubstituteAssignment(@RequestBody SubstituteAssignmentEditDTO dto) {
-		
-		boolean success = sofdSubstituteService.editSubstitute(dto.id(), dto.constraint());
+		List<SOFDSubstituteService.SubstituteAssignment> all = sofdSubstituteService.getSubstituteAssignments();
+		if (dto.orgUnitAssignment()) {
+			if (dto.constraints() == null || dto.constraints().isEmpty()) {
+				return new ResponseEntity<>("Der skal vælges minimum en enhed", HttpStatus.BAD_REQUEST);
+			}
 
-		if (!success) {
-			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+			SOFDSubstituteService.SubstituteAssignment match = all.stream().filter(a -> a.orgUnitAssignment() && a.substitute().uuid().equals(dto.substituteUuid()) && a.substituteContextId() == dto.contextId()).findAny().orElse(null);
+			if (match == null) {
+				return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+			}
+
+			boolean anyFailed = false;
+			List<String> matchOrgUnitUuids = match.constraintOrgUnits().stream().map(m -> m.uuid()).toList();
+
+			// add missing ou assignments
+			for (String uuid : dto.constraints()) {
+				if (!matchOrgUnitUuids.contains(uuid)) {
+					boolean status = sofdSubstituteService.addOrgUnitSubstitute(dto.contextId(), dto.substituteUuid(), uuid);
+					if (!status) {
+						anyFailed = true;
+					}
+				}
+			}
+
+			// delete ou assignments
+			for (SOFDSubstituteService.ConstraintOrgUnit ou : match.constraintOrgUnits()) {
+				if (!dto.constraints().contains(ou.uuid())) {
+					boolean status = sofdSubstituteService.deleteOrgUnitSubstitute(ou.assignmentId());
+					if (!status) {
+						anyFailed = true;
+					}
+				}
+			}
+
+			if (anyFailed) {
+				return new ResponseEntity<>("En eller flere stedfortræderetildelinger kunne ikke gemmes", HttpStatus.BAD_REQUEST);
+			}
+
+		} else {
+			if (dto.contextIsAssignableToOrgUnit()) {
+
+				// the current assignment is not an orgUnitAssignment, but it should be. Delete the old one and create new orgUnitAssignments
+				if (dto.constraints() == null || dto.constraints().isEmpty()) {
+					return new ResponseEntity<>("Der skal vælges minimum en enhed", HttpStatus.BAD_REQUEST);
+				}
+
+				boolean anyFailed = false;
+				boolean deleteStatus = sofdSubstituteService.delete(dto.id());
+				if (!deleteStatus) {
+					anyFailed = true;
+				}
+
+				for (String uuid : dto.constraints()) {
+					boolean status = sofdSubstituteService.addOrgUnitSubstitute(dto.contextId(), dto.substituteUuid(), uuid);
+					if (!status) {
+						anyFailed = true;
+					}
+				}
+
+				if (anyFailed) {
+					return new ResponseEntity<>("En eller flere stedfortræderetildelinger kunne ikke gemmes", HttpStatus.BAD_REQUEST);
+				}
+			} else {
+				boolean success = sofdSubstituteService.editSubstitute(dto.id(), dto.constraints());
+
+				if (!success) {
+					return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+				}
+			}
 		}
-		
+
 		return new ResponseEntity<>(HttpStatus.OK);
 	}
 }

@@ -25,8 +25,8 @@ public class SOFDSubstituteService {
 	
 	@Autowired
 	private ManagerConfiguration config;
-	
-	public record SubstituteContext(long id, String name, String identifier, boolean supportsConstraints, boolean canBeDeleted) {}
+
+	public record SubstituteContext(long id, String name, String identifier, boolean supportsConstraints, boolean canBeDeleted, boolean assignableToOrgunit) {}
 	public List<SubstituteContext> getSubstituteContexts() {
 		HttpEntity<String> request = new HttpEntity<>(getHeaders());
 		String url = config.getSofdBaseUrl();
@@ -52,8 +52,8 @@ public class SOFDSubstituteService {
 	}
 	
 	public record Substitute(String uuid, String name) {}
-	public record ConstraintOrgUnit(String uuid, String name) {}
-	public record SubstituteAssignment(long id, long substituteContextId, String substituteContextName, List<ConstraintOrgUnit> constraintOrgUnits, Substitute substitute) {}
+	public record ConstraintOrgUnit(String uuid, String name, long assignmentId) {}
+	public record SubstituteAssignment(long id, long substituteContextId, String substituteContextName, List<ConstraintOrgUnit> constraintOrgUnits, Substitute substitute, boolean orgUnitAssignment) {}
 	public List<SubstituteAssignment> getSubstituteAssignments() {
 		HttpEntity<String> request = new HttpEntity<>(getHeaders());
 		String url = config.getSofdBaseUrl();
@@ -148,17 +148,50 @@ public class SOFDSubstituteService {
 	public boolean addSubstitute(long substituteContextId, String substitutePersonUuid, List<String> constraintOrgUnitUuids) {
 		String url = config.getSofdBaseUrl();
 		String query = "/api/substitutes/assignments/create";
-		
+
 		String userUuid = SecurityUtil.getUserUuid();
 		AddSubstituteDTO dto = new AddSubstituteDTO(substituteContextId, userUuid, substitutePersonUuid, constraintOrgUnitUuids);
 		HttpEntity<AddSubstituteDTO> request = new HttpEntity<>(dto, getHeaders());
-		
+
 		ResponseEntity<String> response = restTemplate.exchange(url + query, HttpMethod.POST, request, String.class);
 		if (response.getStatusCode().equals(HttpStatus.OK)) {
 			return true;
 		}
-		
+
 		log.warn("Failed to create substitute assignment");
+		return false;
+	}
+
+
+	record AddOrgUnitSubstituteDTO(long substituteContextId, String substitutePersonUuid, String orgUnitUuid) {}
+	public boolean addOrgUnitSubstitute(long context, String substitute, String orgUnitUuid) {
+		String url = config.getSofdBaseUrl();
+		String query = "/api/substitutes/orgunit/assignments/create";
+
+		AddOrgUnitSubstituteDTO dto = new AddOrgUnitSubstituteDTO(context, substitute, orgUnitUuid);
+		HttpEntity<AddOrgUnitSubstituteDTO> request = new HttpEntity<>(dto, getHeaders());
+
+		ResponseEntity<String> response = restTemplate.exchange(url + query, HttpMethod.POST, request, String.class);
+		if (response.getStatusCode().equals(HttpStatus.OK)) {
+			return true;
+		}
+
+		log.warn("Failed to create substitute orgunit assignment");
+		return false;
+	}
+
+	public boolean deleteOrgUnitSubstitute(long id) {
+		HttpEntity<String> request = new HttpEntity<>(getHeaders());
+		String url = config.getSofdBaseUrl();
+
+		String query = "/api/substitutes/orgunit/" + id + "/delete";
+
+		ResponseEntity<String> response = restTemplate.exchange(url + query, HttpMethod.POST, request, String.class);
+		if (response.getStatusCode().equals(HttpStatus.OK)) {
+			return true;
+		}
+
+		log.warn("Failed to delete substitute assignment with id " + id);
 		return false;
 	}
 	

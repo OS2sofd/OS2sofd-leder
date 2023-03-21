@@ -44,7 +44,7 @@
 												<a href="#" onclick="substituteService.removeSubstituteAssignment(this);" th:attr="data-assignmentid=${assignment.id}">
 													<em style="color: black;" class="fa fa-fw fa-times"></em>
 												</a> &nbsp;
-												<em onclick="substituteService.openEditModal(this);"  th:attr="data-id=${assignment.id}, data-substitutename=${assignment.substitute.name}, data-contextid=${assignment.substituteContextId}, data-ous=${assignment.constraintOrgUnitsUuids}" style="color: black;" class="fa fa-fw fa-pencil"></em>
+												<em onclick="substituteService.openEditModal(this);"  th:attr="data-id=${assignment.id}, data-substitutename=${assignment.substitute.name}, data-substituteuuid=${assignment.substitute.uuid}, data-contextid=${assignment.substituteContextId}, data-ous=${assignment.constraintOrgUnitsUuids}, data-orgunitassignment=${assignment.isOrgUnitAssignment}" style="color: black;" class="fa fa-fw fa-pencil"></em>
 											</td>
 										</tr>
 					                </tbody>
@@ -70,7 +70,7 @@
 						<label class="col-sm-2 control-label">Kontekst</label>
 						<div class="col-sm-8">
 							<select class="form-control" id="addSubstituteSelectedContext" onchange="substituteService.handleSubstituteContextChange();">
-								<option th:each="subContext : ${substituteContexts}" th:value="${subContext.id}" th:attr="data-supportsconstraints=${subContext.supportsConstraints}">
+								<option th:each="subContext : ${substituteContexts}" th:value="${subContext.id}" th:attr="data-supportsconstraints=${subContext.supportsConstraints}, data-assignabletoorgunit=${subContext.assignableToOrgunit}">
 									<span th:if="${subContext.identifier} == 'SOFD'" th:text="${@managerConfiguration.html.sofdSubstituteContextName}"></span>
 									<span th:unless="${subContext.identifier} == 'SOFD'" th:text="${subContext.name}"></span>
 								</option>
@@ -90,7 +90,7 @@
 					</div>
 					<div class="form-group row">
 						<label class="col-sm-2 control-label">Afdelinger
-							<i style="width: 10px;" class="fa fa-question" data-toggle="tooltip" data-placement="right" title="Her kan du afgrænse stedfortræderen til udvalgte afdelinger. Hvis ingen afdeling er valgt, fungerer stedfortræderen på alle afdelinger."></i>
+							<i id="createModalOuTooltip" style="width: 10px;" class="fa fa-question" data-toggle="tooltip" data-placement="right" title="Her kan du afgrænse stedfortræderen til udvalgte afdelinger. Hvis ingen afdeling er valgt, fungerer stedfortræderen på alle afdelinger."></i>
 						</label>
 						<div class="col-sm-8">
 							<input id="chbxSubstituteContextConstraints" type="checkbox" class="i-checks">
@@ -135,11 +135,15 @@
 	
 				<div class="modal-body">
 					<input id="assignmentId" hidden>
+					<input id="orgUnitAssignment" hidden>
+					<input id="substituteUuid" hidden>
+					<input id="contextId" hidden>
+					<input id="contextIsAssignableToOrgUnit" hidden>
 					<div class="form-group row">
 						<label class="col-sm-2 control-label">Kontekst</label>
 						<div class="col-sm-8">
 							<select class="form-control" id="editSubstituteSelectedContext" disabled="disabled">
-								<option th:each="subContext : ${substituteContexts}" th:value="${subContext.id}" th:attr="data-supportsconstraints=${subContext.supportsConstraints}" th:text="${subContext.name}"></option>
+								<option th:each="subContext : ${substituteContexts}" th:value="${subContext.id}" th:attr="data-supportsconstraints=${subContext.supportsConstraints}, data-assignabletoorgunit=${subContext.assignableToOrgunit}" th:text="${subContext.name}"></option>
 							</select>
 						</div>
 					</div>
@@ -151,7 +155,7 @@
 					</div>
 					<div class="form-group row">
 						<label class="col-sm-2 control-label">Afdelinger
-							<i style="width: 10px;" class="fa fa-question" data-toggle="tooltip" data-placement="right" title="Her kan du afgrænse stedfortræderen til udvalgte afdelinger. Hvis ingen afdeling er valgt, fungerer stedfortræderen på alle afdelinger."></i>
+							<i id="editModalOuTooltip" style="width: 10px;" class="fa fa-question" data-toggle="tooltip" data-placement="right" title="Her kan du afgrænse stedfortræderen til udvalgte afdelinger. Hvis ingen afdeling er valgt, fungerer stedfortræderen på alle afdelinger."></i>
 						</label>
 						<div class="col-sm-8">
 							<input id="chbxSubstituteContextConstraintsEdit" type="checkbox" class="i-checks">
@@ -260,14 +264,26 @@
 				
 				this.handleSubstituteContextChange = function() {
 					var supportsConstraints = $("#addSubstituteSelectedContext").find(':selected').data("supportsconstraints");
+					var assignableToOrgUnits = $("#addSubstituteSelectedContext").find(':selected').data("assignabletoorgunit");
 					$('.constraintOrgUnits').iCheck('uncheck');
-					$('#chbxSubstituteContextConstraints').iCheck('uncheck');
-					if (!supportsConstraints) {
+
+					if (assignableToOrgUnits) {
+						$('#chbxSubstituteContextConstraints').iCheck('check');
 						$('#chbxSubstituteContextConstraints').iCheck('disable');
+						$("#createModalOuTooltip").attr("data-original-title", 'Da der er valgt en kontekst, der skal tilknyttes en afdeling, skal der vælges minimum en afdeling');
+						$('[data-toggle="tooltip"]').tooltip();
+						$("#subConstraintOrgUnitsTable").show();
 					} else {
-						$('#chbxSubstituteContextConstraints').iCheck('enable');
+						$('#chbxSubstituteContextConstraints').iCheck('uncheck');
+						if (!supportsConstraints) {
+							$('#chbxSubstituteContextConstraints').iCheck('disable');
+						} else {
+							$('#chbxSubstituteContextConstraints').iCheck('enable');
+						}
+						$("#createModalOuTooltip").attr("data-original-title", 'Her kan du afgrænse stedfortræderen til udvalgte afdelinger. Hvis ingen afdeling er valgt, fungerer stedfortræderen på alle afdelinger.');
+						$('[data-toggle="tooltip"]').tooltip();
+						$("#subConstraintOrgUnitsTable").hide();
 					}
-					$("#subConstraintOrgUnitsTable").hide();
 				}
 
 				this.removeSubstituteAssignment = function(elem) {
@@ -315,9 +331,13 @@
 					var substituteName = $(elem).data('substitutename');
 					var ousString = $(elem).data('ous');
 					var id = $(elem).data('id');
+					var orgUnitAssignment =  $(elem).data('orgunitassignment');
+					var substituteUuid = $(elem).data('substituteuuid');
 					
 					$("#assignmentId").val(id);
-					$('#editSubstituteSelectedContext option[value="' + contextId + '"]').attr("selected", "selected");
+					$("#orgUnitAssignment").val(orgUnitAssignment);
+					$("#substituteUuid").val(substituteUuid);
+					$('#editSubstituteSelectedContext').val(contextId);
 					$("#editSubstituteAutocompletePerson").val(substituteName);
 					$('.constraintOrgUnitsEdit').iCheck('uncheck');
 					if (ousString.length > 0 && ousString != "[]") {
@@ -339,14 +359,28 @@
 					}
 					
 					var supportsConstraints = $("#editSubstituteSelectedContext").find(':selected').data("supportsconstraints");
-					if (!supportsConstraints) {
-						$("#saveEdit").prop("disabled", true);
+					var assignableToOrgUnits = $("#editSubstituteSelectedContext").find(':selected').data("assignabletoorgunit");
+					if (assignableToOrgUnits) {
+						$('#chbxSubstituteContextConstraintsEdit').iCheck('check');
 						$('#chbxSubstituteContextConstraintsEdit').iCheck('disable');
+						$("#editSubConstraintOrgUnitsTable").show();
+						$("#editModalOuTooltip").attr("data-original-title", 'Da der er valgt en kontekst, der skal tilknyttes en afdeling, skal der vælges minimum en afdeling');
+						$('[data-toggle="tooltip"]').tooltip();
 					} else {
-						$("#saveEdit").prop("disabled", false);
-						$('#chbxSubstituteContextConstraintsEdit').iCheck('enable');
+						if (!supportsConstraints) {
+							$("#saveEdit").prop("disabled", true);
+							$('#chbxSubstituteContextConstraintsEdit').iCheck('disable');
+						} else {
+							$("#saveEdit").prop("disabled", false);
+							$('#chbxSubstituteContextConstraintsEdit').iCheck('enable');
+						}
+						$("#editModalOuTooltip").attr("data-original-title", 'Her kan du afgrænse stedfortræderen til udvalgte afdelinger. Hvis ingen afdeling er valgt, fungerer stedfortræderen på alle afdelinger.');
+						$('[data-toggle="tooltip"]').tooltip();
 					}
-					
+
+					$("#contextId").val(contextId);
+					$("#contextIsAssignableToOrgUnit").val(assignableToOrgUnits);
+
 					$('#modal-edit-substitute').modal('show'); 
 				}
 				
@@ -373,7 +407,11 @@
 							'X-CSRF-TOKEN': token
 						},
 						error: function(jqXHR, textStatus, errorThrown) {
-							toastr.error("Der opstod en fejl. Prøv igen.")
+							if (jqXHR.responseText != null && jqXHR.responseText != "" ) {
+								toastr.error(jqXHR.responseText);
+							} else {
+								toastr.error("Der opstod en fejl. Prøv igen.");
+							}
 						},
 						success: function(response) {
 							location.reload(true);
@@ -384,10 +422,14 @@
 				this.editSubstituteAssignment = function() {
 					payload = {
 						id: $("#assignmentId").val(),
+						orgUnitAssignment: $("#orgUnitAssignment").val(),
+						substituteUuid: $("#substituteUuid").val(),
+						contextId: $("#contextId").val(),
+						contextIsAssignableToOrgUnit: $("#contextIsAssignableToOrgUnit").val(),
 						constraints : null
 					};
 					
-					payload.constraint = $("#editSubConstraintOrgUnitsTable input[type=checkbox]:checked").map(function() {
+					payload.constraints = $("#editSubConstraintOrgUnitsTable input[type=checkbox]:checked").map(function() {
 						return this.dataset.uuid;
 					}).get();
 
@@ -400,7 +442,11 @@
 							'X-CSRF-TOKEN': token
 						},
 						error: function(jqXHR, textStatus, errorThrown) {
-							toastr.error("Der opstod en fejl. Prøv igen.")
+							if (jqXHR.responseText != null && jqXHR.responseText != "" ) {
+								toastr.error(jqXHR.responseText);
+							} else {
+								toastr.error("Der opstod en fejl. Prøv igen.");
+							}
 						},
 						success: function(response) {
 							location.reload(true);

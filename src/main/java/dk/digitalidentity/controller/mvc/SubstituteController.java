@@ -25,7 +25,7 @@ public class SubstituteController {
 	@Autowired
 	private ManagerConfiguration config;
 
-	public record SubstituteAssignmentDTO(long id, long substituteContextId, String substituteContextName, List<ConstraintOrgUnit> constraintOrgUnits, Substitute substitute, List<String> constraintOrgUnitsUuids) {}
+	public record SubstituteAssignmentDTO(long id, long substituteContextId, String substituteContextName, List<ConstraintOrgUnit> constraintOrgUnits, Substitute substitute, List<String> constraintOrgUnitsUuids, boolean isOrgUnitAssignment) {}
 	@GetMapping("/substitutes")
 	public String listSubstitutes(Model model) {
 		if (!config.getModules().getSubstituteModule().isEnabled()) {
@@ -34,7 +34,7 @@ public class SubstituteController {
 		
 		List<SubstituteContext> substituteContexts = sofdSubstituteService.getSubstituteContexts();
 		List<ConstraintOrgUnit> managedOrgUnits = sofdSubstituteService.getManagedOrgUnits();
-		List<SubstituteAssignmentDTO> substituteAssignments = sofdSubstituteService.getSubstituteAssignments().stream().map(s -> new SubstituteAssignmentDTO(s.id(), s.substituteContextId(), s.substituteContextName(), s.constraintOrgUnits(), s.substitute(), s.constraintOrgUnits().stream().map(o -> o.uuid()).collect(Collectors.toList()))).collect(Collectors.toList());
+		List<SubstituteAssignmentDTO> substituteAssignments = sofdSubstituteService.getSubstituteAssignments().stream().map(s -> new SubstituteAssignmentDTO(s.id(), s.substituteContextId(), s.substituteContextName(), s.constraintOrgUnits(), s.substitute(), s.constraintOrgUnits().stream().map(o -> o.uuid()).collect(Collectors.toList()), s.orgUnitAssignment())).collect(Collectors.toList());
 		
 		if (substituteAssignments == null || managedOrgUnits == null || substituteContexts == null) {
 			return "error";
