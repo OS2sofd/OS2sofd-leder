@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html>
+<head th:replace="fragments/header :: header(datatables = true, datepicker = true)" />
+<body class="top-navigation">
+	<div id="wrapper">
+	    <nav th:replace="fragments/navbar :: navbar-aside(page='affiliations')" />
+	    <div id="page-wrapper" class="gray-bg">
+	    	<nav th:replace="fragments/navbar :: navbar-header" />
+
+	        <div class="wrapper wrapper-content">
+	            <div class="row">
+	                <div class="col-lg-12">
+                        <div class="ibox">
+                            <div class="ibox-title">
+                                <h5><em class="fa fa-handshake-o"></em> &nbsp; Tilhørsforhold</h5>
+                            </div>
+                            <div class="ibox-content" >
+								<br/>
+	                        	<table id="affiliations" class="table table-hover col-lg-12">
+			                		<thead>
+										<tr>
+											<th class="col-lg-4">Navn</th>
+											<th class="col-lg-3">Stilling</th>
+											<th class="col-lg-3">Enhed</th>
+											<th class="col-lg-1">Status</th>
+											<th class="col-lg-1">Handlinger</th>
+										</tr>
+									</thead>
+					                <tbody>
+						                <tr th:each="affiliation: ${affiliations}">
+						                	<td th:text="${affiliation.personName}"/>
+						                	<td th:text="${affiliation.positionName}"/>
+											<td th:text="${affiliation.orgUnitName}"/>
+											<td>
+												<span th:unless="${affiliation.active}" class="badge badge-warning">Inaktiv</span>
+												<span th:if="${affiliation.active}" class="badge badge-primary">Aktiv</span>
+											</td>
+											<td>
+												<em onclick="affiliationService.openEditModal(this);" style="color: black;" th:attr="data-id=${affiliation.id}, data-position=${affiliation.positionName}, data-positiondisplayname=${affiliation.positionDisplayName}, data-start=${affiliation.startDate}, data-stop=${affiliation.stopDate}, data-internalreference=${affiliation.internalReference}" class="fa fa-fw fa-pencil"></em>
+											</td>
+										</tr>
+					                </tbody>
+			                	</table>
+	                        </div>
+	                    </div>
+	                </div>
+	            </div>
+	        </div>
+	    </div>
+	</div>
+	
+	<!-- edit affiliation modal -->
+	<div class="modal fade" id="modal-edit-affiliation" role="dialog">
+		<div class="form-horizontal modal-dialog modal-lg">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4>Rediger tilhørsforhold</h4>
+				</div>
+	
+				<div class="modal-body">
+					<input id="id" hidden>
+					<div class="form-group row">
+						<label class="col-sm-2 control-label">Stilling *</label>
+						<div class="col-sm-8">
+							<input type="text" class="form-control cleanable" id="position"/>
+						</div>
+					</div>
+					<div class="form-group row">
+						<label class="col-sm-2 control-label">Alternativ stillingsbetegnelse</label>
+						<div class="col-sm-8">
+							<input type="text" class="form-control cleanable" id="positionDisplayName"/>
+						</div>
+					</div>
+					<div class="form-group row">
+						<label class="col-sm-2 control-label">Startdato</label>
+						<div class="col-sm-8">
+							<input type="text" class="form-control date cleanable" id="startDate" disabled="disabled"/>
+						</div>
+					</div>
+					<div class="form-group row">
+						<label class="col-sm-2 control-label">Slutdato</label>
+						<div class="col-sm-8">
+							<input type="text" class="form-control date cleanable" id="stopDate"/>
+						</div>
+					</div>
+					<div class="form-group row">
+						<label class="col-sm-2 control-label">Intern reference</label>
+						<div class="col-sm-8">
+							<input type="text" class="form-control cleanable" id="internalReference"/>
+						</div>
+					</div>
+					<div class="form-group row">
+						<label class="col-sm-2 control-label">Begrundelse for ændring *</label>
+						<div class="col-sm-8">
+							<textarea rows="4" class="form-control cleanable" id="reason"></textarea>
+						</div>
+					</div>
+				</div>
+	
+				<div class="modal-footer">
+					<button id="saveEdit" type="button" class="btn btn-primary" onclick="affiliationService.editAffiliation()">Gem</button>
+					<button type="button" class="btn btn-danger" data-dismiss="modal">Annuller</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<div th:replace="fragments/footer :: scripts(datatables = true, datepicker = true)"></div>
+	<script th:inline="javascript">
+		/*<![CDATA[*/
+		
+			/*[+
+				var affiliationRestUrl = [[@{/rest/affiliations}]];
+			+]*/
+			
+			var token = $("meta[name='_csrf']").attr("content");
+			var affiliationService;
+			$(document).ready(function () {
+				affiliationService = new AffiliationService();
+				affiliationService.init();
+			});
+			
+			function AffiliationService() {
+				
+				this.init = function() {
+					$('.date').datepicker({
+						forceParse: false,
+						autoclose: true,
+						weekStart: 1,
+						format: "dd/mm/yyyy",
+						orientation: "bottom",
+						enableOnReadonly: false,
+						language: "da"
+					});
+
+					var table = $('#affiliations').DataTable({
+						"pageLength" : 50,
+						"bLengthChange": false,
+						"responsive" : true,
+						"autoWidth": false,
+						"columnDefs": [
+							{ "orderable": false, "searchable": false, "targets": 4 }
+						  ],
+						"order": [ 0, 'asc' ],
+						"language" : {
+							"search" : "Søg",
+							"lengthMenu" : "_MENU_ tilhørsforhold per side",
+							"info" : "Viser _START_ til _END_ af _TOTAL_ tilhørsforhold",
+							"zeroRecords" : "Ingen data...",
+							"infoEmpty" : "",
+							"infoFiltered" : "(ud af _MAX_ tilhørsforhold)",
+							"paginate" : {
+								"previous" : "Forrige",
+								"next" : "Næste"
+							}
+						}
+					});
+				}
+				
+				this.openEditModal = function(elem) {
+					$(".cleanable").val("");
+
+					var id = $(elem).data('id');
+					var position = $(elem).data('position');
+					var positionDisplayName = $(elem).data('positiondisplayname');
+					var startDate = $(elem).data('start');
+					var stopDate = $(elem).data('stop');
+					var internalReference = $(elem).data('internalreference');
+
+					$("#id").val(id);
+					$("#position").val(position);
+					$("#positionDisplayName").val(positionDisplayName);
+					$("#internalReference").val(internalReference);
+
+					$("#startDate").datepicker("update", new Date(startDate));
+					$("#stopDate").datepicker("update", new Date(stopDate));
+
+					$('#modal-edit-affiliation').modal('show');
+				}
+				
+				this.editAffiliation = function() {
+					var position = $("#position").val();
+					var reason = $("#reason").val();
+					if (position == null || position === "" || reason == null || reason === "") {
+						toastr.error("Stillingsbetegnelse og begrundelse skal være udfyldt");
+						return;
+					}
+					payload = {
+						id: $("#id").val(),
+						position: position,
+						positionDisplayName: $("#positionDisplayName").val(),
+						startDate: $("#startDate").val(),
+						stopDate: $("#stopDate").val(),
+						internalReference : $("#internalReference").val(),
+						reason : reason
+					};
+
+					$.ajax({
+						contentType: 'application/json',
+						url: affiliationRestUrl + "/edit",
+						method : "POST",
+						data: JSON.stringify(payload),
+						headers: {
+							'X-CSRF-TOKEN': token
+						},
+						error: function(jqXHR, textStatus, errorThrown) {
+							if (jqXHR.responseText != null && jqXHR.responseText != "" ) {
+								toastr.error(jqXHR.responseText);
+							} else {
+								toastr.error("Der opstod en fejl. Prøv igen.");
+							}
+						},
+						success: function(response) {
+							location.reload(true);
+						}
+					});
+				}
+			}
+		/*]]>*/
+	</script>
+</body>
+</html>

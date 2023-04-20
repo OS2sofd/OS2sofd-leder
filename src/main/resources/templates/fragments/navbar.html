@@ -77,6 +77,9 @@
 	                <li th:classappend="${page == 'substitutes'} ? 'active' : ''">
 	                    <a sec:authorize="hasRole('ROLE_MANAGER')" href="/substitutes"><div><span class="nav-label"><em class="fa fa-users"></em> &nbsp; Stedfortrædere</span></div></a>
 	                </li>
+					<li th:classappend="${page == 'affiliations'} ? 'active' : ''">
+						<a sec:authorize="hasRole('ROLE_MANAGER') or hasRole('ROLE_SUBSTITUTE')" href="/affiliations"><div><span class="nav-label"><em class="fa fa-handshake-o"></em> &nbsp; Tilhørsforhold</span></div></a>
+					</li>
                 </th:block>
                 <li>
                 	<a sec:authorize="!isAuthenticated()" href="/saml/login"><span class="nav-label"><em class="fa fa-sign-in"></em> &nbsp; Login</span></a>

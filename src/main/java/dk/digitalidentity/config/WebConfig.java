@@ -1,5 +1,6 @@
 package dk.digitalidentity.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.CacheControl;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
@@ -9,6 +10,9 @@ import java.util.concurrent.TimeUnit;
 
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
+
+    @Autowired
+    private ManagerConfiguration config;
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
@@ -20,13 +24,12 @@ public class WebConfig implements WebMvcConfigurer {
                 .addResourceLocations("classpath:/static/css/")
                 .setCacheControl(CacheControl.maxAge(1, TimeUnit.DAYS));
 
-        registry.addResourceHandler("/custom/**")
-                .addResourceLocations("classpath:/static/custom/")
-                .setCacheControl(CacheControl.maxAge(1, TimeUnit.DAYS));
-
         registry.addResourceHandler("/js/**")
                 .addResourceLocations("classpath:/static/js/")
                 .setCacheControl(CacheControl.maxAge(1, TimeUnit.DAYS));
 
+        registry.addResourceHandler("/custom/**")
+                .addResourceLocations(config.getCustomResourcePath())
+                .setCacheControl(CacheControl.maxAge(1, TimeUnit.DAYS));
     }
 }

@@ -8,4 +8,5 @@ import lombok.Setter;
 public class Modules {
 	private SubstituteModule substituteModule;
 	private FunctionHierarchy functionHierarchy;
+	private AffiliationModule affiliationModule;
 }
