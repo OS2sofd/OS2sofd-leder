@@ -4,6 +4,7 @@ import dk.digitalidentity.config.ManagerConfiguration;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import javax.mail.Message;
 import javax.mail.Session;
@@ -11,9 +12,6 @@ import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 import java.util.Properties;
 
 @Slf4j
@@ -23,7 +21,7 @@ public class EmailService {
 	@Autowired
 	private ManagerConfiguration configuration;
 
-	public boolean sendMessage(String email, String subject, String message) {
+	public boolean sendMessage(String email, String subject, String message, String replyTo) {
 		if (!isConfigured()) {
 			log.warn("email server is not configured - not sending email to " + email);
 			return false;
@@ -42,6 +40,14 @@ public class EmailService {
 			Session session = Session.getDefaultInstance(props);
 
 			MimeMessage msg = new MimeMessage(session);
+
+			if (StringUtils.hasLength(replyTo)) {
+				msg.setReplyTo(new javax.mail.Address[]
+								{
+									new javax.mail.internet.InternetAddress(replyTo)
+								});
+			}
+
 			msg.setFrom(new InternetAddress(configuration.getEmail().getFrom(),
 					configuration.getEmail().getFromName()));
 			msg.setRecipient(Message.RecipientType.TO, new InternetAddress(email));

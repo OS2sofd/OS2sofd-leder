@@ -84,23 +84,34 @@ public class AffiliationRestController {
 		builder.append("<p>Ændringer:<p/>");
 		builder.append("<ul>");
 
-		if (!Objects.equals(match.positionName(), dto.position())) {
-			builder.append("<li>Stillingsbetegnelse er ændret fra ").append(match.positionName()).append(" til ").append(dto.position()).append("</li>");
+		String matchPositionName = match.positionName() != null && match.positionName().trim().equals("") ? null : match.positionName();
+		String dtoPositionName = dto.position() != null && dto.position().trim().equals("") ? null : dto.position();
+		if (!Objects.equals(matchPositionName, dtoPositionName)) {
+			builder.append("<li>Stillingsbetegnelse er ændret fra ").append(matchPositionName == null ? "ikke angivet" : matchPositionName).append(" til ").append(dtoPositionName == null ? "ikke angivet" : dtoPositionName).append("</li>");
 		}
-		if (!Objects.equals(match.positionDisplayName(), dto.positionDisplayName())) {
-			builder.append("<li>Alternativ stillingsbetegnelse er ændret fra ").append(match.positionDisplayName()).append(" til ").append(dto.positionDisplayName()).append("</li>");
+
+		String matchPositionDisplayName = match.positionDisplayName() != null && match.positionDisplayName().trim().equals("") ? null : match.positionDisplayName();
+		String dtoPositionDisplayName = dto.positionDisplayName() != null && dto.positionDisplayName().trim().equals("") ? null : dto.positionDisplayName();
+		if (!Objects.equals(matchPositionDisplayName, dtoPositionDisplayName)) {
+			builder.append("<li>Alternativ stillingsbetegnelse er ændret fra ").append(matchPositionDisplayName == null ? "ikke angivet" : matchPositionDisplayName).append(" til ").append(dtoPositionDisplayName == null ? "ikke angivet" : dtoPositionDisplayName).append("</li>");
 		}
+
 		if (!Objects.equals(match.stopDate(), dto.stopDate())) {
-			builder.append("<li>Stopdato er ændret fra ").append(match.stopDate()).append(" til ").append(dto.stopDate()).append("</li>");
+			builder.append("<li>Stopdato er ændret fra ").append(match.stopDate() == null ? "ikke angivet" : match.stopDate()).append(" til ").append(dto.stopDate() == null ? "ikke angivet" : dto.stopDate()).append("</li>");
 		}
-		if (!Objects.equals(match.internalReference(), dto.internalReference())) {
-			builder.append("<li>Intern reference er ændret fra ").append(match.internalReference()).append(" til ").append(dto.internalReference()).append("</li>");
+
+		String matchInternalReference = match.internalReference() != null && match.internalReference().trim().equals("") ? null : match.internalReference();
+		String dtoInternalReference = dto.internalReference() != null && dto.internalReference().trim().equals("") ? null : dto.internalReference();
+		if (!Objects.equals(matchInternalReference, dtoInternalReference)) {
+			builder.append("<li>Intern reference er ændret fra ").append(matchInternalReference == null ? "ikke angivet" : matchInternalReference).append(" til ").append(dtoInternalReference == null ? "ikke angivet" : dtoInternalReference).append("</li>");
 		}
 
 		builder.append("</ul>");
+		builder.append("<br/>");
+		builder.append("<p>Dette er dokumentation samt revisionsspor. Forlængelsen er gennemført i SOFD Core og sagen kan lukkes med det samme i It-service og support</p>");
 
 		try {
-			emailService.sendMessage(configuration.getModules().getAffiliationModule().getReceiptEmail(), "Opdatering af tilhørsforhold", builder.toString());
+			emailService.sendMessage(configuration.getModules().getAffiliationModule().getReceiptEmail(), "Opdatering af tilhørsforhold", builder.toString(), loginContexts.email());
 		}
 		catch (Exception ex) {
 			log.error("Failed send mail after affiliation was updated. Affiliation id: " + dto.id(), ex);

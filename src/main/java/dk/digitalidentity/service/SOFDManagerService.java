@@ -26,7 +26,7 @@ public class SOFDManagerService {
 	
 	public enum ContextRole { MANAGER, SUBSTITUTE, ADMIN;}
 	public record ContextDTO(String uuid, String name, ContextRole role, String ouUuids) {}
-	public record ContextResultDTO(String name, String username, List<ContextDTO> contexts) {}
+	public record ContextResultDTO(String name, String username, String email, List<ContextDTO> contexts) {}
 	public ContextResultDTO getLoginContexts() {
 		HttpEntity<String> request = new HttpEntity<>(getHeaders());
 		String url = config.getSofdBaseUrl();
