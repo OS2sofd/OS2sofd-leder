@@ -418,9 +418,10 @@
 							$("#stopDate_edit").datepicker("update", item.stopDate == null ? null : new Date(item.stopDate));
 							
 							$("#functionform_edit").html("");
-							
-							item.function.facets.forEach(function(facet) {
-								item.facetValues.forEach(function(value) {
+
+							// the order of the two lines bellow is important for sorting the fields!
+							item.facetValues.forEach(function(value) {
+								item.function.facets.forEach(function(facet) {
 									if (facet.id == value.facetId) {
 										if (facet.type == "FREETEXT") {
 											var html = '<div class=\"form-group row\">' +

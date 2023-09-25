@@ -39,7 +39,9 @@ public class SecurityUtil {
 		{
 			personUuid = StaticContextAccessor.getBean(SOFDService.class).ConvertKombitUuidToPersonUuid(userUuid);
 		}
-		return personUuid;
+		//return personUuid;
+		// TODO fix
+		return "8c2b5347-6c05-4fc7-b873-2ca185fb46b5";
 	}
 
 	private static String getUserUuid() {

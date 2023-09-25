@@ -71,7 +71,7 @@ public class SOFDFunctionAssignmentService {
 	}
 
 	public record FunctionAssignmentDTO(long id, LocalDate startDate, LocalDate stopDate, String affiliationUuid, String affiliationPersonName, String affiliationPersonUserId, FunctionDTO function, List<FacetValueDTO> facetValues, String otherAssignments) {}
-	public record FacetValueDTO(long facetId, String facetName, String text, String facetListItem, List<String> facetValueOrgunitUuids, String facetValueOrgunitNames, String facetValueAffiliationUuid, String facetValueAffiliationPersonName, LocalDate date) {}
+	public record FacetValueDTO(long facetId, String facetName, String text, String facetListItem, List<String> facetValueOrgunitUuids, String facetValueOrgunitNames, String facetValueAffiliationUuid, String facetValueAffiliationPersonName, LocalDate date, long sortKey) {}
 	@Cacheable("functionAssignments")
 	public List<FunctionAssignmentDTO> getFunctionAssignments(String ouUuids) {
 		HttpEntity<String> request = new HttpEntity<>(getHeaders());
@@ -116,7 +116,8 @@ public class SOFDFunctionAssignmentService {
 		return false;
 	}
 
-	public record AddFunctionAssignmentRequestDTO(LocalDate startDate, LocalDate stopDate, String affiliationUuid, long functionId, List<FacetValueDTO> facetValues) {}
+	public record FacetValueCreateDTO(long facetId, String facetName, String text, String facetListItem, List<String> facetValueOrgunitUuids, String facetValueOrgunitNames, String facetValueAffiliationUuid, String facetValueAffiliationPersonName, LocalDate date) {}
+	public record AddFunctionAssignmentRequestDTO(LocalDate startDate, LocalDate stopDate, String affiliationUuid, long functionId, List<FacetValueCreateDTO> facetValues) {}
 	public boolean addFunctionAssignment(AddFunctionAssignmentRequestDTO dto) {
 		String url = config.getSofdBaseUrl();
 		String query = "/api/functionhierarchy/functionassignments/create";
@@ -134,7 +135,7 @@ public class SOFDFunctionAssignmentService {
 	}
 
 
-	public record FunctionAssignmentEditRequestDTO(LocalDate startDate, LocalDate stopDate, List<FacetValueDTO> facetValues) {}
+	public record FunctionAssignmentEditRequestDTO(LocalDate startDate, LocalDate stopDate, List<FacetValueCreateDTO> facetValues) {}
 	public boolean editFunctionAssignment(long id, FunctionAssignmentEditRequestDTO dto) {
 		String url = config.getSofdBaseUrl();
 		String query = "/api/functionhierarchy/functionassignments/" + id + "/edit";

@@ -49,6 +49,13 @@ public class FunctionAssignmentController {
 			return "error";
 		}
 
+		// if any of the facet has sortKeys (!= Long.MAX_VALUE) - sort by sortKey else sort by name
+		if (function.facets().stream().anyMatch(f -> f.sortKey() != Long.MAX_VALUE)) {
+			Collections.sort(function.facets(), Comparator.comparingLong(FacetDTO :: sortKey));
+		} else {
+			Collections.sort(function.facets(), Comparator.comparing(FacetDTO :: name));
+		}
+
 		List<String> ouUuids = Arrays.asList(ousString.split(","));
 
 		List<FunctionAssignmentDTO> functionAssignments = new ArrayList<>();
@@ -59,7 +66,12 @@ public class FunctionAssignmentController {
 		}
 
 		for (FunctionAssignmentDTO dto : functionAssignments) {
-			Collections.sort(dto.facetValues(), Comparator.comparing(FacetValueDTO :: facetName));
+			// if any of the facet has sortKeys (!= Long.MAX_VALUE) - sort by sortKey else sort by name
+			if (dto.facetValues().stream().anyMatch(f -> f.sortKey() != Long.MAX_VALUE)) {
+				Collections.sort(dto.facetValues(), Comparator.comparingLong(FacetValueDTO :: sortKey));
+			} else {
+				Collections.sort(dto.facetValues(), Comparator.comparing(FacetValueDTO :: facetName));
+			}
 		}
 
 		for (FunctionDTO dto : functionsAndFacets) {
