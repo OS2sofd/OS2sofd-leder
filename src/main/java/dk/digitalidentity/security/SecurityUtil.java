@@ -6,6 +6,8 @@ import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
+import dk.digitalidentity.config.StaticContextAccessor;
+import dk.digitalidentity.service.SOFDService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
@@ -30,14 +32,24 @@ public class SecurityUtil {
 		return SecurityContextHolder.getContext().getAuthentication() != null;
 	}
 	
-	public static String getUserUuid() {
+	public static String getPersonUuid() {
+		var userUuid = getUserUuid();
+		String personUuid = null;
+		if( userUuid != null)
+		{
+			personUuid = StaticContextAccessor.getBean(SOFDService.class).ConvertKombitUuidToPersonUuid(userUuid);
+		}
+		return personUuid;
+	}
+
+	private static String getUserUuid() {
 		String uuid = null;
 
 		if (isLoggedIn()) {
 			String principal = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 			String[] split = principal.split(",");
 			uuid = split[split.length-1].replace("Serial=", "");
-			
+
 			if (uuid.length() != 36) {
 				log.warn("UUID for logged in user is invalid: " + uuid);
 			}
@@ -45,6 +57,7 @@ public class SecurityUtil {
 
 		return uuid;
 	}
+
 	
 	public static String getUser() {
 		String name = null;

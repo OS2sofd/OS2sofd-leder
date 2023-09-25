@@ -41,7 +41,7 @@ public class DefaultRestController {
 		ContextResultDTO contextResult = sofdManagerService.getLoginContexts();
 		if (SecurityUtil.hasRole(RoleConstants.ADMIN.toString())) {
 			try {
-				contextResult.contexts().add(new ContextDTO("ADMIN" + SecurityUtil.getUserUuid(), contextResult.name(), ContextRole.ADMIN, sofdFunctionAssignmentService.getParentOUUuid()));
+				contextResult.contexts().add(new ContextDTO("ADMIN" + SecurityUtil.getPersonUuid(), contextResult.name(), ContextRole.ADMIN, sofdFunctionAssignmentService.getParentOUUuid()));
 			} catch (Exception e) {
 				log.warn("Failed to get parent ou: " + e.getMessage());
 				return new ResponseEntity<>(HttpStatus.BAD_REQUEST);

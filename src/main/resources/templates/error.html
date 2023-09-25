@@ -14,11 +14,7 @@
                             <div class="ibox-title">
                                 <h5><em class="fa fa-user"></em> &nbsp; Fejl opstået</h5>
                             </div>
-		
-							<!-- TODO: få lavet noget ordentlig fejlhåndtering -->
-                            <div class="ibox-content" >
-	                        	Der er opstået en fejl, prøv igen.
-	                        </div>
+                            <div class="ibox-content" th:text="${#strings.isEmpty(error)} ? 'Ukendt fejl opstået' : ${error}"></div>
 	                    </div>
 	                </div>
 	            </div>

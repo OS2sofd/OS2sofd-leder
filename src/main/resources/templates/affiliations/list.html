@@ -20,8 +20,11 @@
 			                		<thead>
 										<tr>
 											<th class="col-lg-4">Navn</th>
-											<th class="col-lg-3">Stilling</th>
-											<th class="col-lg-3">Enhed</th>
+											<th class="col-lg-2">Stilling</th>
+											<th class="col-lg-2">Enhed</th>
+											<th class="col-lg-1">Startdato</th>
+											<th class="col-lg-1">Stopdato</th>
+											<th class="col-lg-1">It-bruger</th>
 											<th class="col-lg-1">Status</th>
 											<th class="col-lg-1">Handlinger</th>
 										</tr>
@@ -31,6 +34,9 @@
 						                	<td th:text="${affiliation.personName}"/>
 						                	<td th:text="${affiliation.positionName}"/>
 											<td th:text="${affiliation.orgUnitName}"/>
+											<td th:text="${#temporals.format(affiliation.startDate, 'dd/MM/yyyy')}"/>
+											<td th:text="${#temporals.format(affiliation.stopDate, 'dd/MM/yyyy')}"/>
+											<td th:text="${affiliation.adUserInfo}"/>
 											<td>
 												<span th:unless="${affiliation.active}" class="badge badge-warning">Inaktiv</span>
 												<span th:if="${affiliation.active}" class="badge badge-primary">Aktiv</span>
@@ -118,6 +124,15 @@
 			$(document).ready(function () {
 				affiliationService = new AffiliationService();
 				affiliationService.init();
+
+				// sorts dd/mm/yyyy dates
+				$.extend( jQuery.fn.dataTableExt.oSort, {
+					"date-dk-pre": function (x){
+						var date = moment(x, "DD/MM/YYYY");
+						return date.isValid() ? date.format("YYYY-MM-DD") : x;
+					}
+				});
+
 			});
 			
 			function AffiliationService() {
@@ -133,13 +148,16 @@
 						language: "da"
 					});
 
+					var lastColIndex = $("#affiliations").find("th").length - 1;
+
 					var table = $('#affiliations').DataTable({
 						"pageLength" : 50,
 						"bLengthChange": false,
 						"responsive" : true,
 						"autoWidth": false,
 						"columnDefs": [
-							{ "orderable": false, "searchable": false, "targets": 4 }
+							{ "orderable": false, "searchable": false, "targets": lastColIndex },
+							{ "type": "date-dk", targets: "_all" }
 						  ],
 						"order": [ 0, 'asc' ],
 						"language" : {

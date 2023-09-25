@@ -31,7 +31,7 @@ public class SOFDManagerService {
 		HttpEntity<String> request = new HttpEntity<>(getHeaders());
 		String url = config.getSofdBaseUrl();
 
-		String query = "/api/manager/"+ SecurityUtil.getUserUuid() + "/logincontexts";
+		String query = "/api/manager/"+ SecurityUtil.getPersonUuid() + "/logincontexts";
 		ContextResultDTO result = null;
 
 		ResponseEntity<ContextResultDTO> response = restTemplate.exchange(url + query, HttpMethod.GET, request, ContextResultDTO.class);

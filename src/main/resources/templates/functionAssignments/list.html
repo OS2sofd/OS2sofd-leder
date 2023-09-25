@@ -34,15 +34,19 @@
 									</thead>
 					                <tbody>
 						                <tr th:each="assignment: ${functionAssignments}">
-						                	<td th:text="${assignment.affiliationPersonUserId} == null ? ${assignment.affiliationPersonName} : (${assignment.affiliationPersonName} + ' (' + ${assignment.affiliationPersonUserId} + ')')"></td>
+						                	<td>
+												<span th:text="${assignment.affiliationPersonUserId} == null ? ${assignment.affiliationPersonName} : (${assignment.affiliationPersonName} + ' (' + ${assignment.affiliationPersonUserId} + ')')" />
+												<i th:if="${assignment.otherAssignments != null && assignment.otherAssignments != ''}" style="width: 10px;" class="fa fa-exclamation-circle" data-toggle="tooltip" data-placement="right" th:title="'Denne medarbejder har andre tildelinger: ' + ${assignment.otherAssignments}"></i>
+											</td>
 						                	<td th:text="${#temporals.format(assignment.startDate, 'dd/MM/yyyy')}"/>
 						                	<td th:text="${#temporals.format(assignment.stopDate, 'dd/MM/yyyy')}"/>
 											<td th:each="value : ${assignment.facetValues}">
-												<span th:if="${value.text != null && value.text != ''}" th:text="${value.text}"></span>
-												<span th:if="${value.facetListItem != null && value.facetListItem != ''}" th:text="${value.facetListItem}"></span>
-												<span th:if="${value.facetValueOrgunitNames != null && value.facetValueOrgunitNames != '' && value.facetValueOrgunitNames.length > 100}" th:text="${#strings.substring(value.facetValueOrgunitNames,0,100)} + '...'" th:title="${value.facetValueOrgunitNames}"></span>
-												<span th:if="${value.facetValueOrgunitNames != null && value.facetValueOrgunitNames != '' && value.facetValueOrgunitNames.length <= 100}" th:text="${value.facetValueOrgunitNames}"></span>
-												<span th:if="${value.facetValueAffiliationPersonName != null && value.facetValueAffiliationPersonName != ''}" th:text="${value.facetValueAffiliationPersonName}"></span>
+												<th:block th:if="${value.text != null && value.text != ''}" th:text="${value.text}"/>
+												<th:block th:if="${value.date != null && value.date != ''}" th:text="${#temporals.format(value.date, 'dd/MM/yyyy')}" />
+												<th:block th:if="${value.facetListItem != null && value.facetListItem != ''}" th:text="${value.facetListItem}"/>
+												<th:block th:if="${value.facetValueOrgunitNames != null && value.facetValueOrgunitNames != '' && value.facetValueOrgunitNames.length > 100}" th:text="${#strings.substring(value.facetValueOrgunitNames,0,100)} + '...'" th:title="${value.facetValueOrgunitNames}"/>
+												<th:block th:if="${value.facetValueOrgunitNames != null && value.facetValueOrgunitNames != '' && value.facetValueOrgunitNames.length <= 100}" th:text="${value.facetValueOrgunitNames}"/>
+												<th:block th:if="${value.facetValueAffiliationPersonName != null && value.facetValueAffiliationPersonName != ''}" th:text="${value.facetValueAffiliationPersonName}"/>
 											</td>
 											<td>
 												<a href="#" onclick="functionService.removeFunctionAssignment(this);" th:attr="data-assignmentid=${assignment.id}">
@@ -157,6 +161,17 @@
 									</div>
 								</div>
 							</th:block>
+							<th:block th:if="${facet.type == 'FOLLOW_UP_DATE'}">
+								<div class="form-group row">
+									<label class="col-lg-2 control-label" th:text="${facet.name}" style="word-break: break-word;"></label>
+									<i th:if="${facet.description != null && facet.description != ''}" style="width: 10px;" class="fa fa-question" data-toggle="tooltip" data-placement="right" th:title="${facet.description}"></i>
+									<span th:unless="${facet.description != null && facet.description != ''}" style="width: 10px;"></span>
+									<div class="col-lg-8">
+										<input th:id="'function' + ${function.id} + 'facet' + ${facet.id}" th:attr="data-type=${facet.type}, data-facetId=${facet.id}, data-functionid=${function.id}, data-pattern=${facet.pattern}, data-name=${facet.name}" class="form-control facetValue_add date cleanup">
+									</div>
+								</div>
+							</th:block>
+
 						</th:block>
 					</div>
 				</div>
@@ -248,28 +263,6 @@
 	</style>
 	
 	<div th:replace="fragments/footer :: scripts(datatables = true, checkbox = true, datepicker = true, jstree = true)"></div>
-	<!-- Taken from https://datatables.net/plug-ins/type-detection/date-uk
-	<script th:inline="javascript">
-		/**
-		 * Automatically detect British (`dd/mm/yyyy`) date types. Goes with the UK
-		 * date sorting plug-in.
-		 *
-		 *  @name Date (`dd/mm/yyyy`)
-		 *  @summary Detect data which is in the date format `dd/mm/yyyy`
-		 *  @author Andy McMaster
-		 */
-
-		jQuery.fn.dataTableExt.aTypes.unshift(
-			function ( sData )
-			{
-				if (sData !== null && sData.match(/^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[012])\/(19|20|21)\d\d$/))
-				{
-					return 'date-uk';
-				}
-				return null;
-			}
-		);
-	</script>-->
 	<script th:inline="javascript">
 		/*<![CDATA[*/
 		
@@ -279,6 +272,8 @@
 				var functionAssignments = [[${functionAssignments}]];
 				var functionId = [[${function.id}]];
 				var functionName = [[${function.name}]];
+				var startDateMandatory = [[${@managerConfiguration.getModules().getFunctionHierarchy().isStartDateMandatory()}]];
+				var stopDateMandatory = [[${@managerConfiguration.getModules().getFunctionHierarchy().isStopDateMandatory()}]];
 			+]*/
 			
 			var token = $("meta[name='_csrf']").attr("content");
@@ -293,16 +288,10 @@
 				ouService.init();
 
 				// sorts dd/mm/yyyy dates
-				// from https://datatables.net/forums/discussion/32647/how-to-use-the-plugin-date-uk-to-sort-dates-in-the-format-dd-mm-yyyy
 				$.extend( jQuery.fn.dataTableExt.oSort, {
-					"date-uk-pre": function (a){
-						return parseInt(moment(a, "DD/MM/YYYY").format("X"), 10);
-					},
-					"date-uk-asc": function (a, b) {
-						return a - b;
-					},
-					"date-uk-desc": function (a, b) {
-						return b - a;
+					"date-dk-pre": function (x){
+						var date = moment(x, "DD/MM/YYYY");
+						return date.isValid() ? date.format("YYYY-MM-DD") : x;
 					}
 				});
 			});
@@ -326,15 +315,19 @@
 					});
 					
 					var lastColIndex = $("#functionAssignments").find("th").length - 1;
-					
+
 					var table = $('#functionAssignments').DataTable({
 						"pageLength" : 50,
+						"dom": '<"html5buttons"B>lTfgitp',
+						"buttons": [
+							{ "extend": "excel", title: functionName}
+						],
 						"bLengthChange": false,
 						"responsive" : true,
 						"autoWidth": false,
 						"columnDefs": [
 							{ "orderable": false, "searchable": false, "targets": lastColIndex },
-							{ "type": "date-uk", targets: [1,2] }
+							{ "type": "date-dk", targets: "_all" }
 						  ],
 						"order": [ 0, 'asc' ],
 						"language" : {
@@ -421,8 +414,8 @@
 							$("#assignmentId_edit").val(id);
 							$("#functionId_edit").val(item.function.id);
 							$("#employee_edit").val(item.affiliationPersonName);
-							$("#startDate_edit").datepicker("update", new Date(item.startDate));
-							$("#stopDate_edit").datepicker("update", new Date(item.stopDate));
+							$("#startDate_edit").datepicker("update", item.startDate == null ? null : new Date(item.startDate));
+							$("#stopDate_edit").datepicker("update", item.stopDate == null ? null : new Date(item.stopDate));
 							
 							$("#functionform_edit").html("");
 							
@@ -515,9 +508,38 @@
 
 											$("#functionform_edit").append(html);
 										}
+										else if (facet.type == "FOLLOW_UP_DATE") {
+											var html = '<div class=\"form-group row\">' +
+															'<label class=\"col-lg-2 control-label\" style=\"word-break: break-word;\">' + facet.name + '</label>';
+
+											if (facet.description != null && facet.description != "") {
+												html = html + '<i class=\"fa fa-question\" style=\"width: 10px;\" data-toggle=\"tooltip\" data-placement=\"right\" title=\"' + facet.description + '\"></i>'
+											} else {
+												html = html + '<span style=\"width: 10px;\"></span>';
+											}
+
+											html = html + '<div class="col-lg-8">' +
+																'<input id=\"function' + item.function.id + 'facet' + facet.id + '_edit\" data-type=\"' + facet.type + '\" data-facetId=\"' + facet.id + '\" data-functionid=\"' + item.function.id + '\" data-pattern=\"' + facet.pattern + '\" data-name=\"' + facet.name + '\" class=\"form-control facetValue_edit date cleanup\" value=\"' + value.date + '\">' +
+															'</div>' +
+														'</div>'
+
+											$("#functionform_edit").append(html);
+										}
+
 									}
 								});
 							});
+							
+							$('.date').datepicker({
+								forceParse: false,
+								autoclose: true,
+								weekStart: 1,
+								format: "dd/mm/yyyy",
+								orientation: "bottom",
+								enableOnReadonly: false,
+								language: "da"
+							});
+							$("input.date.facetValue_edit").each(function(){$(this).datepicker("update", this.value == null ? null : new Date(this.value));});
 
 							ouService.initEditOUBtn();
 						}
@@ -533,15 +555,16 @@
 					var startDate = $("#startDate_add").val();
 					var stopDate = $("#stopDate_add").val();
 					var affiliationUuid = $("#realPersonField").val();
-					
-					if (startDate == null || startDate == "") {
+
+					if (startDateMandatory && (startDate == null || startDate == "")) {
 						toastr.error("Start dato skal have en værdi.")
 						return;
 					}
-					if (stopDate == null || stopDate == "") {
+					if (stopDateMandatory && (stopDate == null || stopDate == "")) {
 						toastr.error("Stop dato skal have en værdi.")
 						return;
 					}
+
 					if (affiliationUuid == null || affiliationUuid == "") {
 						toastr.error("Der skal vælges en medarbejder.")
 						return;
@@ -609,6 +632,13 @@
 									text : value
 								};
 								
+								payload.facetValues.push(obj);
+							} else if (type == "FOLLOW_UP_DATE") {
+								var value = $("#function" + functionId + "facet" + facetId).val();
+								var obj = {
+									facetId : facetId,
+									date : value
+								};
 								payload.facetValues.push(obj);
 							} else {
 								toastr.error("Ukendt funktionsfacettype.")
@@ -696,6 +726,13 @@
 									text : value
 								};
 								
+								payload.facetValues.push(obj);
+							} else if (type == "FOLLOW_UP_DATE") {
+								var value = $("#function" + functionId + "facet" + facetId + "_edit").val();
+								var obj = {
+									facetId : facetId,
+									date : value
+								};
 								payload.facetValues.push(obj);
 							} else {
 								toastr.error("Ukendt funktionsfacettype.")
@@ -936,6 +973,10 @@
 								"search_callback": function(str, node) {
 									return (node.text.toUpperCase().includes(str.toUpperCase()));
 								}
+							},
+							"checkbox" : {
+								"three_state": false,
+								"two_state" :true
 							},
 							"plugins" : ["search", "checkbox"]
 					}).on('loaded.jstree', function() {

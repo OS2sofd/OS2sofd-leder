@@ -45,7 +45,7 @@ public class SOFDFunctionAssignmentService {
 	private SOFDFunctionAssignmentService self;
 
 	public record FunctionDTO(long id, String name, String category, String description, List<FacetDTO> facets) {}
-	public record FacetDTO(long id, String name, String description, String type, String pattern, List<String> listItems) {}
+	public record FacetDTO(long id, String name, String description, String type, String pattern, Long sortKey, List<String> listItems) {}
 	@Cacheable("functions")
 	public List<FunctionDTO> getFunctionsAndFacets() {
 		HttpEntity<String> request = new HttpEntity<>(getHeaders());
@@ -70,8 +70,8 @@ public class SOFDFunctionAssignmentService {
 		return result;
 	}
 
-	public record FunctionAssignmentDTO(long id, LocalDate startDate, LocalDate stopDate, String affiliationUuid, String affiliationPersonName, String affiliationPersonUserId, FunctionDTO function, List<FacetValueDTO> facetValues) {}
-	public record FacetValueDTO(long facetId, String facetName, String text, String facetListItem, List<String> facetValueOrgunitUuids, String facetValueOrgunitNames, String facetValueAffiliationUuid, String facetValueAffiliationPersonName) {}
+	public record FunctionAssignmentDTO(long id, LocalDate startDate, LocalDate stopDate, String affiliationUuid, String affiliationPersonName, String affiliationPersonUserId, FunctionDTO function, List<FacetValueDTO> facetValues, String otherAssignments) {}
+	public record FacetValueDTO(long facetId, String facetName, String text, String facetListItem, List<String> facetValueOrgunitUuids, String facetValueOrgunitNames, String facetValueAffiliationUuid, String facetValueAffiliationPersonName, LocalDate date) {}
 	@Cacheable("functionAssignments")
 	public List<FunctionAssignmentDTO> getFunctionAssignments(String ouUuids) {
 		HttpEntity<String> request = new HttpEntity<>(getHeaders());
@@ -129,7 +129,7 @@ public class SOFDFunctionAssignmentService {
 			return true;
 		}
 
-		log.warn("Failed to create function assignment");
+		log.warn("Failed to create function assignment: StatusCode: " + response.getStatusCodeValue() + " Body: " + response.getBody() );
 		return false;
 	}
 
@@ -158,7 +158,7 @@ public class SOFDFunctionAssignmentService {
 		HttpEntity<String> request = new HttpEntity<>(getHeaders());
 		String url = config.getSofdBaseUrl();
 
-		String userUuid = SecurityUtil.getUserUuid();
+		String userUuid = SecurityUtil.getPersonUuid();
 		String query = "/api/functionhierarchy/search/all/?ous=" + ous;
 		AutoCompleteResult result = null;
 

@@ -51,11 +51,13 @@ public class FunctionAssignmentRestController {
 		return new ResponseEntity<>(result.suggestions().stream().filter(s -> s.value().toLowerCase().contains(query.toLowerCase())).collect(Collectors.toList()), HttpStatus.OK);
 	}
 
-	private record AddFunctionAssignmentDTO(@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy") LocalDate startDate, @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy") LocalDate stopDate, String affiliationUuid, long functionId, List<SOFDFunctionAssignmentService.FacetValueDTO> facetValues) {}
+	private record AddFunctionAssignmentDTO(@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy") LocalDate startDate, @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy") LocalDate stopDate, String affiliationUuid, long functionId, List<FacetValueDTO> facetValues) {}
+	public record FacetValueDTO(long facetId, String facetName, String text, String facetListItem, List<String> facetValueOrgunitUuids, String facetValueOrgunitNames, String facetValueAffiliationUuid, String facetValueAffiliationPersonName, @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy") LocalDate date) {}
 	@ResponseBody
 	@PostMapping(value = "/rest/functionassignment/add")
 	public HttpEntity<?> createSubstituteAssignment(@RequestBody AddFunctionAssignmentDTO dto) {
-		SOFDFunctionAssignmentService.AddFunctionAssignmentRequestDTO body = new SOFDFunctionAssignmentService.AddFunctionAssignmentRequestDTO(dto.startDate(), dto.stopDate(), dto.affiliationUuid(), dto.functionId(), dto.facetValues());
+		var facetValueList = dto.facetValues.stream().map(fv -> new SOFDFunctionAssignmentService.FacetValueDTO(fv.facetId,fv.facetName,fv.text,fv.facetListItem,fv.facetValueOrgunitUuids,fv.facetValueOrgunitNames,fv.facetValueAffiliationUuid,fv.facetValueAffiliationPersonName,fv.date)).toList();
+		SOFDFunctionAssignmentService.AddFunctionAssignmentRequestDTO body = new SOFDFunctionAssignmentService.AddFunctionAssignmentRequestDTO(dto.startDate(), dto.stopDate(), dto.affiliationUuid(), dto.functionId(), facetValueList);
 		boolean success = sofdFunctionAssignmentService.addFunctionAssignment(body);
 
 		if (!success) {
@@ -65,11 +67,12 @@ public class FunctionAssignmentRestController {
 		return new ResponseEntity<>(HttpStatus.OK);
 	}
 
-	private record FunctionAssignmentEditDTO(@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy") LocalDate startDate, @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy") LocalDate stopDate, List<SOFDFunctionAssignmentService.FacetValueDTO> facetValues) {}
+	private record FunctionAssignmentEditDTO(@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy") LocalDate startDate, @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy") LocalDate stopDate, List<FacetValueDTO> facetValues) {}
 	@ResponseBody
 	@PostMapping(value = "/rest/functionassignment/{id}/edit")
 	public HttpEntity<?> editSubstituteAssignment(@PathVariable long id, @RequestBody FunctionAssignmentEditDTO dto) {
-		SOFDFunctionAssignmentService.FunctionAssignmentEditRequestDTO body = new SOFDFunctionAssignmentService.FunctionAssignmentEditRequestDTO(dto.startDate(), dto.stopDate(), dto.facetValues());
+		var facetValueList = dto.facetValues.stream().map(fv -> new SOFDFunctionAssignmentService.FacetValueDTO(fv.facetId,fv.facetName,fv.text,fv.facetListItem,fv.facetValueOrgunitUuids,fv.facetValueOrgunitNames,fv.facetValueAffiliationUuid,fv.facetValueAffiliationPersonName,fv.date)).toList();
+		SOFDFunctionAssignmentService.FunctionAssignmentEditRequestDTO body = new SOFDFunctionAssignmentService.FunctionAssignmentEditRequestDTO(dto.startDate(), dto.stopDate(), facetValueList);
 		boolean success = sofdFunctionAssignmentService.editFunctionAssignment(id, body);
 
 		if (!success) {

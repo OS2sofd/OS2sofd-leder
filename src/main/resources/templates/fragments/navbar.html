@@ -64,6 +64,9 @@
                     <a href="/"><div><span class="nav-label"><em class="fa fa-home"></em> &nbsp; Velkommen</span></div></a>
                 </li>
                 <th:block sec:authorize="isAuthenticated()">
+					<li th:if="${@managerConfiguration.getModules().getFunctionHierarchy().isShowAllFunctionsEnabled()}" th:classappend="${page == 'allFunctionAssignments'} ? 'active' : ''">
+						<a href="/allFunctionassignments"><div><span class="nav-label"><em class="fa fa-list"></em> &nbsp; Alle medarbejderfunktioner</span></div></a>
+					</li>	
                 	<li th:each="category : ${@SOFDFunctionAssignmentService.getAllCategories()}" th:classappend="${#strings.equalsIgnoreCase(page, category.key)} ? 'active' : ''">
                 		<a sec:authorize="hasRole('ROLE_MANAGER') or hasRole('ROLE_SUBSTITUTE') or hasRole('ROLE_ADMIN')" href="#"><div><span class="nav-label"><em class="fa fa-list"></em> &nbsp;<span th:text="${category.key}"></span></span></div></a>
                 		<ul class="nav nav-second-level" style="color: #000000 !important; background-color: #FDFEFF !important;">

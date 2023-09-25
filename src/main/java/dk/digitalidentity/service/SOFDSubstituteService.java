@@ -58,7 +58,7 @@ public class SOFDSubstituteService {
 		HttpEntity<String> request = new HttpEntity<>(getHeaders());
 		String url = config.getSofdBaseUrl();
 
-		String userUuid = SecurityUtil.getUserUuid();
+		String userUuid = SecurityUtil.getPersonUuid();
 		String query = "/api/substitutes/assignments/" + userUuid;
 		List<SubstituteAssignment> result = new ArrayList<>();
 
@@ -85,7 +85,7 @@ public class SOFDSubstituteService {
 		HttpEntity<String> request = new HttpEntity<>(getHeaders());
 		String url = config.getSofdBaseUrl();
 
-		String userUuid = SecurityUtil.getUserUuid();
+		String userUuid = SecurityUtil.getPersonUuid();
 		String query = "/api/substitutes/managedorgunits/" + userUuid;
 		List<ConstraintOrgUnit> result = new ArrayList<>();
 
@@ -125,7 +125,7 @@ public class SOFDSubstituteService {
 		HttpEntity<String> request = new HttpEntity<>(getHeaders());
 		String url = config.getSofdBaseUrl();
 
-		String userUuid = SecurityUtil.getUserUuid();
+		String userUuid = SecurityUtil.getPersonUuid();
 		String query = "/api/substitutes/search/person/" + userUuid + "?query=" + term + (ousString != null ? "&ous="+ousString : "");
 		AutoCompleteResult result = null;
 
@@ -149,7 +149,7 @@ public class SOFDSubstituteService {
 		String url = config.getSofdBaseUrl();
 		String query = "/api/substitutes/assignments/create";
 
-		String userUuid = SecurityUtil.getUserUuid();
+		String userUuid = SecurityUtil.getPersonUuid();
 		AddSubstituteDTO dto = new AddSubstituteDTO(substituteContextId, userUuid, substitutePersonUuid, constraintOrgUnitUuids);
 		HttpEntity<AddSubstituteDTO> request = new HttpEntity<>(dto, getHeaders());
 

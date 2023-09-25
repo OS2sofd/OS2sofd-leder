@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head th:replace="fragments/header :: header(datatables = true, checkbox = true, datepicker = true, jstree = true)" />
+<body class="top-navigation">
+	<div id="wrapper">
+		<nav th:replace="fragments/navbar :: navbar-aside(page = 'allFunctionAssignments')" />
+	    <div id="page-wrapper" class="gray-bg">
+	    	<nav th:replace="fragments/navbar :: navbar-header" />
+
+	        <div class="wrapper wrapper-content">
+	            <div class="row">
+	                <div class="col-lg-12">
+                        <div class="ibox">
+                            <div class="ibox-title">
+                                <h5><em class="fa fa-list"></em> &nbsp; <span>Alle medarbejderfunktioner</span></h5>
+                            </div>		
+                            <div class="ibox-content" >
+	                        	<table id="functionAssignments" class="table table-hover col-lg-12">
+			                		<thead>
+										<tr>
+											<th>Medarbejder</th>
+											<th>Startdato</th>
+											<th>Stopdato</th>
+											<th>Kategori</th>
+											<th>Funktion</th>
+										</tr>
+									</thead>
+					                <tbody>
+						                <tr th:each="assignment: ${functionAssignments}">
+						                	<td>
+												<span th:text="${assignment.affiliationPersonUserId} == null ? ${assignment.affiliationPersonName} : (${assignment.affiliationPersonName} + ' (' + ${assignment.affiliationPersonUserId} + ')')" />
+												<i th:if="${assignment.otherAssignments != null && assignment.otherAssignments != ''}" style="width: 10px;" class="fa fa-exclamation-circle" data-toggle="tooltip" data-placement="right" th:title="'Denne medarbejder har andre tildelinger: ' + ${assignment.otherAssignments}"></i>
+											</td>
+						                	<td th:text="${#temporals.format(assignment.startDate, 'dd/MM/yyyy')}"/>
+						                	<td th:text="${#temporals.format(assignment.stopDate, 'dd/MM/yyyy')}"/>
+											<td th:text="${assignment.function.category}" />
+											<td th:text="${assignment.function.name}" />
+										</tr>
+					                </tbody>
+			                	</table>
+	                        </div>
+	                    </div>
+	                </div>
+	            </div>
+	        </div>
+	    </div>
+	</div>
+	
+	
+	
+	<div th:replace="fragments/footer :: scripts(datatables = true, checkbox = true, datepicker = true, jstree = true)"></div>
+	<script th:inline="javascript">
+		/*<![CDATA[*/					
+			var token = $("meta[name='_csrf']").attr("content");
+			var functionService;
+
+			$(document).ready(function () {
+				functionService = new FunctionService();				
+				functionService.init();
+
+				// sorts dd/mm/yyyy dates
+				$.extend( jQuery.fn.dataTableExt.oSort, {
+					"date-dk-pre": function (x){
+						var date = moment(x, "DD/MM/YYYY");
+						return date.isValid() ? date.format("YYYY-MM-DD") : x;
+					}
+				});
+			});
+			
+			function FunctionService() {				
+				this.init = function() {										
+					var table = $('#functionAssignments').DataTable({
+						"pageLength" : 50,
+						"dom": '<"html5buttons"B>lTfgitp',
+						"buttons": [
+							{ "extend": "excel", title: "Alle medarbejderfunktioner"}
+						],
+						"bLengthChange": false,
+						"responsive" : true,
+						"autoWidth": false,
+						"columnDefs": [
+							{ "type": "date-dk", targets: "_all" }
+						  ],
+						"order": [ 0, 'asc' ],
+						"language" : {
+							"search" : "Søg",
+							"lengthMenu" : "_MENU_ medarbejderfunktioner per side",
+							"info" : "Viser _START_ til _END_ af _TOTAL_ medarbejderfunktioner",
+							"zeroRecords" : "Ingen data...",
+							"infoEmpty" : "",
+							"infoFiltered" : "(ud af _MAX_ medarbejderfunktioner)",
+							"paginate" : {
+								"previous" : "Forrige",
+								"next" : "Næste"
+							}
+						}
+					});
+				}				
+			}										
+			
+		/*]]>*/
+	</script>
+</body>
+</html>

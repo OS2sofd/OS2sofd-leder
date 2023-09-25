@@ -56,7 +56,7 @@ public class DefaultController implements ErrorController {
 
         if (SecurityUtil.hasRole(RoleConstants.ADMIN.toString())) {
             try {
-                result.contexts().add(new ContextDTO(SecurityUtil.getUserUuid(), result.name(), ContextRole.ADMIN, sofdFunctionAssignmentService.getParentOUUuid()));
+                result.contexts().add(new ContextDTO(SecurityUtil.getPersonUuid(), result.name(), ContextRole.ADMIN, sofdFunctionAssignmentService.getParentOUUuid()));
             } catch (Exception e) {
                 log.warn("Failed to get parent ou: " + e.getMessage());
                 return "error";
@@ -85,7 +85,9 @@ public class DefaultController implements ErrorController {
             return "redirect:/";
         }
 
-        log.warn("Person with uuid " + SecurityUtil.getUserUuid() + " logged in to the manager ui, but is not an admin, manager or substitute.");
+        log.warn("Person with uuid " + SecurityUtil.getPersonUuid() + " logged in to the manager ui, but is not an admin, manager or substitute.");
+
+        model.addAttribute("error","Ingen adgang");
         return "error";
     }
 
@@ -124,7 +126,7 @@ public class DefaultController implements ErrorController {
             if (SecurityUtil.getBooleanAttribute("admin")) {
                 securityUtil.switchToAdminContext();
             } else {
-                log.error("Logged in person with uuid " + SecurityUtil.getUserUuid() + " is not an admin, but tried to switch to admin context");
+                log.error("Logged in person with uuid " + SecurityUtil.getPersonUuid() + " is not an admin, but tried to switch to admin context");
                 return "error";
             }
         } else {

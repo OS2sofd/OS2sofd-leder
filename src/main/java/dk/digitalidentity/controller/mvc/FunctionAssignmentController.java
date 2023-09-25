@@ -33,7 +33,7 @@ public class FunctionAssignmentController {
 	private ManagerConfiguration config;
 
 	@GetMapping("/functionassignments")
-	public String listFunctionAssignments(Model model, HttpServletRequest request, @RequestParam(name = "function") long functionId) {
+	public String listFunctionAssignments(Model model, HttpServletRequest request, @RequestParam(name = "function") long functionId) throws Exception {
 		if (!config.getModules().getFunctionHierarchy().isEnabled()) {
 			return "error";
 		}
@@ -43,9 +43,7 @@ public class FunctionAssignmentController {
 		if (function == null) {
 			return "error";
 		}
-		
-		Collections.sort(function.facets(), Comparator.comparingLong(FacetDTO :: id));
-		
+
 		String ousString = (String) request.getSession().getAttribute(SessionConstants.SESSION_CONTEXT_OUS);
 		if (ousString == null) {
 			return "error";
@@ -54,13 +52,9 @@ public class FunctionAssignmentController {
 		List<String> ouUuids = Arrays.asList(ousString.split(","));
 
 		List<FunctionAssignmentDTO> functionAssignments = new ArrayList<>();
-		try {
-			if (ousString.equals(sofdFunctionAssignmentService.getParentOUUuid())) {
-				functionAssignments = sofdFunctionAssignmentService.getFunctionAssignments(null).stream().filter(f -> f.function().id() == functionId).collect(Collectors.toList());
-			} else {
-				functionAssignments = sofdFunctionAssignmentService.getFunctionAssignments(ousString).stream().filter(f -> f.function().id() == functionId).collect(Collectors.toList());
-			}
-		} catch (Exception e) {
+		if (ousString.equals(sofdFunctionAssignmentService.getParentOUUuid())) {
+			functionAssignments = sofdFunctionAssignmentService.getFunctionAssignments(null).stream().filter(f -> f.function().id() == functionId).collect(Collectors.toList());
+		} else {
 			functionAssignments = sofdFunctionAssignmentService.getFunctionAssignments(ousString).stream().filter(f -> f.function().id() == functionId).collect(Collectors.toList());
 		}
 
@@ -69,7 +63,12 @@ public class FunctionAssignmentController {
 		}
 
 		for (FunctionDTO dto : functionsAndFacets) {
-			Collections.sort(dto.facets(), Comparator.comparing(FacetDTO :: name));
+			// if any of the facet has sortKeys (!= Long.MAX_VALUE) - sort by sortKey else sort by name
+			if (dto.facets().stream().anyMatch(f -> f.sortKey() != Long.MAX_VALUE)) {
+				Collections.sort(dto.facets(), Comparator.comparingLong(FacetDTO :: sortKey));
+			} else {
+				Collections.sort(dto.facets(), Comparator.comparing(FacetDTO :: name));
+			}
 		}
 		
 		model.addAttribute("functionAssignments", functionAssignments);
@@ -85,4 +84,46 @@ public class FunctionAssignmentController {
 		
 		return "functionAssignments/list";
 	}
+
+	@GetMapping("/allFunctionassignments")
+	public String listAllFunctionAssignments(Model model, HttpServletRequest request) throws Exception {
+		if (!config.getModules().getFunctionHierarchy().isEnabled()) {
+			return "error";
+		}
+
+		List<FunctionDTO> functionsAndFacets = sofdFunctionAssignmentService.getFunctionsAndFacets();
+
+		String ousString = (String) request.getSession().getAttribute(SessionConstants.SESSION_CONTEXT_OUS);
+		if (ousString == null) {
+			return "error";
+		}
+		List<String> ouUuids = Arrays.asList(ousString.split(","));
+		List<FunctionAssignmentDTO> functionAssignments = new ArrayList<>();
+		if (ousString.equals(sofdFunctionAssignmentService.getParentOUUuid())) {
+			functionAssignments = sofdFunctionAssignmentService.getFunctionAssignments(null);
+		} else {
+			functionAssignments = sofdFunctionAssignmentService.getFunctionAssignments(ousString);
+		}
+
+		for (FunctionAssignmentDTO dto : functionAssignments) {
+			Collections.sort(dto.facetValues(), Comparator.comparing(FacetValueDTO :: facetName));
+		}
+
+		for (FunctionDTO dto : functionsAndFacets) {
+			Collections.sort(dto.facets(), Comparator.comparing(FacetDTO :: name));
+		}
+
+		model.addAttribute("functionAssignments", functionAssignments);
+		model.addAttribute("functions", functionsAndFacets);
+
+		try {
+			model.addAttribute("ous", sofdFunctionAssignmentService.getOus(ouUuids));
+		} catch (Exception e) {
+			log.warn("Failed to filter ous: " + e.getMessage());
+			return "error";
+		}
+
+		return "functionAssignments/listAll";
+	}
+
 }
