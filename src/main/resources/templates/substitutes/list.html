@@ -41,9 +41,12 @@
 												</ul>
 											</td>
 											<td>
-												<a href="#" onclick="substituteService.removeSubstituteAssignment(this);" th:attr="data-assignmentid=${assignment.id}">
+												<a th:unless="${assignment.isOrgUnitAssignment}" href="#" onclick="substituteService.removeSubstituteAssignment(this);" th:attr="data-assignmentid=${assignment.id}">
 													<em style="color: black;" class="fa fa-fw fa-times"></em>
-												</a> &nbsp;
+												</a>
+												<a th:if="${assignment.isOrgUnitAssignment}" href="#" onclick="substituteService.removeSubstituteOrgUnitAssignment(this);" th:attr="data-substituteuuid=${assignment.substitute.uuid}, data-contextid=${assignment.substituteContextId}">
+													<em style="color: black;" class="fa fa-fw fa-times"></em>
+												</a>&nbsp;
 												<em onclick="substituteService.openEditModal(this);"  th:attr="data-id=${assignment.id}, data-substitutename=${assignment.substitute.name}, data-substituteuuid=${assignment.substitute.uuid}, data-contextid=${assignment.substituteContextId}, data-ous=${assignment.constraintOrgUnitsUuids}, data-orgunitassignment=${assignment.isOrgUnitAssignment}" style="color: black;" class="fa fa-fw fa-pencil"></em>
 											</td>
 										</tr>
@@ -317,6 +320,26 @@
 						}
 					});
 				}
+
+				this.removeSubstituteOrgUnitAssignment = function(elem) {
+					var substituteUuid = $(elem).data('substituteuuid');
+					var contextId = $(elem).data('contextid');
+
+					console.log(substituteUuid);
+					console.log(contextId);
+
+					payload = {
+						id: 0,
+						orgUnitAssignment: true,
+						substituteUuid: substituteUuid,
+						contextId: contextId,
+						contextIsAssignableToOrgUnit: true,
+						constraints : [],
+						deleteOrgUnitAssignment: true
+					};
+
+					substituteService.callEdit(payload);
+				}
 				
 				this.openCreateModal = function() {
 					$('#addSubstituteAutocompletePerson').val("");
@@ -426,13 +449,18 @@
 						substituteUuid: $("#substituteUuid").val(),
 						contextId: $("#contextId").val(),
 						contextIsAssignableToOrgUnit: $("#contextIsAssignableToOrgUnit").val(),
-						constraints : null
+						constraints : null,
+						deleteOrgUnitAssignment: false
 					};
 					
 					payload.constraints = $("#editSubConstraintOrgUnitsTable input[type=checkbox]:checked").map(function() {
 						return this.dataset.uuid;
 					}).get();
 
+					substituteService.callEdit(payload);
+				}
+
+				this.callEdit = function(payload) {
 					$.ajax({
 						contentType: 'application/json',
 						url: substituteRestUrl + "/edit",

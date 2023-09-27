@@ -35,6 +35,10 @@ public class SubstituteController {
 		List<SubstituteContext> substituteContexts = sofdSubstituteService.getSubstituteContexts();
 		List<ConstraintOrgUnit> managedOrgUnits = sofdSubstituteService.getManagedOrgUnits();
 		List<SubstituteAssignmentDTO> substituteAssignments = sofdSubstituteService.getSubstituteAssignments().stream().map(s -> new SubstituteAssignmentDTO(s.id(), s.substituteContextId(), s.substituteContextName(), s.constraintOrgUnits(), s.substitute(), s.constraintOrgUnits().stream().map(o -> o.uuid()).collect(Collectors.toList()), s.orgUnitAssignment())).collect(Collectors.toList());
+
+		for (SubstituteAssignmentDTO substituteAssignment : substituteAssignments) {
+			System.out.println("substituteAssignment.isOrgUnitAssignment() = " + substituteAssignment.isOrgUnitAssignment());
+		}
 		
 		if (substituteAssignments == null || managedOrgUnits == null || substituteContexts == null) {
 			return "error";

@@ -87,13 +87,13 @@ public class SubstituteRestController {
 		return new ResponseEntity<>(HttpStatus.OK);
 	}
 	
-	record SubstituteAssignmentEditDTO(long id, boolean orgUnitAssignment, String substituteUuid, long contextId, boolean contextIsAssignableToOrgUnit, List<String> constraints) {}
+	record SubstituteAssignmentEditDTO(long id, boolean orgUnitAssignment, String substituteUuid, long contextId, boolean contextIsAssignableToOrgUnit, List<String> constraints, boolean deleteOrgUnitAssignment) {}
 	@ResponseBody
 	@PostMapping(value = "/rest/substituteAssignment/edit")
 	public HttpEntity<?> editSubstituteAssignment(@RequestBody SubstituteAssignmentEditDTO dto) {
 		List<SOFDSubstituteService.SubstituteAssignment> all = sofdSubstituteService.getSubstituteAssignments();
 		if (dto.orgUnitAssignment()) {
-			if (dto.constraints() == null || dto.constraints().isEmpty()) {
+			if ((dto.constraints() == null || dto.constraints().isEmpty()) && !dto.deleteOrgUnitAssignment()) {
 				return new ResponseEntity<>("Der skal vælges minimum en enhed", HttpStatus.BAD_REQUEST);
 			}
 
