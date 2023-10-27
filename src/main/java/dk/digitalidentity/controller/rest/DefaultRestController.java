@@ -47,6 +47,15 @@ public class DefaultRestController {
 				return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 			}
 		}
+		if (SecurityUtil.hasRole(RoleConstants.READER.toString())) {
+			try {
+				contextResult.contexts().add(new ContextDTO("READER" + SecurityUtil.getPersonUuid(), contextResult.name(), ContextRole.READER, sofdFunctionAssignmentService.getParentOUUuid()));
+			} catch (Exception e) {
+				log.warn("Failed to get parent ou: " + e.getMessage());
+				return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+			}
+		}
+
 		String selectedUuid = (String) request.getSession().getAttribute(SessionConstants.SESSION_CONTEXT_UUID);
 		List<ContextTopBarDTO> result = contextResult.contexts().stream().map(c -> new ContextTopBarDTO(c.uuid(), c.name(), c.role().toString(), c.ouUuids(), c.uuid().equals(selectedUuid))).collect(Collectors.toList());
 		return new ResponseEntity<>(result, HttpStatus.OK);

@@ -7,7 +7,7 @@
         
         <ul class="nav navbar-top-links navbar-right">
             <li sec:authorize="isAuthenticated()" class="dropdown show">
-            	<a  data-toggle="dropdown" href="#" aria-expanded="true" id="userMenuTopbar"><i class="fa fa-user"></i>&nbsp;<span th:if="${session.SESSION_CONTEXT_NAME != null}" th:text="${session.SESSION_CONTEXT_ROLE == T(dk.digitalidentity.service.SOFDManagerService.ContextRole).MANAGER} ? 'Leder ' + ${session.SESSION_CONTEXT_NAME} : (${session.SESSION_CONTEXT_ROLE == T(dk.digitalidentity.service.SOFDManagerService.ContextRole).ADMIN} ? 'Administrator ' + ${session.SESSION_CONTEXT_NAME} : 'Stedfortræder for ' + ${session.SESSION_CONTEXT_NAME})"></span></a>
+            	<a  data-toggle="dropdown" href="#" aria-expanded="true" id="userMenuTopbar"><i class="fa fa-user"></i>&nbsp;<span th:if="${session.SESSION_CONTEXT_NAME != null}" th:text="${session.SESSION_CONTEXT_ROLE == T(dk.digitalidentity.service.SOFDManagerService.ContextRole).MANAGER} ? 'Leder ' + ${session.SESSION_CONTEXT_NAME} : (${session.SESSION_CONTEXT_ROLE == T(dk.digitalidentity.service.SOFDManagerService.ContextRole).ADMIN} ? 'Administrator ' + ${session.SESSION_CONTEXT_NAME} : (${session.SESSION_CONTEXT_ROLE == T(dk.digitalidentity.service.SOFDManagerService.ContextRole).READER} ? 'Læseadgang ' + ${session.SESSION_CONTEXT_NAME} : 'Stedfortræder for ' + ${session.SESSION_CONTEXT_NAME}))"></span></a>
                 <ul class="dropdown-menu" style="width: 250px;">
                		<li>
                     	<div class="list-group">
@@ -26,6 +26,16 @@
 			                    </ul>
 			                </div>
 
+							<div sec:authorize="!hasRole('ROLE_ADMIN') AND hasRole('ROLE_READER')" class="list-group-item">
+								<ul style="padding-left: 0px;">
+									<li>
+										<a th:href="@{/admin/welcome/edit}" style="color: black; border: none; font-size: small;">
+											<i class="fa fa-eye"></i> &nbsp; Se velkomsttekst
+										</a>
+									</li>
+								</ul>
+							</div>
+
 							<div sec:authorize="hasRole('ROLE_ADMIN')" class="list-group-item">
 								<ul style="padding-left: 0px;">
 									<li>
@@ -35,6 +45,16 @@
 			                        </li>
 			                    </ul>
 			                </div>
+
+							<div sec:authorize="!hasRole('ROLE_ADMIN') AND hasRole('ROLE_READER')" class="list-group-item">
+								<ul style="padding-left: 0px;">
+									<li>
+										<a th:href="@{/admin/helptext/edit}" style="color: black; border: none; font-size: small;">
+											<i class="fa fa-eye"></i> &nbsp; Se hjælpetekster
+										</a>
+									</li>
+								</ul>
+							</div>
 
 							<div class="list-group-item">
 								<ul style="padding-left: 0px;">
@@ -68,7 +88,7 @@
 						<a href="/allFunctionassignments"><div><span class="nav-label"><em class="fa fa-list"></em> &nbsp; Alle medarbejderfunktioner</span></div></a>
 					</li>	
                 	<li th:each="category : ${@SOFDFunctionAssignmentService.getAllCategories()}" th:classappend="${#strings.equalsIgnoreCase(page, category.key)} ? 'active' : ''">
-                		<a sec:authorize="hasRole('ROLE_MANAGER') or hasRole('ROLE_SUBSTITUTE') or hasRole('ROLE_ADMIN')" href="#"><div><span class="nav-label"><em class="fa fa-list"></em> &nbsp;<span th:text="${category.key}"></span></span></div></a>
+                		<a sec:authorize="hasRole('ROLE_MANAGER') or hasRole('ROLE_SUBSTITUTE') or hasRole('ROLE_READER') or hasRole('ROLE_ADMIN')" href="#"><div><span class="nav-label"><em class="fa fa-list"></em> &nbsp;<span th:text="${category.key}"></span></span></div></a>
                 		<ul class="nav nav-second-level" style="color: #000000 !important; background-color: #FDFEFF !important;">
 	                    	<li th:each="function : ${category.value}" th:classappend="${subpage == function.id} ? 'active' : ''">
 	                    		<a style="padding-left: 45px; padding-top: 5px; padding-bottom: 5px;" th:href="'/functionassignments?function=' + ${function.id}">

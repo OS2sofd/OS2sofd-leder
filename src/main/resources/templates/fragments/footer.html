@@ -92,7 +92,7 @@
 									var entry = data[i];
 									var menuItem = '<li><a href="/choosecontext?uuid=' + entry.uuid + '&name=' + entry.name + '&ous=' + entry.ous + '&role=' + entry.role + '" style="color: black; border: none; font-size: small;" class="list-group-item">'
 													+ '<em class="fa '+((entry.selected) ? 'fa-check-circle-o' : 'fa-circle-o')+' fa"></em>'
-													+ '<span style="padding-left: 10px">' + (entry.role == 'MANAGER'? 'Leder ' + entry.name : (entry.role == 'ADMIN'? 'Administrator ' + entry.name : 'Stedfortræder for ' + entry.name)) + '</span>'
+													+ '<span style="padding-left: 10px">' + (entry.role == 'MANAGER'? 'Leder ' + entry.name : (entry.role == 'ADMIN'? 'Administrator ' + entry.name : (entry.role == 'READER'? 'Læseadgang ' + entry.name : 'Stedfortræder for ' + entry.name))) + '</span>'
 													+ '</a></li>';
 		
 									$("#contextList").append(menuItem);

@@ -14,7 +14,7 @@
 		
                             <div class="ibox-content" >
                             	<select id="context" class="form-control">
-                            		<option th:each="context : ${loginContexts}" th:attr="data-role=${context.role}, data-name=${context.name}, data-uuid=${context.uuid}, data-ous=${context.ouUuids}" th:text="${context.role == T(dk.digitalidentity.service.SOFDManagerService.ContextRole).MANAGER} ? 'Leder ' + ${context.name} : (${context.role == T(dk.digitalidentity.service.SOFDManagerService.ContextRole).ADMIN} ? 'Administrator ' + ${context.name} : 'Stedfortræder for ' + ${context.name})"></option>
+                            		<option th:each="context : ${loginContexts}" th:attr="data-role=${context.role}, data-name=${context.name}, data-uuid=${context.uuid}, data-ous=${context.ouUuids}" th:text="${context.role == T(dk.digitalidentity.service.SOFDManagerService.ContextRole).MANAGER} ? 'Leder ' + ${context.name} : (${context.role == T(dk.digitalidentity.service.SOFDManagerService.ContextRole).ADMIN} ? 'Administrator ' + ${context.name} : (${context.role == T(dk.digitalidentity.service.SOFDManagerService.ContextRole).READER} ? 'Læseadgang ' + ${context.name} : 'Stedfortræder for ' + ${context.name}))"></option>
                             	</select>
                             	
                             	<br/>

@@ -25,6 +25,12 @@ public class RolePostProcesser implements SamlLoginPostProcessor {
 				newAuthorities.add(new SamlGrantedAuthority(RoleConstants.ADMIN));
 				tokenUser.getAttributes().put("admin", true);
 			}
+
+			// TODO
+			if ("ROLE_read".equals(grantedAuthority.getAuthority())) {
+				newAuthorities.add(new SamlGrantedAuthority(RoleConstants.READER));
+				tokenUser.getAttributes().put("reader", true);
+			}
 		}
 		
 		

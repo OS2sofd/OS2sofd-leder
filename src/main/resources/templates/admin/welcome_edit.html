@@ -10,7 +10,7 @@
 	        <div class="wrapper wrapper-content">
 	            <div class="row">
 	                <div class="col-lg-12">
-                        <div class="ibox">
+                        <div class="ibox" sec:authorize="hasRole('ROLE_ADMIN')">
                             <div class="ibox-title">
                                 <h5><em class="fa fa-pencil"></em> &nbsp; Rediger velkomsttekst</h5>
                             </div>
@@ -28,6 +28,16 @@
 								</form>
 	                        </div>
 	                    </div>
+						<div class="ibox" sec:authorize="!hasRole('ROLE_ADMIN') AND hasRole('ROLE_READER')">
+							<div class="ibox-title">
+								<h5><em class="fa fa-eye"></em> &nbsp; Se velkomsttekst</h5>
+							</div>
+
+							<div class="ibox-content" >
+								<p>Her kan du se den tekst, der vises på velkomstsiden. Kun administratorer kan redigere teksten.</p>
+								<pre th:utext="${TextDTO.value}"></pre>
+							</div>
+						</div>
 	                </div>
 	            </div>
 	        </div>

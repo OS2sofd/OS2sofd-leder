@@ -1,6 +1,7 @@
 package dk.digitalidentity.controller.mvc;
 
 import dk.digitalidentity.security.RequireAdminAccess;
+import dk.digitalidentity.security.RequireReadOrAdminAccess;
 import dk.digitalidentity.service.TextService;
 import org.owasp.html.HtmlPolicyBuilder;
 import org.owasp.html.PolicyFactory;
@@ -11,7 +12,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 
 @Controller
-@RequireAdminAccess
 public class AdminController {
 
     @Autowired
@@ -20,12 +20,14 @@ public class AdminController {
     public record TextDTO(String value) {
     }
 
+    @RequireReadOrAdminAccess
     @GetMapping("/admin/welcome/edit")
     public String EditWelcomeText(Model model) {
         model.addAttribute("TextDTO", new TextDTO(textService.getWelcomeText()));
         return "admin/welcome_edit";
     }
 
+    @RequireAdminAccess
     @PostMapping("/admin/welcome/edit")
     public String EditWelcomeTextPost(Model model, TextDTO textDTO) {
         if (textDTO.value().length() > 65536) {
@@ -40,12 +42,14 @@ public class AdminController {
         return "redirect:/";
     }
 
+    @RequireReadOrAdminAccess
     @GetMapping("/admin/helptext/edit")
     public String EditHelpText(Model model) {
         model.addAttribute("helpText", new TextDTO(textService.getSubstituteHelptext()));
         return "admin/helptext_edit";
     }
 
+    @RequireAdminAccess
     @PostMapping("/admin/helptext/edit")
     public String EditHelpTextPost(Model model, TextDTO helpTextDTO) {
         if (helpTextDTO.value().length() > 65536) {

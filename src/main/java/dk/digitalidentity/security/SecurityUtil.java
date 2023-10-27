@@ -135,6 +135,17 @@ public class SecurityUtil {
 		
 	}
 
+	public void switchToReaderContext() {
+		TokenUser tokenUser = ((TokenUser) SecurityContextHolder.getContext().getAuthentication().getDetails());
+
+		List<SamlGrantedAuthority> authorities = new ArrayList<>();
+		authorities.add(new SamlGrantedAuthority(RoleConstants.READER));
+		tokenUser.setAuthorities(authorities);
+
+		cleanCache(tokenUser, authorities);
+
+	}
+
 	private void cleanCache(TokenUser tokenUser, List<SamlGrantedAuthority> authorities) {
 		
 		// so spring really likes caching this object, so we need to make sure Spring knows about the new version

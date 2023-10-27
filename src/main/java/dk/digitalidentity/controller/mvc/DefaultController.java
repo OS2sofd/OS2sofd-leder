@@ -63,6 +63,15 @@ public class DefaultController implements ErrorController {
             }
         }
 
+        if (SecurityUtil.hasRole(RoleConstants.READER.toString())) {
+            try {
+                result.contexts().add(new ContextDTO(SecurityUtil.getPersonUuid(), result.name(), ContextRole.READER, sofdFunctionAssignmentService.getParentOUUuid()));
+            } catch (Exception e) {
+                log.warn("Failed to get parent ou: " + e.getMessage());
+                return "error";
+            }
+        }
+
         ContextDTO loginContext = null;
 
         if (result.contexts().size() == 1) {
@@ -71,6 +80,8 @@ public class DefaultController implements ErrorController {
             loginContext = result.contexts().stream().filter(c -> c.role().equals(ContextRole.SUBSTITUTE)).findFirst().orElse(null);
             ContextDTO manager = result.contexts().stream().filter(c -> c.role().equals(ContextRole.MANAGER)).findFirst().orElse(null);
             loginContext = manager != null ? manager : loginContext;
+            ContextDTO reader = result.contexts().stream().filter(c -> c.role().equals(ContextRole.READER)).findFirst().orElse(null);
+            loginContext = reader != null ? reader : loginContext;
             ContextDTO admin = result.contexts().stream().filter(c -> c.role().equals(ContextRole.ADMIN)).findFirst().orElse(null);
             loginContext = admin != null ? admin : loginContext;
         }
@@ -85,7 +96,7 @@ public class DefaultController implements ErrorController {
             return "redirect:/";
         }
 
-        log.warn("Person with uuid " + SecurityUtil.getPersonUuid() + " logged in to the manager ui, but is not an admin, manager or substitute.");
+        log.warn("Person with uuid " + SecurityUtil.getPersonUuid() + " logged in to the manager ui, but is not an admin, reader, manager or substitute.");
 
         model.addAttribute("error","Ingen adgang");
         return "error";
@@ -101,6 +112,9 @@ public class DefaultController implements ErrorController {
             securityUtil.switchToManagerContext();
         } else if (context.role().equals(ContextRole.SUBSTITUTE)) {
             securityUtil.switchToSubstituteContext();
+        } else if (context.role().equals(ContextRole.READER)) {
+            request.getSession().setAttribute(SessionConstants.SESSION_CONTEXT_UUID, "READER"+context.uuid());
+            securityUtil.switchToReaderContext();
         } else if (context.role().equals(ContextRole.ADMIN)) {
             request.getSession().setAttribute(SessionConstants.SESSION_CONTEXT_UUID, "ADMIN"+context.uuid());
             securityUtil.switchToAdminContext();
@@ -127,6 +141,13 @@ public class DefaultController implements ErrorController {
                 securityUtil.switchToAdminContext();
             } else {
                 log.error("Logged in person with uuid " + SecurityUtil.getPersonUuid() + " is not an admin, but tried to switch to admin context");
+                return "error";
+            }
+        } else if (role.equals(ContextRole.READER)) {
+            if (SecurityUtil.getBooleanAttribute("reader")) {
+                securityUtil.switchToReaderContext();
+            } else {
+                log.error("Logged in person with uuid " + SecurityUtil.getPersonUuid() + " is not an reader, but tried to switch to reader context");
                 return "error";
             }
         } else {

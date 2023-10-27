@@ -24,7 +24,7 @@ public class SOFDManagerService {
 	@Autowired
 	private ManagerConfiguration config;
 	
-	public enum ContextRole { MANAGER, SUBSTITUTE, ADMIN;}
+	public enum ContextRole { MANAGER, SUBSTITUTE, ADMIN, READER;}
 	public record ContextDTO(String uuid, String name, ContextRole role, String ouUuids) {}
 	public record ContextResultDTO(String name, String username, String email, List<ContextDTO> contexts) {}
 	public ContextResultDTO getLoginContexts() {

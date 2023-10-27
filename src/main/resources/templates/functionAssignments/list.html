@@ -17,7 +17,7 @@
 		
                             <div class="ibox-content" >
 								<p th:text="${function.description}"></p>
-                           		<button class="btn btn-primary" style="margin-bottom: 10px;" onclick="functionService.openCreateModal();">
+                           		<button sec:authorize="hasRole('ROLE_MANAGER') or hasRole('ROLE_SUBSTITUTE') or hasRole('ROLE_ADMIN')" class="btn btn-primary" style="margin-bottom: 10px;" onclick="functionService.openCreateModal();">
                                		<em class="fa fa-fw fa-user-plus"></em>
 									<span>Tilføj <span th:text="${function.name}"></span></span>
 								</button>
@@ -29,7 +29,7 @@
 											<th>Startdato</th>
 											<th>Stopdato</th>
 											<th th:each="facet : ${function.facets}" th:text="${facet.name}"/>
-											<th>Handlinger</th>
+											<th sec:authorize="hasRole('ROLE_MANAGER') or hasRole('ROLE_SUBSTITUTE') or hasRole('ROLE_ADMIN')">Handlinger</th>
 										</tr>
 									</thead>
 					                <tbody>
@@ -48,7 +48,7 @@
 												<th:block th:if="${value.facetValueOrgunitNames != null && value.facetValueOrgunitNames != '' && value.facetValueOrgunitNames.length <= 100}" th:text="${value.facetValueOrgunitNames}"/>
 												<th:block th:if="${value.facetValueAffiliationPersonName != null && value.facetValueAffiliationPersonName != ''}" th:text="${value.facetValueAffiliationPersonName}"/>
 											</td>
-											<td>
+											<td sec:authorize="hasRole('ROLE_MANAGER') or hasRole('ROLE_SUBSTITUTE') or hasRole('ROLE_ADMIN')">
 												<a href="#" onclick="functionService.removeFunctionAssignment(this);" th:attr="data-assignmentid=${assignment.id}">
 													<em style="color: black;" class="fa fa-fw fa-times"></em>
 												</a> &nbsp;
