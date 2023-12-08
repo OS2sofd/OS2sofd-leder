@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html>
-<head th:replace="fragments/header :: header(datatables = true, checkbox = true)" />
+<head th:replace="fragments/header :: header(datatables = true, checkbox = true, jstree = true)" />
 <body class="top-navigation">
 	<div id="wrapper">
 	    <nav th:replace="fragments/navbar :: navbar-aside(page='substitutes')" />
@@ -70,10 +70,10 @@
 	
 				<div class="modal-body">
 					<div class="form-group row">
-						<label class="col-sm-2 control-label">Kontekst</label>
-						<div class="col-sm-8">
+						<label class="col-lg-2 control-label">Kontekst</label>
+						<div class="col-lg-8">
 							<select class="form-control" id="addSubstituteSelectedContext" onchange="substituteService.handleSubstituteContextChange();">
-								<option th:each="subContext : ${substituteContexts}" th:value="${subContext.id}" th:attr="data-supportsconstraints=${subContext.supportsConstraints}, data-assignabletoorgunit=${subContext.assignableToOrgunit}">
+								<option th:each="subContext : ${substituteContexts}" th:value="${subContext.id}" th:attr="data-supportsconstraints=${subContext.supportsConstraints}, data-assignabletoorgunit=${subContext.assignableToOrgunit}, data-inherit=${subContext.inherit}">
 									<span th:if="${subContext.identifier} == 'SOFD'" th:text="${@managerConfiguration.html.sofdSubstituteContextName}"></span>
 									<span th:unless="${subContext.identifier} == 'SOFD'" th:text="${subContext.name}"></span>
 								</option>
@@ -81,8 +81,8 @@
 						</div>
 					</div>
 					<div class="form-group row">
-						<label class="col-sm-2 control-label">Stedfortræder</label>
-						<div class="col-sm-8">
+						<label class="col-lg-2 control-label">Stedfortræder</label>
+						<div class="col-lg-8">
 							<input type="text" class="form-control" id="addSubstituteAutocompletePerson" autocomplete="off"/>
 							<div id="dropdownResultInternal" class="dropdown" data-toggle="dropdown">
 						  		<ul id="searchResultDropDownMenuInternal" class="dropdown-menu" style="width: 100%; padding-left: 15px; padding-right: 15px; line-height: 25px; top: -2px !important;">
@@ -92,36 +92,23 @@
 						</div>
 					</div>
 					<div class="form-group row">
-						<label class="col-sm-2 control-label">Afdelinger
+						<label class="col-lg-2 control-label">Afdelinger
 							<i id="createModalOuTooltip" style="width: 10px;" class="fa fa-question" data-toggle="tooltip" data-placement="right" title="Her kan du afgrænse stedfortræderen til udvalgte afdelinger. Hvis ingen afdeling er valgt, fungerer stedfortræderen på alle afdelinger."></i>
 						</label>
-						<div class="col-sm-8">
+						<div class="col-lg-8">
 							<input id="chbxSubstituteContextConstraints" type="checkbox" class="i-checks">
+							&nbsp; <span id="inheritMessage">Afdelinger nedarves for den valgte stedfortræderkontekst</span>
 						</div>
 					</div>
-					<div class="form-group row">
-						<label class="col-sm-2 control-label"></label>
-						<div class="col-sm-8">
-							<table id="subConstraintOrgUnitsTable" style="display:none;" class="table table-striped table-hover">
-								<tbody>
-									<tr th:each="orgunit : ${managedOrgUnits}" class="subConstraintOrgUnit">
-										<td>
-											<div class="checkbox c-checkbox">
-												<div>
-													<label><input th:attr="data-uuid=${orgunit.uuid}" type="checkbox" class="i-checks constraintOrgUnits"></label>
-												</div>
-											</div>
-										</td>
-										<td style="vertical-align: middle !important;" th:text="${orgunit.name}"/>
-									</tr>
-								</tbody>
-							</table>
-						</div>
+					<div class="form-group row" id="tree">
+						<label class="control-label" style="margin-top: 10px;">Søg</label>
+						<input class="form-control" id="orgUnitTreeSearchField" autofocus="autofocus" style="margin-bottom: 40px;" />
+						<div id="orgUnitTreeHierarchy"></div>
 					</div>
 				</div>
 	
 				<div class="modal-footer">
-					<button type="button" class="btn btn-primary" onclick="substituteService.addSubstituteAssignment()">Tilføj</button>
+					<button id="addBtn" type="button" class="btn btn-primary" onclick="substituteService.addSubstituteAssignment()">Tilføj</button>
 					<button type="button" class="btn btn-danger" data-dismiss="modal">Annuller</button>
 				</div>
 			</div>
@@ -143,75 +130,165 @@
 					<input id="contextId" hidden>
 					<input id="contextIsAssignableToOrgUnit" hidden>
 					<div class="form-group row">
-						<label class="col-sm-2 control-label">Kontekst</label>
-						<div class="col-sm-8">
+						<label class="col-lg-2 control-label">Kontekst</label>
+						<div class="col-lg-8">
 							<select class="form-control" id="editSubstituteSelectedContext" disabled="disabled">
-								<option th:each="subContext : ${substituteContexts}" th:value="${subContext.id}" th:attr="data-supportsconstraints=${subContext.supportsConstraints}, data-assignabletoorgunit=${subContext.assignableToOrgunit}" th:text="${subContext.name}"></option>
+								<option th:each="subContext : ${substituteContexts}" th:value="${subContext.id}" th:attr="data-supportsconstraints=${subContext.supportsConstraints}, data-assignabletoorgunit=${subContext.assignableToOrgunit}, data-inherit=${subContext.inherit}" th:text="${subContext.name}"></option>
 							</select>
 						</div>
 					</div>
 					<div class="form-group row">
-						<label class="col-sm-2 control-label">Stedfortræder</label>
-						<div class="col-sm-8">
+						<label class="col-lg-2 control-label">Stedfortræder</label>
+						<div class="col-lg-8">
 							<input type="text" class="form-control" id="editSubstituteAutocompletePerson" disabled="disabled"/>
 						</div>
 					</div>
 					<div class="form-group row">
-						<label class="col-sm-2 control-label">Afdelinger
+						<label class="col-lg-2 control-label">Afdelinger
 							<i id="editModalOuTooltip" style="width: 10px;" class="fa fa-question" data-toggle="tooltip" data-placement="right" title="Her kan du afgrænse stedfortræderen til udvalgte afdelinger. Hvis ingen afdeling er valgt, fungerer stedfortræderen på alle afdelinger."></i>
 						</label>
-						<div class="col-sm-8">
+						<div class="col-lg-8">
 							<input id="chbxSubstituteContextConstraintsEdit" type="checkbox" class="i-checks">
+							&nbsp; <span id="editInheritMessage">Afdelinger nedarves for den valgte stedfortræderkontekst</span>
 						</div>
 					</div>
-					<div class="form-group row">
-						<label class="col-sm-2 control-label"></label>
-						<div class="col-sm-8">
-							<table id="editSubConstraintOrgUnitsTable" style="display:none;" class="table table-striped table-hover">
-								<tbody>
-									<tr th:each="orgunit : ${managedOrgUnits}" class="subConstraintOrgUnit">
-										<td>
-											<div class="checkbox c-checkbox">
-												<div>
-													<label><input th:attr="data-uuid=${orgunit.uuid}" type="checkbox" class="i-checks constraintOrgUnitsEdit"></label>
-												</div>
-											</div>
-										</td>
-										<td style="vertical-align: middle !important;" th:text="${orgunit.name}"/>
-									</tr>
-								</tbody>
-							</table>
-						</div>
+					<div class="form-group row" id="editTree">
+						<label class="control-label" style="margin-top: 10px;">Søg</label>
+						<input class="form-control" id="editOrgUnitTreeSearchField" autofocus="autofocus" style="margin-bottom: 40px;" />
+						<div id="editOrgUnitTreeHierarchy"></div>
 					</div>
 				</div>
 	
 				<div class="modal-footer">
-					<button id="saveEdit" type="button" class="btn btn-primary" onclick="substituteService.editSubstituteAssignment()">Gem</button>
+					<button id="saveEdit" type="button" class="btn btn-primary" onclick="substituteService.editSubstituteAssignment(this)">Gem</button>
 					<button type="button" class="btn btn-danger" data-dismiss="modal">Annuller</button>
 				</div>
 			</div>
 		</div>
 	</div>
 	
-	<div th:replace="fragments/footer :: scripts(datatables = true, checkbox = true, autocomplete = true)"></div>
+	<div th:replace="fragments/footer :: scripts(datatables = true, checkbox = true, autocomplete = true, jstree = true)"></div>
 	<script th:inline="javascript">
 		/*<![CDATA[*/
 		
 			/*[+
 				var substituteRestUrl = [[@{/rest/substituteAssignment}]];
+				var ous = [[${ous}]];
+				var allowedUuids = [[${allowedUuids}]];
 			+]*/
 			
 			var token = $("meta[name='_csrf']").attr("content");
-			var substituteService, searchService;
+			var substituteService, searchService, treeService;
 			$(document).ready(function () {
 				$(".helpTextPopover").popover();
 				
 				substituteService = new SubstituteService();
 				searchService = new SearchService();
+				treeService = new TreeService();
 				
 				substituteService.init();
 				searchService.init();
 			});
+
+			function TreeService() {
+				this.initJSTree = function(id, searchId, inherit, ousString) {
+					$('#' + id).jstree('destroy');
+					var checkboxSettings = {};
+					if (inherit) {
+						checkboxSettings = {
+												"keep_selected_style" : false,
+												"three_state": false,
+												"cascade" : "down"
+											};
+					} else {
+						checkboxSettings = {
+												"three_state" : false,
+												"two_state": true
+											};
+					}
+
+					$('#' + id).jstree({
+						"core": {
+							"data": ous,
+							"themes": {
+								"icons": false
+							}
+						},
+						"search" : {
+							"show_only_matches": true,
+							"search_callback": function(str, node) {
+								return (node.text.toUpperCase().includes(str.toUpperCase()));
+							}
+						},
+						"checkbox" : checkboxSettings,
+						"plugins" : ["search", "checkbox"]
+					}).on('loaded.jstree', function() {
+						// open nodes
+						$('#' + id).jstree('open_all');
+						$($('#' + id).jstree().get_json($('#' + id), {
+						  flat: true
+						})).each(function(index, value) {
+							var node = $('#' + id).jstree().get_node(this.id);
+
+							if (!node.original.open) {
+								$('#' + id).jstree().close_node(node, false);
+							}
+						});
+
+						// disable not allowed nodes
+						ous.forEach(function(entry) {
+							$("#" + id).jstree(true).disable_node(entry);
+						});
+
+						allowedUuids.forEach(function(entry) {
+							$("#" + id).jstree(true).enable_node(entry);
+						});
+
+						// select ous in jstree if edit
+						if (ousString != null && ousString.length > 0 && ousString != "[]") {
+							ousString = ousString.replace("[", "").replace("]", "");
+							var constraintOUs = ousString.split(", ");
+
+							constraintOUs.forEach(function(nodeId) {
+								$('#' + id).jstree(true).select_node(nodeId);
+							});
+							$("#chbxSubstituteContextConstraintsEdit").iCheck('check');
+						} else {
+							$("#chbxSubstituteContextConstraintsEdit").iCheck('uncheck');
+							$("#editTree").hide();
+						}
+					});
+
+					// searching in the JSTree
+					var to = false;
+					$('#' + searchId).keyup(function() {
+						if (to) {
+							clearTimeout(to);
+						}
+
+						to = setTimeout(function() {
+							var v = $('#' + searchId).val();
+
+							$('#' + id).jstree(true).search(v);
+						}, 400);
+					});
+					$('#' + searchId).focus();
+
+					// listener
+					if (inherit) {
+						$('#' + id).on('deselect_node.jstree', function (e, data) {
+							// if no parent or parent is not selected - allow deselect
+							var parent = $('#' + id).jstree(true).get_parent(data.node);
+							if (!parent || !$('#' + id).jstree(true).is_selected(parent)) {
+								return;
+							} else {
+								$('#' + id).jstree(true).select_node(data.node);
+								return;
+							}
+						});
+					}
+				};
+			}
 			
 			function SubstituteService() {
 				
@@ -224,21 +301,19 @@
 					});
 
 					$("#chbxSubstituteContextConstraints").on('ifChecked', function(event){
-						$("#subConstraintOrgUnitsTable").show();
+						$("#tree").show();
 					});
 					
 					$("#chbxSubstituteContextConstraints").on('ifUnchecked', function(event){
-						$('.constraintOrgUnits').iCheck('uncheck');
-						$("#subConstraintOrgUnitsTable").hide();
+						$("#tree").hide();
 					});
 					
 					$("#chbxSubstituteContextConstraintsEdit").on('ifChecked', function(event){
-						$("#editSubConstraintOrgUnitsTable").show();
+						$("#editTree").show();
 					});
 					
 					$("#chbxSubstituteContextConstraintsEdit").on('ifUnchecked', function(event){
-						$('.constraintOrgUnitsEdit').iCheck('uncheck');
-						$("#editSubConstraintOrgUnitsTable").hide();
+						$("#editTree").hide();
 					});
 					
 					var table = $('#substitutes').DataTable({
@@ -268,14 +343,22 @@
 				this.handleSubstituteContextChange = function() {
 					var supportsConstraints = $("#addSubstituteSelectedContext").find(':selected').data("supportsconstraints");
 					var assignableToOrgUnits = $("#addSubstituteSelectedContext").find(':selected').data("assignabletoorgunit");
-					$('.constraintOrgUnits').iCheck('uncheck');
+					var inherit = $("#addSubstituteSelectedContext").find(':selected').data("inherit");
+					$("#addBtn").data("inherit", inherit);
+					if (inherit) {
+						$("#inheritMessage").show();
+					} else {
+						$("#inheritMessage").hide();
+					}
+					treeService.initJSTree("orgUnitTreeHierarchy", "orgUnitTreeSearchField", inherit, null);
 
 					if (assignableToOrgUnits) {
 						$('#chbxSubstituteContextConstraints').iCheck('check');
 						$('#chbxSubstituteContextConstraints').iCheck('disable');
 						$("#createModalOuTooltip").attr("data-original-title", 'Da der er valgt en kontekst, der skal tilknyttes en afdeling, skal der vælges minimum en afdeling');
 						$('[data-toggle="tooltip"]').tooltip();
-						$("#subConstraintOrgUnitsTable").show();
+
+						$("#tree").show();
 					} else {
 						$('#chbxSubstituteContextConstraints').iCheck('uncheck');
 						if (!supportsConstraints) {
@@ -285,7 +368,7 @@
 						}
 						$("#createModalOuTooltip").attr("data-original-title", 'Her kan du afgrænse stedfortræderen til udvalgte afdelinger. Hvis ingen afdeling er valgt, fungerer stedfortræderen på alle afdelinger.');
 						$('[data-toggle="tooltip"]').tooltip();
-						$("#subConstraintOrgUnitsTable").hide();
+						$("#tree").hide();
 					}
 				}
 
@@ -343,7 +426,6 @@
 				
 				this.openCreateModal = function() {
 					$('#addSubstituteAutocompletePerson').val("");
-					$('.constraintOrgUnits').iCheck('uncheck');
 					$('#addSubstituteSelectedContext').children().eq(0).prop('selected', true);
 					substituteService.handleSubstituteContextChange();
 					$('#modal-add-substitute').modal('show'); 
@@ -362,31 +444,21 @@
 					$("#substituteUuid").val(substituteUuid);
 					$('#editSubstituteSelectedContext').val(contextId);
 					$("#editSubstituteAutocompletePerson").val(substituteName);
-					$('.constraintOrgUnitsEdit').iCheck('uncheck');
-					if (ousString.length > 0 && ousString != "[]") {
-						ousString = ousString.replace("[", "").replace("]", "");
-						var constraintOUs = ousString.split(", ");
-						
-						$("#editSubConstraintOrgUnitsTable").show();
-						$("#chbxSubstituteContextConstraintsEdit").iCheck('check');
-						$(".constraintOrgUnitsEdit").each(function(index) {
-							var uuid = $(this).data("uuid");
-							if (constraintOUs.includes(uuid)) {
-								$(this).iCheck('check');
-							}
-						});
-					} else {
-						$('.constraintOrgUnitsEdit').iCheck('uncheck');
-						$("#chbxSubstituteContextConstraintsEdit").iCheck('uncheck');
-						$("#editSubConstraintOrgUnitsTable").hide();
-					}
-					
+
 					var supportsConstraints = $("#editSubstituteSelectedContext").find(':selected').data("supportsconstraints");
 					var assignableToOrgUnits = $("#editSubstituteSelectedContext").find(':selected').data("assignabletoorgunit");
+					var inherit = $("#editSubstituteSelectedContext").find(':selected').data("inherit");
+					$("#saveEdit").data("inherit", inherit);
+					if (inherit) {
+						$("#editInheritMessage").show();
+					} else {
+						$("#editInheritMessage").hide();
+					}
+					treeService.initJSTree("editOrgUnitTreeHierarchy", "editOrgUnitTreeSearchField", inherit, ousString);
 					if (assignableToOrgUnits) {
 						$('#chbxSubstituteContextConstraintsEdit').iCheck('check');
 						$('#chbxSubstituteContextConstraintsEdit').iCheck('disable');
-						$("#editSubConstraintOrgUnitsTable").show();
+						$("#editTree").show();
 						$("#editModalOuTooltip").attr("data-original-title", 'Da der er valgt en kontekst, der skal tilknyttes en afdeling, skal der vælges minimum en afdeling');
 						$('[data-toggle="tooltip"]').tooltip();
 					} else {
@@ -404,7 +476,7 @@
 					$("#contextId").val(contextId);
 					$("#contextIsAssignableToOrgUnit").val(assignableToOrgUnits);
 
-					$('#modal-edit-substitute').modal('show'); 
+					$('#modal-edit-substitute').modal('show');
 				}
 				
 				this.addSubstituteAssignment = function() {
@@ -416,9 +488,19 @@
 
 					var includeConstraints = $('#chbxSubstituteContextConstraints').prop("checked");
 					if (includeConstraints) {
-						payload.constraint = $("#subConstraintOrgUnitsTable input[type=checkbox]:checked").map(function() {
-							return this.dataset.uuid;
-						}).get();
+						var inherit = $("#addBtn").data("inherit");
+						if (inherit) {
+							var selectedNodes = $('#orgUnitTreeHierarchy').jstree(true).get_selected();
+
+							var selectedTopNodes = selectedNodes.filter(function(nodeId) {
+								var parent = $('#orgUnitTreeHierarchy').jstree(true).get_parent(nodeId);
+								return !$('#orgUnitTreeHierarchy').jstree(true).is_selected(parent);
+							});
+
+							payload.constraint = selectedTopNodes;
+						} else {
+							payload.constraint =  $('#orgUnitTreeHierarchy').jstree(true).get_selected();
+						}
 					}
 
 					$.ajax({
@@ -452,10 +534,23 @@
 						constraints : null,
 						deleteOrgUnitAssignment: false
 					};
-					
-					payload.constraints = $("#editSubConstraintOrgUnitsTable input[type=checkbox]:checked").map(function() {
-						return this.dataset.uuid;
-					}).get();
+
+					var includeConstraints = $('#chbxSubstituteContextConstraintsEdit').prop("checked");
+					if (includeConstraints) {
+						var inherit = $("#saveEdit").data("inherit");
+						if (inherit) {
+							var selectedNodes = $('#editOrgUnitTreeHierarchy').jstree(true).get_selected();
+
+							var selectedTopNodes = selectedNodes.filter(function(nodeId) {
+								var parent = $('#editOrgUnitTreeHierarchy').jstree(true).get_parent(nodeId);
+								return !$('#editOrgUnitTreeHierarchy').jstree(true).is_selected(parent);
+							});
+
+							payload.constraints = selectedTopNodes;
+						} else {
+							payload.constraints =  $('#editOrgUnitTreeHierarchy').jstree(true).get_selected();
+						}
+					}
 
 					substituteService.callEdit(payload);
 				}

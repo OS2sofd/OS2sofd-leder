@@ -26,7 +26,7 @@ public class SOFDSubstituteService {
 	@Autowired
 	private ManagerConfiguration config;
 
-	public record SubstituteContext(long id, String name, String identifier, boolean supportsConstraints, boolean canBeDeleted, boolean assignableToOrgunit) {}
+	public record SubstituteContext(long id, String name, String identifier, boolean supportsConstraints, boolean canBeDeleted, boolean assignableToOrgunit, boolean inherit) {}
 	public List<SubstituteContext> getSubstituteContexts() {
 		HttpEntity<String> request = new HttpEntity<>(getHeaders());
 		String url = config.getSofdBaseUrl();
