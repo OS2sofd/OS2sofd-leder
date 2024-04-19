@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html>
+<head th:replace="fragments/header :: header(datatables = true, datepicker = true, checkbox = true)" />
+<body class="top-navigation">
+	<div id="wrapper">
+	    <nav th:replace="fragments/navbar :: navbar-aside(page='pausablePeople')" />
+	    <div id="page-wrapper" class="gray-bg">
+	    	<nav th:replace="fragments/navbar :: navbar-header" />
+
+	        <div class="wrapper wrapper-content">
+	            <div class="row">
+	                <div class="col-lg-12">
+                        <div class="ibox">
+                            <div class="ibox-title">
+                                <h5><em class="fa fa-pause"></em> &nbsp; Pausemarkering</h5>
+                            </div>
+                            <div class="ibox-content" >
+								<br/>
+	                        	<table id="people" class="table table-hover col-lg-12">
+			                		<thead>
+										<tr>
+											<th class="col-lg-3">Navn</th>
+											<th class="col-lg-2">Tilhørsforhold</th>
+											<th class="col-lg-1">Pause startdato</th>
+											<th class="col-lg-1">Pause stopdato</th>
+											<th class="col-lg-1">Årsag</th>
+											<th class="col-lg-3">Uddybning</th>
+											<th class="col-lg-1">Handlinger</th>
+										</tr>
+									</thead>
+					                <tbody>
+						                <tr th:each="person: ${pausablePeople}">
+						                	<td th:text="${person.personName}"/>
+											<td>
+												<p th:each="position : ${person.positions}" th:text="${position}"></p>
+											</td>
+											<td>
+												<p th:if="${person.leaveDTO != null AND person.leaveDTO.startDate != null}" th:text="${#temporals.format(person.leaveDTO.startDate, 'dd/MM/yyyy')}"></p>
+											</td>
+											<td>
+												<p th:if="${person.leaveDTO != null AND person.leaveDTO.stopDate != null}" th:text="${#temporals.format(person.leaveDTO.stopDate, 'dd/MM/yyyy')}"></p>
+											</td>
+											<td>
+												<p th:if="${person.leaveDTO != null AND person.leaveDTO.leaveReasonMessage != null}" th:text="${person.leaveDTO.leaveReasonMessage}"></p>
+											</td>
+											<td>
+												<p th:if="${person.leaveDTO != null AND person.leaveDTO.reasonText != null}" th:text="${person.leaveDTO.reasonText}"></p>
+											</td>
+											<td>
+												<em th:if="${person.leaveDTO != null}" onclick="pauseService.openEditModal(this);" style="color: black;" data-paused="true" th:attr="data-uuid=${person.uuid}, data-startdate=${person.leaveDTO.startDate}, data-stopdate=${person.leaveDTO.stopDate}, data-leavereasonvalue=${person.leaveDTO.leaveReasonValue}, data-reasontext=${person.leaveDTO.reasonText}, data-disableaccountorders=${person.leaveDTO.disableAccountOrders}, data-expireaccounts=${person.leaveDTO.expireAccounts}" class="fa fa-fw fa-pencil"></em>
+												<em th:unless="${person.leaveDTO != null}" onclick="pauseService.openEditModal(this);" style="color: black;" data-paused="false" th:attr="data-uuid=${person.uuid}" class="fa fa-fw fa-pencil"></em>
+											</td>
+										</tr>
+					                </tbody>
+			                	</table>
+	                        </div>
+	                    </div>
+	                </div>
+	            </div>
+	        </div>
+	    </div>
+	</div>
+
+	<!-- edit leave modal -->
+	<div class="modal fade" id="modal-edit-leave" role="dialog">
+		<div class="form-horizontal modal-dialog modal-lg">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4>Rediger pausemarkering</h4>
+				</div>
+	
+				<div class="modal-body">
+					<p>
+						Ved at sætte en pausemarkering på medarbejderen, har man mulighed for at vælge, hvorvidt medarbejderen i ”pausen” skal have adgang til kommunens IT-miljø eller ej.
+						<br/><br/>
+						Hvis man sætte hak i ”Sæt udløb på AD-konti” vil medarbejderens AD-konti ikke være tilgængelige i pauseperioden, og dermed vil medarbejderen ikke have adgang til IT-miljøet, hvilket både omfatter brugerkonti og rettigheder til eventuelle fagsystemer. Når pausen er slut, vil adgangene automatisk blive genåbnet. Man kan også nøjes med at markere en pause uden at ”lukke af” for IT-miljøet, så vil brugeren fortsat kunne tilgå dette, men blot være markeret som ”på pause”. Feltet ”Undtag fra IDM-processer” bliver automatisk sat hvis man vælger ”Sæt udløb på AD-konti”.
+						<br/><br/>
+						Start- og slutdato er begge inklusive – dvs. det er første og sidste dag i pausen.
+					</p>
+					<input id="uuid" hidden>
+					<div class="form-group row">
+						<label class="col-lg-2 control-label" for="paused">På pause</label>
+						<div class="col-lg-8">
+							<input id="paused" type="checkbox" class="i-checks">
+						</div>
+					</div>
+					<div class="form-group row">
+						<label class="col-sm-2 control-label" for="startDate">Startdato</label>
+						<div class="col-sm-8">
+							<input type="text" class="form-control date disableAll" id="startDate"/>
+						</div>
+					</div>
+					<div class="form-group row">
+						<label class="col-sm-2 control-label" for="stopDate">Slutdato</label>
+						<div class="col-sm-8">
+							<input type="text" class="form-control date disableAll" id="stopDate"/>
+						</div>
+					</div>
+					<div class="form-group row">
+						<label class="col-sm-2 control-label" for="reason">Årsag</label>
+						<div class="col-sm-8">
+							<select type="text" class="form-control disableAll" id="reason">
+								<option value="ORLOV">Orlov</option>
+								<option value="SKOLEOPHOLD">Skoleophold</option>
+								<option value="INAKTIV">Inaktiv</option>
+								<option value="ANDET">Andet</option>
+							</select>
+						</div>
+					</div>
+					<div class="form-group row">
+						<label class="col-sm-2 control-label" for="reasonText">Uddybning</label>
+						<div class="col-sm-8">
+							<textarea rows="3" class="form-control disableAll" id="reasonText"></textarea>
+						</div>
+					</div>
+					<div class="form-group row">
+						<label class="col-lg-2 control-label" for="disableAccountOrders">Undtag for IdM processer
+							<i id="disableAccountOrdersTooltip" style="width: 10px;" class="fa fa-question" data-toggle="tooltip" data-placement="right" title="Markering sikre, at medarbejderen er undtaget de automatiske IdM-processer i pausen"></i>
+						</label>
+						<div class="col-lg-8">
+							<input id="disableAccountOrders" type="checkbox" class="i-checks disableCheckboxes">
+						</div>
+					</div>
+					<div class="form-group row">
+						<label class="col-lg-2 control-label" for="expireAccounts">Sæt udløb på AD konti
+							<i id="expireAccountsTooltip" style="width: 10px;" class="fa fa-question" data-toggle="tooltip" data-placement="right" title="Markering vil betyde, at medarbejderen ikke har adgang til kommunens IT-miljø i pausen"></i>
+						</label>
+						<div class="col-lg-8">
+							<input id="expireAccounts" type="checkbox" class="i-checks disableCheckboxes">
+						</div>
+					</div>
+					<p>
+						Bemærk at det er alle brugerens tilhørsforhold som bliver pausemarkeret.
+					</p>
+				</div>
+	
+				<div class="modal-footer">
+					<button id="saveEdit" type="button" class="btn btn-primary" onclick="pauseService.editLeave()">Gem</button>
+					<button type="button" class="btn btn-danger" data-dismiss="modal">Annuller</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<div th:replace="fragments/footer :: scripts(datatables = true, datepicker = true, checkbox = true)"></div>
+	<script th:inline="javascript">
+		/*<![CDATA[*/
+		
+			/*[+
+				var leaveRestUrl = [[@{/rest/leave}]];
+			+]*/
+			
+			var token = $("meta[name='_csrf']").attr("content");
+			var pauseService;
+			var currentOnLeave = false;
+			$(document).ready(function () {
+				pauseService = new PauseService();
+				pauseService.init();
+
+				// sorts dd/mm/yyyy dates
+				$.extend( jQuery.fn.dataTableExt.oSort, {
+					"date-dk-pre": function (x){
+						var date = moment(x, "DD/MM/YYYY");
+						return date.isValid() ? date.format("YYYY-MM-DD") : x;
+					}
+				});
+
+			});
+			
+			function PauseService() {
+				
+				this.init = function() {
+					$('.date').datepicker({
+						forceParse: false,
+						autoclose: true,
+						weekStart: 1,
+						format: "dd/mm/yyyy",
+						orientation: "bottom",
+						enableOnReadonly: false,
+						language: "da"
+					});
+
+					$('#paused').on('ifChanged', function(event){
+						var checked = $(this).prop("checked");
+						if (checked) {
+							$(".disableAll").prop("disabled", false);
+							if (!currentOnLeave) {
+								$(".disableCheckboxes").prop("disabled", false);
+							}
+						} else {
+							$(".disableAll").prop("disabled", true);
+						}
+					});
+
+					$('#expireAccounts').on('ifChecked', function(event){
+						$("#disableAccountOrders").iCheck('check');
+					});
+
+					$('#modal-edit-leave').on('shown.bs.modal', function() {
+						$('[data-toggle="tooltip"]').tooltip();
+					});
+
+					var lastColIndex = $("#people").find("th").length - 1;
+
+					var table = $('#people').DataTable({
+						"pageLength" : 50,
+						"bLengthChange": false,
+						"responsive" : true,
+						"autoWidth": false,
+						"columnDefs": [
+							{ "orderable": false, "searchable": false, "targets": lastColIndex },
+							{ "type": "date-dk", targets: "_all" }
+						  ],
+						"order": [ 0, 'asc' ],
+						"language" : {
+							"search" : "Søg",
+							"lengthMenu" : "_MENU_ tilhørsforhold per side",
+							"info" : "Viser _START_ til _END_ af _TOTAL_ tilhørsforhold",
+							"zeroRecords" : "Ingen data...",
+							"infoEmpty" : "",
+							"infoFiltered" : "(ud af _MAX_ tilhørsforhold)",
+							"paginate" : {
+								"previous" : "Forrige",
+								"next" : "Næste"
+							}
+						}
+					});
+				}
+				
+				this.openEditModal = function(elem) {
+					var uuid = $(elem).data('uuid');
+					var paused = $(elem).data('paused');
+
+					if (paused) {
+						currentOnLeave = true;
+						var startDate = $(elem).data('startdate');
+						var stopDate = $(elem).data('stopdate');
+						var leaveReasonValue = $(elem).data('leavereasonvalue');
+						var reasonText = $(elem).data('reasontext');
+						var disableAccountOrders = $(elem).data('disableaccountorders');
+						var expireAccounts = $(elem).data('expireaccounts');
+
+						$("#paused").iCheck('check');
+						$("#startDate").datepicker("update", new Date(startDate));
+						$("#stopDate").datepicker("update", new Date(stopDate));
+						$("#reason").val(leaveReasonValue);
+						$("#reasonText").val(reasonText);
+						$("#disableAccountOrders").iCheck(disableAccountOrders ? 'check' : 'uncheck');
+						$("#expireAccounts").iCheck(expireAccounts ? 'check' : 'uncheck');
+
+						$(".disableAll").prop("disabled", false);
+						$(".disableCheckboxes").prop("disabled", true);
+					} else {
+						currentOnLeave = false;
+						$("#startDate").datepicker("update", new Date());
+						$("#stopDate").datepicker("update", null);
+						$("#reason").val("ORLOV");
+						$("#reasonText").val("");
+						$("#disableAccountOrders").iCheck('uncheck');
+						$("#expireAccounts").iCheck('uncheck');
+						$("#paused").iCheck('uncheck');
+
+						$(".disableAll").prop("disabled", true);
+						$(".disableCheckboxes").prop("disabled", true);
+					}
+
+					$("#uuid").val(uuid);
+					$('#modal-edit-leave').modal('show');
+				}
+				
+				this.editLeave = function() {
+					var uuid = $("#uuid").val();
+					console.log(uuid);
+					payload = {
+						uuid: uuid,
+						paused: $("#paused").prop("checked"),
+						startDate: $("#startDate").val(),
+						stopDate: $("#stopDate").val(),
+						reason: $("#reason").val(),
+						reasonText: $("#reasonText").val(),
+						disableAccountOrders : $("#disableAccountOrders").prop("checked"),
+						expireAccounts : $("#expireAccounts").prop("checked")
+					};
+
+					$.ajax({
+						contentType: 'application/json',
+						url: leaveRestUrl + "/edit",
+						method : "POST",
+						data: JSON.stringify(payload),
+						headers: {
+							'X-CSRF-TOKEN': token
+						},
+						error: function(jqXHR, textStatus, errorThrown) {
+							if (jqXHR.responseText != null && jqXHR.responseText != "" ) {
+								toastr.error(jqXHR.responseText);
+							} else {
+								toastr.error("Der opstod en fejl. Prøv igen.");
+							}
+						},
+						success: function(response) {
+							$('#modal-edit-leave').modal('hide');
+							location.reload(true);
+						}
+					});
+				}
+			}
+		/*]]>*/
+	</script>
+</body>
+</html>

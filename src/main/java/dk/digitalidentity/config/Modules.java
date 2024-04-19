@@ -9,4 +9,5 @@ public class Modules {
 	private SubstituteModule substituteModule;
 	private FunctionHierarchy functionHierarchy;
 	private AffiliationModule affiliationModule;
+	private PausePersonModule pausePersonModule;
 }

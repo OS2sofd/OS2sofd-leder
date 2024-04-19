@@ -24,7 +24,7 @@ public class AffiliationController {
 	private SOFDService sofdService;
 
 	@GetMapping("/affiliations")
-	public String listSubstitutes(Model model, HttpServletRequest request) {
+	public String listAffiliations(Model model, HttpServletRequest request) {
 		if (!config.getModules().getAffiliationModule().isEnabled()) {
 			return "error";
 		}

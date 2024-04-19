@@ -1,10 +1,15 @@
 package dk.digitalidentity.service;
 
 import dk.digitalidentity.config.ManagerConfiguration;
+import dk.digitalidentity.controller.rest.LeaveRestController;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -93,6 +98,44 @@ public class SOFDService {
         }
 
         return response.getBody().uuid;
+    }
+
+    private record PausablePersonDTO(String uuid, String personName, LeaveDTO leaveDTO, List<String> positions) {}
+    private record LeaveDTO(LocalDate startDate, LocalDate stopDate, String leaveReasonValue, String leaveReasonMessage, String reasonText, boolean disableAccountOrders, boolean expireAccounts) {}
+    public List<PausablePersonDTO> getPausablePeople(String uuid) {
+        HttpEntity<String> request = new HttpEntity<>(getHeaders());
+        String url = config.getSofdBaseUrl();
+
+        String query = "/api/manager/" + uuid + "/pausablepeople";
+        List<PausablePersonDTO> result = new ArrayList<>();
+
+        ResponseEntity<PausablePersonDTO[]> response = restTemplate.exchange(url + query, HttpMethod.GET, request, PausablePersonDTO[].class);
+        if (!response.getStatusCode().equals(HttpStatus.OK)) {
+            log.warn("Failed to fetch list of pausable people for manager with uuid " + uuid + ". " + response.getStatusCodeValue() + ", response=" + response.getBody());
+            return null;
+        }
+
+        if (response.getBody() != null) {
+            result = new ArrayList<>(Arrays.asList(response.getBody()));
+        } else {
+            log.warn("Response body was null when fetching a list of pausable people for manager with uuid " + uuid);
+        }
+
+        return result;
+    }
+
+    public boolean editLeave(String uuid, LeaveRestController.EditLeaveDTO dto) {
+        String url = config.getSofdBaseUrl();
+        String query = "/api/manager/" + uuid + "/leave/edit";
+
+        HttpEntity<LeaveRestController.EditLeaveDTO> request = new HttpEntity<>(dto, getHeaders());
+        ResponseEntity<String> response = restTemplate.exchange(url + query, HttpMethod.POST, request, String.class);
+        if (response.getStatusCode().equals(HttpStatus.OK)) {
+            return true;
+        }
+
+        log.warn("Person with uuid " + uuid + " failed to edit leave on person with uuid " + dto.uuid());
+        return false;
     }
 
     private HttpHeaders getHeaders() {
