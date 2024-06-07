@@ -22,8 +22,9 @@
 									<span>Tilføj <span th:text="${function.name}"></span></span>
 								</button>
 								<br/>
-	                        	<table id="functionAssignments" class="table table-hover col-lg-12">
-			                		<thead>
+								<div class="table-wrapper">
+									<table id="functionAssignments" class="table table-hover col-lg-12">
+										<thead>
 										<tr>
 											<th>Medarbejder</th>
 											<th>Startdato</th>
@@ -31,15 +32,15 @@
 											<th th:each="facet : ${function.facets}" th:text="${facet.name}"/>
 											<th sec:authorize="hasRole('ROLE_MANAGER') or hasRole('ROLE_SUBSTITUTE') or hasRole('ROLE_ADMIN')">Handlinger</th>
 										</tr>
-									</thead>
-					                <tbody>
-						                <tr th:each="assignment: ${functionAssignments}">
-						                	<td>
+										</thead>
+										<tbody>
+										<tr th:each="assignment: ${functionAssignments}">
+											<td>
 												<span th:text="${assignment.affiliationPersonUserId} == null ? ${assignment.affiliationPersonName} : (${assignment.affiliationPersonName} + ' (' + ${assignment.affiliationPersonUserId} + ')')" />
 												<i th:if="${assignment.otherAssignments != null && assignment.otherAssignments != ''}" style="width: 10px;" class="fa fa-exclamation-circle" data-toggle="tooltip" data-placement="right" th:title="'Denne medarbejder har andre tildelinger: ' + ${assignment.otherAssignments}"></i>
 											</td>
-						                	<td th:text="${#temporals.format(assignment.startDate, 'dd/MM/yyyy')}"/>
-						                	<td th:text="${#temporals.format(assignment.stopDate, 'dd/MM/yyyy')}"/>
+											<td th:text="${#temporals.format(assignment.startDate, 'dd/MM/yyyy')}"/>
+											<td th:text="${#temporals.format(assignment.stopDate, 'dd/MM/yyyy')}"/>
 											<td th:each="value : ${assignment.facetValues}">
 												<th:block th:if="${value.text != null && value.text != ''}" th:text="${value.text}"/>
 												<th:block th:if="${value.date != null && value.date != ''}" th:text="${#temporals.format(value.date, 'dd/MM/yyyy')}" />
@@ -55,8 +56,9 @@
 												<em onclick="functionService.openEditModal(this);"  th:attr="data-id=${assignment.id}" style="cursor:pointer;color: black;" class="fa fa-fw fa-pencil"></em>
 											</td>
 										</tr>
-					                </tbody>
-			                	</table>
+										</tbody>
+									</table>
+								</div>
 	                        </div>
 	                    </div>
 	                </div>
@@ -262,14 +264,26 @@
 		}
 
 		/* making sure the table doesn't overflow the screen */
-		table {
-			table-layout:fixed;
+
+		.table-wrapper{
+    		display: grid;
+    		grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    		overflow-x: scroll;
+		}
+
+		thead {
+			white-space: nowrap;
 		}
 
 		td {
-			overflow: hidden;
-			word-wrap: break-word;
+			word-break: break-word;
 		}
+
+		.dataTables_wrapper {
+			width: auto;
+		}
+
+
 	</style>
 	
 	<div th:replace="fragments/footer :: scripts(datatables = true, checkbox = true, datepicker = true, jstree = true)"></div>
