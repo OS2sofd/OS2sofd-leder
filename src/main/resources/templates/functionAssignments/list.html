@@ -52,7 +52,7 @@
 												<a href="#" onclick="functionService.removeFunctionAssignment(this);" th:attr="data-assignmentid=${assignment.id}">
 													<em style="color: black;" class="fa fa-fw fa-times"></em>
 												</a> &nbsp;
-												<em onclick="functionService.openEditModal(this);"  th:attr="data-id=${assignment.id}" style="color: black;" class="fa fa-fw fa-pencil"></em>
+												<em onclick="functionService.openEditModal(this);"  th:attr="data-id=${assignment.id}" style="cursor:pointer;color: black;" class="fa fa-fw fa-pencil"></em>
 											</td>
 										</tr>
 					                </tbody>
@@ -260,6 +260,16 @@
 		.chooseOuBtn_edit {
 			height: calc(1.5em + 0.75rem + 2px);
 		}
+
+		/* making sure the table doesn't overflow the screen */
+		table {
+			table-layout:fixed;
+		}
+
+		td {
+			overflow: hidden;
+			word-wrap: break-word;
+		}
 	</style>
 	
 	<div th:replace="fragments/footer :: scripts(datatables = true, checkbox = true, datepicker = true, jstree = true)"></div>
@@ -440,7 +450,7 @@
 
 											$("#functionform_edit").append(html);
 										} else if (facet.type == "ORG") {
-											var orgString = value.facetValueOrgunitUuids.join(",");
+											var orgString = (value.facetValueOrgunitUuids) ? value.facetValueOrgunitUuids.join(",") : "";
 											var html = '<div class=\"form-group row\">' +
 															'<label class=\"col-lg-2 control-label\" style=\"word-break: break-word;\">' + facet.name + '</label>';
 

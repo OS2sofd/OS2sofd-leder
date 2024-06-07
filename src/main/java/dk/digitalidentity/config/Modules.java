@@ -6,8 +6,8 @@ import lombok.Setter;
 @Getter
 @Setter
 public class Modules {
-	private SubstituteModule substituteModule;
-	private FunctionHierarchy functionHierarchy;
-	private AffiliationModule affiliationModule;
-	private PausePersonModule pausePersonModule;
+	private SubstituteModule substituteModule = new SubstituteModule();
+	private FunctionHierarchy functionHierarchy = new FunctionHierarchy();
+	private AffiliationModule affiliationModule = new AffiliationModule();
+	private PausePersonModule pausePersonModule = new PausePersonModule();
 }

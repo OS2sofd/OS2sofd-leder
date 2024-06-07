@@ -42,7 +42,7 @@
 												<span th:if="${affiliation.active}" class="badge badge-primary">Aktiv</span>
 											</td>
 											<td>
-												<em onclick="affiliationService.openEditModal(this);" style="color: black;" th:attr="data-id=${affiliation.id}, data-position=${affiliation.positionName}, data-positiondisplayname=${affiliation.positionDisplayName}, data-start=${affiliation.startDate}, data-stop=${affiliation.stopDate}, data-internalreference=${affiliation.internalReference}" class="fa fa-fw fa-pencil"></em>
+												<em onclick="affiliationService.openEditModal(this);" style="cursor:pointer;color: black;" th:attr="data-id=${affiliation.id}, data-position=${affiliation.positionName}, data-positiondisplayname=${affiliation.positionDisplayName}, data-start=${affiliation.startDate}, data-stop=${affiliation.stopDate}, data-internalreference=${affiliation.internalReference}" class="fa fa-fw fa-pencil"></em>
 											</td>
 										</tr>
 					                </tbody>

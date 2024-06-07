@@ -47,7 +47,7 @@
 												<a th:if="${assignment.isOrgUnitAssignment}" href="#" onclick="substituteService.removeSubstituteOrgUnitAssignment(this);" th:attr="data-substituteuuid=${assignment.substitute.uuid}, data-contextid=${assignment.substituteContextId}">
 													<em style="color: black;" class="fa fa-fw fa-times"></em>
 												</a>&nbsp;
-												<em onclick="substituteService.openEditModal(this);"  th:attr="data-id=${assignment.id}, data-substitutename=${assignment.substitute.name}, data-substituteuuid=${assignment.substitute.uuid}, data-contextid=${assignment.substituteContextId}, data-ous=${assignment.constraintOrgUnitsUuids}, data-orgunitassignment=${assignment.isOrgUnitAssignment}" style="color: black;" class="fa fa-fw fa-pencil"></em>
+												<em onclick="substituteService.openEditModal(this);"  th:attr="data-id=${assignment.id}, data-substitutename=${assignment.substitute.name}, data-substituteuuid=${assignment.substitute.uuid}, data-contextid=${assignment.substituteContextId}, data-ous=${assignment.constraintOrgUnitsUuids}, data-orgunitassignment=${assignment.isOrgUnitAssignment}" style="cursor:pointer;color: black;" class="fa fa-fw fa-pencil"></em>
 											</td>
 										</tr>
 					                </tbody>

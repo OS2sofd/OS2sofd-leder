@@ -14,8 +14,8 @@ public class ManagerConfiguration {
     private Modules modules;
     private String sofdBaseUrl;
     private String sofdApiKey;
-    private HTMLConfig html;
-    private EmailConfig email;
+    private HTMLConfig html = new HTMLConfig();
+    private EmailConfig email = new EmailConfig();
 
     // used to point to mounted docker volume for custom resources (logo and css)
     // can be replace with e.g. "file:/custom/"
