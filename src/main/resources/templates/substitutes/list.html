@@ -15,7 +15,7 @@
                                 <h5><em class="fa fa-users"></em> &nbsp; Stedfortrædere</h5>
                             </div>
                             <div class="ibox-content" >
-								<div th:utext="${@textService.getSubstituteHelptext()}"></div>
+								<div th:utext="${@textService.getText('SUBSTITUTE_HELPTEXT')}"></div>
 
                            		<button class="btn btn-primary" style="margin-bottom: 10px;" onclick="substituteService.openCreateModal();">
                                		<em class="fa fa-fw fa-user-plus"></em>

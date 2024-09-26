@@ -10,6 +10,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import java.util.Map;
 
 @Controller
 public class AdminController {
@@ -17,50 +20,22 @@ public class AdminController {
     @Autowired
     private TextService textService;
 
-    public record TextDTO(String value) {
-    }
-
-    @RequireReadOrAdminAccess
-    @GetMapping("/admin/welcome/edit")
-    public String EditWelcomeText(Model model) {
-        model.addAttribute("TextDTO", new TextDTO(textService.getWelcomeText()));
-        return "admin/welcome_edit";
-    }
-
-    @RequireAdminAccess
-    @PostMapping("/admin/welcome/edit")
-    public String EditWelcomeTextPost(Model model, TextDTO textDTO) {
-        if (textDTO.value().length() > 65536) {
-            TextDTO dto = new TextDTO(textDTO.value());
-            model.addAttribute("TextDTO", dto);
-            model.addAttribute("showError", true);
-
-            return "admin/welcome_edit";
-        }
-
-        textService.setWelcomeText(getSafeHtml(textDTO.value()));
-        return "redirect:/";
-    }
-
     @RequireReadOrAdminAccess
     @GetMapping("/admin/helptext/edit")
     public String EditHelpText(Model model) {
-        model.addAttribute("helpText", new TextDTO(textService.getSubstituteHelptext()));
+        model.addAttribute("helpTexts", textService.getAll());
         return "admin/helptext_edit";
     }
 
     @RequireAdminAccess
     @PostMapping("/admin/helptext/edit")
-    public String EditHelpTextPost(Model model, TextDTO helpTextDTO) {
-        if (helpTextDTO.value().length() > 65536) {
-            TextDTO dto = new TextDTO(helpTextDTO.value());
-            model.addAttribute("helpText", dto);
-            model.addAttribute("showError", true);
-
-            return "admin/helptext_edit";
+    public String EditHelpTextPost(@RequestParam Map<String, String> parameters) {
+        for( var textType : TextService.TextType.values() ) {
+            if( parameters.containsKey(textType.name())) {
+                textService.setText(textType, getSafeHtml(parameters.get(textType.name())));
+            }
         }
-        textService.setSubstituteHelptext(getSafeHtml(helpTextDTO.value()));
-        return "redirect:/";
+        return "redirect:/admin/helptext/edit";
     }
 
     private String getSafeHtml(String html) {

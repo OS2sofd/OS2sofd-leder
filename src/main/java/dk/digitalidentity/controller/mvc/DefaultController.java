@@ -8,6 +8,7 @@ import dk.digitalidentity.service.SOFDManagerService;
 import dk.digitalidentity.service.SOFDManagerService.ContextDTO;
 import dk.digitalidentity.service.SOFDManagerService.ContextResultDTO;
 import dk.digitalidentity.service.SOFDManagerService.ContextRole;
+import dk.digitalidentity.service.TextService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.error.ErrorAttributeOptions;

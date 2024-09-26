@@ -2,51 +2,74 @@ package dk.digitalidentity.service;
 
 import dk.digitalidentity.dao.TextDao;
 import dk.digitalidentity.dao.model.Text;
+import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
+
 @Service
 public class TextService {
-    public static final String WELCOME_TEXT = "WELCOME_TEXT";
-    public static final String SUBSTITUTE_HELPTEXT = "SUBSTITUTE_HELPTEXT";
-
     @Autowired
     private TextDao textDao;
 
-    private String getText(String key) {
-        Text text = textDao.findByKey(key);
+    public record TextDTO(TextService.TextType textType, String value) { }
+
+    public String getText(TextType textType) {
+        Text text = textDao.findByKey(textType.name());
         if (text == null) {
             text = new Text();
-            text.setKey(key);
+            text.setKey(textType.name());
             text.setValue("");
             text = textDao.save(text);
         }
         return text.getValue();
     }
 
-    private void setText(String key, String value) {
-        Text text = textDao.findByKey(key);
-        if (text.getValue() == null || (text.getValue() != null && !text.getValue().equals(value))) {
+    public void setText(TextType textType, String value) {
+        Text text = textDao.findByKey(textType.name());
+        if (text.getValue() == null || !text.getValue().equals(value)) {
             text.setValue(value);
             textDao.save(text);
         }
     }
 
-    public String getWelcomeText() {
-        return this.getText(WELCOME_TEXT);
+    // method used from thymeleaf to avoid too much boilerplate
+    public String getText(String textType) {
+        return getText(TextType.valueOf(textType));
     }
 
-    public void setWelcomeText(String value) {
-        this.setText(WELCOME_TEXT, value);
+    public List<TextDTO> getAll() {
+        var result = new ArrayList<TextDTO>();
+        for( var textType : TextType.getValuesSorted() ) {
+            result.add(new TextDTO(textType, getText(textType)));
+        }
+        return result;
     }
 
-    public String getSubstituteHelptext() {
-        return this.getText(SUBSTITUTE_HELPTEXT);
-    }
+    @Getter
+    public enum TextType {
+        WELCOME_TEXT("Velkommen",1)
+        ,ALL_FUNCTION_ASSIGNMENTS_HELPTEXT("Alle medarbejderfunktioner hjælpetekst",2)
+        ,SUBSTITUTE_HELPTEXT("Stedfortrædere hjælpetekst",3)
+        ,AFFILIATION_HELPTEXT("Tilhørsforhold hjælpetekst",4)
+        ,LEAVE_HELPTEXT("Pausemarkering hjælpetekst",5);
 
-    public void setSubstituteHelptext(String value) {
-        this.setText(SUBSTITUTE_HELPTEXT, value);
-    }
 
+        private final String displayValue;
+        private final int order;
+
+        private TextType(String displayValue, int order) {
+            this.displayValue = displayValue;
+            this.order = order;
+        }
+
+        public static List<TextType> getValuesSorted() {
+            return Arrays.stream(TextType.values()).sorted(Comparator.comparing(t -> t.order)).toList();
+        }
+    }
 
 }

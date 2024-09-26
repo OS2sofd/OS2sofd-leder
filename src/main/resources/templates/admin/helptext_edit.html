@@ -12,32 +12,25 @@
 	                <div class="col-lg-12">
                         <div class="ibox" sec:authorize="hasRole('ROLE_ADMIN')">
                             <div class="ibox-title">
-                                <h5><em class="fa fa-pencil"></em> &nbsp; Rediger hjælpetekster</h5>
+                                <h5><em class="fa fa-pencil"></em> &nbsp; Rediger tekster</h5>
                             </div>
-		
-                            <div class="ibox-content" >
-								<p>Her kan du redigere den hjælpetekst, der vises på stedfortrædersiden.</p>
-								
-								<form action="#" th:action="@{/admin/helptext/edit}" th:object="${helpText}" method="post">
-									<textarea id="content" class="form-control" th:field="*{value}" autocomplete="off"></textarea>
-									<p th:if="${showError}" style="color: red;">Den indtastede tekst er for lang. Der tillades max 65536 tegn</p>
-									<br/>
-
-									<button type="submit" class="btn btn-primary block full-width m-b">Gem tekst</button>
-									<a th:href="@{/}" class="btn btn-danger block full-width m-b">Annuller</a>
-								</form>
-	                        </div>
-	                    </div>
-						<div class="ibox" sec:authorize="!hasRole('ROLE_ADMIN') AND hasRole('ROLE_READER')">
-							<div class="ibox-title">
-								<h5><em class="fa fa-eye"></em> &nbsp; Se hjælpetekster</h5>
-							</div>
 
 							<div class="ibox-content" >
-								<p>Her kan du se den hjælpetekst, der vises på stedfortrædersiden. Kun administratorer kan redigere hjælpetekster.</p>
-								<pre th:utext="${helpText.value}"></pre>
+								<form action="#" th:action="@{/admin/helptext/edit}" th:object="${helpText}" method="post">
+									<div class="form-group row" th:each="helpText: ${helpTexts}">
+										<label class="col-sm-2 col-form-label" th:text="${helpText.textType.getDisplayValue()}"></label>
+										<div class="col-sm-10">
+											<textarea th:name="${helpText.textType.name()}" class="form-control" autocomplete="off" maxlength="65536">[[${helpText.value}]]</textarea>
+										</div>
+									</div>
+									<div class="form-group row">
+										<button type="submit" class="btn btn-primary block full-width m-b">Gem</button>
+										<a th:href="@{/}" class="btn btn-danger block full-width m-b">Annuller</a>
+									</div>
+								</form>
 							</div>
-						</div>
+
+	                    </div>
 	                </div>
 	            </div>
 	        </div>
@@ -53,8 +46,8 @@
 			
 			var token = $("meta[name='_csrf']").attr("content");
 			$(document).ready(function () {
-				$('#content').summernote({
-					"height": 320,
+				$('input[type=text], textarea').summernote({
+					"height": 150,
 					"toolbar": []
 				});
 			});

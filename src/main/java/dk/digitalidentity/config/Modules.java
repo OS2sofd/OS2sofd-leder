@@ -10,4 +10,5 @@ public class Modules {
 	private FunctionHierarchy functionHierarchy = new FunctionHierarchy();
 	private AffiliationModule affiliationModule = new AffiliationModule();
 	private PausePersonModule pausePersonModule = new PausePersonModule();
+	private AccountApprovalModule accountApprovalModule = new AccountApprovalModule();
 }

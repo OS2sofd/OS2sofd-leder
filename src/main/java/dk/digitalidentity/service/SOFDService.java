@@ -29,6 +29,8 @@ public class SOFDService {
     @Autowired
     private ManagerConfiguration config;
 
+    @Autowired
+    SOFDService self;
 
     public record SofdAffiliation(long id, String personName, String positionName, String positionDisplayName,
                                   String orgUnitName, boolean active, LocalDate startDate, LocalDate stopDate,
@@ -78,10 +80,11 @@ public class SOFDService {
         return false;
     }
 
-    private record Person(String uuid) {
-    }
-    @Cacheable(value = "personuuids", unless = "#result == null")
-    public String ConvertKombitUuidToPersonUuid(String kombitUuid) {
+    private record User(String userId, String kombitUuid) { }
+    private record Person(String uuid, List<User> users) { }
+
+    @Cacheable(value = "personMap", unless = "#result == null")
+    public Person getPersonByKombitUuid(String kombitUuid) {
         HttpEntity<String> request = new HttpEntity<>(getHeaders());
         String url = config.getSofdBaseUrl();
         String query = "/api/v2/persons/byKombitUuid/" + kombitUuid;
@@ -97,7 +100,19 @@ public class SOFDService {
             return null;
         }
 
-        return response.getBody().uuid;
+        return response.getBody();
+    }
+
+
+    public String ConvertKombitUuidToPersonUuid(String kombitUuid) {
+        var person = self.getPersonByKombitUuid(kombitUuid);
+        return person == null ? null : person.uuid();
+    }
+
+    public String ConvertKombitUuidToUserId(String kombitUuid) {
+        var person = self.getPersonByKombitUuid(kombitUuid);
+        var user = person == null ? null : person.users().stream().filter(u -> kombitUuid.equalsIgnoreCase(u.kombitUuid())).findFirst().orElse(null);
+        return user == null ? null : user.userId();
     }
 
     private record PausablePersonDTO(String uuid, String personName, LeaveDTO leaveDTO, List<String> positions) {}

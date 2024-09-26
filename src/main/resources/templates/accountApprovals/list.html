@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head th:replace="fragments/header :: header(datatables = true, datepicker = true)"></head>
+<body class="top-navigation">
+<div id="wrapper">
+    <nav th:replace="fragments/navbar :: navbar-aside (page = 'pendingapprovals')"></nav>
+    <div id="page-wrapper" class="gray-bg">
+        <nav th:replace="fragments/navbar :: navbar-header (page = 'pendingapprovals')"></nav>
+        <div class="wrapper wrapper-content">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="ibox">
+                        <div class="ibox-title">
+                            <h3>Konti til godkendelse</h3>
+                        </div>
+                        <div class="ibox-content">
+                            <div class="table-responsive">
+                                <table id="listTable" class="table table-striped table-hover listTable">
+                                    <thead>
+                                    <tr>
+                                        <th class="col-md-2">Aktivering</th>
+                                        <th class="col-md-5">Navn</th>
+                                        <th class="col-md-2">Bruger id</th>
+                                        <th class="col-md-2">Bruger type</th>
+                                        <th class="col-md-1">Handlinger</th>
+                                    </tr>
+                                    </thead>
+
+                                    <tbody>
+                                    <tr th:each="order : ${orders}">
+                                        <td th:text="${#dates.format(order.activationTimestamp, 'yyyy-MM-dd HH:mm')}"></td>
+                                        <td th:text="${order.person.firstname + ' ' + order.person.surname}"></td>
+                                        <td th:text="${order.userId}"></td>
+                                        <td th:text="${order.userType}"></td>
+                                        <td>
+                                            <a onclick="accountOrderDatatableService.approve(this);" th:attr="data-orderid=${order.id}"><em class="fa fa-fw fa-check"></em></a>
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                    <tfoot>
+                                    <tr>
+                                        <th th:text="aktivering"></th>
+                                        <th th:text="navn"></th>
+                                        <th th:text="id"></th>
+                                        <th th:text="typer"></th>
+                                        <th class="disabled"></th>
+                                    </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div th:replace="fragments/footer :: scripts(datatables = true, datepicker = true)"></div>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    var token = $("meta[name='_csrf']").attr("content");
+
+    var accountOrderDatatableService;
+    $(document).ready(function () {
+        accountOrderDatatableService = new AccountOrderDatatableService();
+        accountOrderDatatableService.init();
+    });
+
+    function AccountOrderDatatableService() {
+        this.init = function() {
+            accountOrderDatatableService.addSearchBoxes();
+            accountOrderDatatableService.initDataTable();
+        }
+
+        this.addSearchBoxes = function() {
+            // Add searchbox based on column title to each footer
+            $('#listTable tfoot th').each( function () {
+                if (!$(this).hasClass('disabled')) {
+                    var title = $(this).text();
+                    $(this).html('<input class="form-control" style="width:100%;" type="text" placeholder="Søg i '+title+'" />');
+                }
+            });
+        }
+
+        this.initDataTable = function() {
+            // Initialize with searchfunction
+            var table = $('#listTable').DataTable({
+                "bDestroy": true,
+                //'paging':   paging,
+                'ordering': true,
+                'info':     true,
+                'pageLength': 50,
+                'initComplete': function () {
+                    // Apply the search
+                    this.api().columns().every( function () {
+                        var that = this;
+
+                        $( 'input', this.footer() ).on('keyup change clear', function () {
+                            if (that.search() !== this.value) {
+                                that.search(this.value).draw();
+                            }
+                        });
+                    });
+
+                    // Put the footer under the header
+                    var r = $('#listTable tfoot tr');
+                    r.find('th').each(function(){
+                        $(this).css('padding', 8);
+                    });
+                    $('#listTable thead').append(r);
+                },
+                "language" : {
+                    "search" : "Søg",
+                    "lengthMenu" : "_MENU_ tilhørsforhold per side",
+                    "info" : "Viser _START_ til _END_ af _TOTAL_ tilhørsforhold",
+                    "zeroRecords" : "Ingen data...",
+                    "infoEmpty" : "",
+                    "infoFiltered" : "(ud af _MAX_ tilhørsforhold)",
+                    "paginate" : {
+                        "previous" : "Forrige",
+                        "next" : "Næste"
+                    }
+                }
+            });
+            table.order([0, 'desc']).draw();
+        }
+
+        this.approve = function(element) {
+            console.log("/pendingapprovals/" + element.dataset.orderid);
+            $.ajax({
+                url: "/pendingapprovals/" + element.dataset.orderid,
+                headers: {
+                    'X-CSRF-TOKEN': token
+                },
+                type: 'post',
+                contentType: 'application/json',
+                success: function( data, textStatus, jQxhr ){
+                    location.reload(true);
+                },
+                error: function( jqXhr, textStatus, errorThrown ){
+                    $.notify({
+                        message: deleteErrorMsg
+                    }, {
+                        status: 'danger',
+                        autoHideDelay: 4000
+                    });
+                }
+            });
+        }
+    }
+
+    /*]]>*/
+</script>
+</body>
+</html>

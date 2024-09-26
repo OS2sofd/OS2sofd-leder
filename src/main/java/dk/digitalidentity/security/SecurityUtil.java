@@ -31,7 +31,18 @@ public class SecurityUtil {
 	public static boolean isLoggedIn() {
 		return SecurityContextHolder.getContext().getAuthentication() != null;
 	}
-	
+
+	public static String getUserId() {
+		var userUuid = getUserUuid();
+		String userId = null;
+		if( userUuid != null)
+		{
+			userId = StaticContextAccessor.getBean(SOFDService.class).ConvertKombitUuidToUserId(userUuid);
+		}
+		return userId;
+	}
+
+
 	public static String getPersonUuid() {
 		var userUuid = getUserUuid();
 		String personUuid = null;

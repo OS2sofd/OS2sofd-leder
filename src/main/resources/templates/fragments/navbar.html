@@ -19,42 +19,12 @@
 							<div sec:authorize="hasRole('ROLE_ADMIN')" class="list-group-item">
 								<ul style="padding-left: 0px;">
 									<li>
-			                            <a th:href="@{/admin/welcome/edit}" style="color: black; border: none; font-size: small;">
-			                                <i class="fa fa-pencil"></i> &nbsp; Rediger velkomsttekst
-			                            </a>
-			                        </li>
-			                    </ul>
-			                </div>
-
-							<div sec:authorize="!hasRole('ROLE_ADMIN') AND hasRole('ROLE_READER')" class="list-group-item">
-								<ul style="padding-left: 0px;">
-									<li>
-										<a th:href="@{/admin/welcome/edit}" style="color: black; border: none; font-size: small;">
-											<i class="fa fa-eye"></i> &nbsp; Se velkomsttekst
-										</a>
-									</li>
-								</ul>
-							</div>
-
-							<div sec:authorize="hasRole('ROLE_ADMIN')" class="list-group-item">
-								<ul style="padding-left: 0px;">
-									<li>
 			                            <a th:href="@{/admin/helptext/edit}" style="color: black; border: none; font-size: small;">
-			                                <i class="fa fa-pencil"></i> &nbsp; Rediger hjælpetekster
+			                                <i class="fa fa-pencil"></i> &nbsp; Rediger tekster
 			                            </a>
 			                        </li>
 			                    </ul>
 			                </div>
-
-							<div sec:authorize="!hasRole('ROLE_ADMIN') AND hasRole('ROLE_READER')" class="list-group-item">
-								<ul style="padding-left: 0px;">
-									<li>
-										<a th:href="@{/admin/helptext/edit}" style="color: black; border: none; font-size: small;">
-											<i class="fa fa-eye"></i> &nbsp; Se hjælpetekster
-										</a>
-									</li>
-								</ul>
-							</div>
 
 							<div class="list-group-item">
 								<ul style="padding-left: 0px;">
@@ -100,6 +70,9 @@
 	                <li th:if="${@managerConfiguration.getModules().getSubstituteModule().isEnabled()}" th:classappend="${page == 'substitutes'} ? 'active' : ''">
 	                    <a sec:authorize="hasRole('ROLE_MANAGER')" href="/substitutes"><div><span class="nav-label"><em class="fa fa-users"></em> &nbsp; Stedfortrædere</span></div></a>
 	                </li>
+					<li th:if="${@managerConfiguration.getModules().getAccountApprovalModule().isEnabled()}" th:classappend="${page == 'pendingapprovals'} ? 'active' : ''">
+						<a sec:authorize="hasRole('ROLE_MANAGER') or hasRole('ROLE_SUBSTITUTE')" href="/pendingapprovals"><div><span class="nav-label"><em class="fa fa-thumbs-up"></em> &nbsp; Kontogodkendelse</span></div></a>
+					</li>
 					<li th:if="${@managerConfiguration.getModules().getAffiliationModule().isEnabled()}" th:classappend="${page == 'affiliations'} ? 'active' : ''">
 						<a sec:authorize="hasRole('ROLE_MANAGER') or hasRole('ROLE_SUBSTITUTE')" href="/affiliations"><div><span class="nav-label"><em class="fa fa-handshake-o"></em> &nbsp; Tilhørsforhold</span></div></a>
 					</li>
