@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+<head th:replace="fragments/header :: header(jstree = true)" />
+<body class="top-navigation">
+<div id="wrapper">
+    <nav th:replace="fragments/navbar :: navbar-aside(page='managers')" />
+    <div id="page-wrapper" class="gray-bg">
+        <nav th:replace="fragments/navbar :: navbar-header" />
+
+        <div class="wrapper wrapper-content">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="ibox">
+                        <div class="ibox-title">
+                            <h5><em class="fa fa-chevron-circle-up"></em> &nbsp; Lederopmærkning</h5>
+                        </div>
+                            <div class="ibox-content" >
+                                <div th:utext="${@textService.getText('MANAGER_HELPTEXT')}"></div>
+
+
+                                    <div class="row">
+                                        <div class="col-md-6" style="padding: 0px 75px 0px 20px;">
+                                            <label class="control-label" style="margin-top: 10px;">Søg efter enhed</label>
+                                            <input class="form-control" id='orgUnitTreeSearchField' autofocus="autofocus" style="margin-bottom: 40px;" />
+                                            <div id="ouWrapper">
+                                                <div th:id='orgUnitTreeHierarchy'></div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6" style="padding: 0px 75px 0px 20px;">
+                                            <form action="#" th:action="@{/managers/delete}" th:object="${helpText}" method="post">
+                                                <input name="orgUnitUuid" id="deleteOrgUnitUuid" type="hidden" />
+                                                <h4 id="selectedOrgUnitHeader"></h4>
+                                                <div id="managerDescription"></div>
+                                                <div id="noAccessMessage">
+                                                    <hr>
+                                                    Du har ingen adgang til at ændre leder for denne enhed.
+                                                </div>
+                                                <div id="deleteManagerPanel">
+                                                    <hr>
+                                                    Hvis du sletter denne lederopmærning, vil enheden automatisk nedarve lederopmærkningen fra den overliggende enhed, såfremt der er angivet en leder der.</br></br>
+                                                    <button id="deleteManagerButton" type="submit" class="btn btn-danger">Slet lederopmærkning</button>
+                                                </div>
+                                            </form>
+                                            <hr>
+                                            <form action="#" th:action="@{/managers/set}" th:object="${helpText}" method="post">
+                                                <div id="editManagerPanel">
+                                                    <input name="orgUnitUuid" id="setOrgUnitUuid" type="hidden" />
+                                                    Du kan her angive en ny leder for enheden. Lederen vil automatisk blive leder for alle underliggende enheder, som ikke har en anden leder angivet.<br/><br/>
+                                                    <input type="text" class="form-control cleanup" id="manager_search" autocomplete="off" placeholder="Søg efter leder"/>
+                                                    <div id="dropdownResultInternal" class="dropdown" data-toggle="dropdown">
+                                                        <ul id="searchResultDropDownMenuInternal" class="dropdown-menu" style="width: 100%; padding-left: 15px; padding-right: 15px; line-height: 25px; top: -2px !important;">
+                                                        </ul>
+                                                    </div>
+                                                    <input name="managerUuid" id="selectedManagerUuid" type="hidden" />
+                                                    <br/>
+                                                    <button id="setManager" type="submit" class="btn btn-primary" disabled>Gem lederopmærkning</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div th:replace="fragments/footer :: scripts(jstree = true)"></div>
+<script th:inline="javascript">
+    /*<![CDATA[*/
+
+        /*[+
+            var orgunitManagerTree = [[${orgunitManagerTree}]];
+            var managerRestUrl = [[@{/rest/manager}]];
+        +]*/
+
+        var token = $("meta[name='_csrf']").attr("content");
+        var managerService;
+        $(document).ready(function () {
+            managerService = new ManagerService();
+            managerService.init();
+            searchService = new SearchService();
+            searchService.init();
+        });
+
+        function ManagerService() {
+
+            this.init = function() {
+                var treeConfig = {
+                    "core": {
+                        "data": orgunitManagerTree,
+                        "themes": {
+                            "icons": false
+                        }
+                    },
+                    "search" : {
+                        "show_only_matches": true,
+                        "search_callback": function(str, node) {
+                            return (node.text.toUpperCase().includes(str.toUpperCase()));
+                        }
+                    },
+                    "plugins" : [
+                        "wholerow", "search", "state"
+                    ],
+                };
+
+                $('#orgUnitTreeHierarchy').jstree(treeConfig)
+                    .on("ready.jstree", function (e, data) {
+                        orgunitManagerTree.forEach(function(entry){
+                            var nodeHtml = entry.orgUnitName;
+                            if( entry.managerExists ) {
+                                if( entry.inherited ) {
+                                    nodeHtml += " (<span style='font-style: italic;'>" + entry.managerName + "</span>)";
+                                }
+                                else {
+                                    nodeHtml += " <span class='badge badge-primary'>" + entry.managerName + "</span>";
+                                }
+                            }
+                            nodeHtml += entry.access ? ' <i class="fa fa-pencil" aria-hidden="true"></i>' : ' <i class="fa fa-lock" aria-hidden="true"></i>';
+                            $('#orgUnitTreeHierarchy').jstree(true).set_text(entry.id, nodeHtml);
+                        });
+                    })
+                    .on("select_node.jstree", function(e, data) {
+				        var selectedOrg = data.node.original;
+				        $("#selectedOrgUnitHeader").text(selectedOrg.orgUnitName);
+				        $("#deleteOrgUnitUuid").val(selectedOrg.id);
+				        $("#setOrgUnitUuid").val(selectedOrg.id);
+				        var managerDescription = "";
+				        if(!selectedOrg.managerExists) {
+				            managerDescription = "Der er ingen leder i <b>" + selectedOrg.orgUnitName + "</b>";
+				        }
+				        else {
+				            managerDescription = "<b>" + selectedOrg.managerName + "</b> er leder i <b>" + selectedOrg.orgUnitName + "</b><br /><br />";
+				            managerDescription += selectedOrg.inherited ? "Lederangivelsen er nedarvet fra en overliggende enhed" : "Lederangivelsen er angivet på denne enhed";
+                            managerDescription += selectedOrg.source == "SELECTED" ? ", og den er manuelt valgt." : ", og den er importeret fra et eksternt system.";
+				        }
+				        $("#managerDescription").html(managerDescription);
+				        $("#noAccessMessage").css("display", selectedOrg.access ? "none" : "block");
+				        $("#deleteManagerPanel").css("display", selectedOrg.access && selectedOrg.source == "SELECTED" && !selectedOrg.inherited ? "block" : "none");
+				        $("#editManagerPanel").css("display", selectedOrg.access ? "block" : "none");
+
+			        });
+
+			    // searching in the JSTree
+                var to = false;
+                $('#orgUnitTreeSearchField').keyup(function() {
+                    if (to) {
+                        clearTimeout(to);
+                    }
+
+                    to = setTimeout(function() {
+                        var v = $('#orgUnitTreeSearchField').val();
+
+                        $('#orgUnitTreeHierarchy').jstree(true).search(v);
+                    }, 400);
+                });
+
+            };
+        }
+
+        function SearchService() {
+            this.init = function() {
+                $('#manager_search').on('input', function() {
+                    $("#selectedManagerUuid").val("");
+                    $("#setManager").prop( "disabled", true );
+                    searchService.executeQuery();
+                });
+            }
+
+            this.executeQuery = function() {
+                var query = $('#manager_search').val();
+                if (query.length >= 2) {
+                    $.ajax({
+                        url: managerRestUrl + "/search/person?query=" + query,
+                        method: "get",
+                        success: function(response) {
+                            searchService.updateDropdown(response);
+                        }
+                    });
+                }
+                else {
+                    searchService.updateDropdown(null);
+                }
+            }
+
+            this.updateDropdown = function (resultSet) {
+                if (resultSet && resultSet.length > 0) {
+                    $("#searchResultDropDownMenuInternal").empty();
+
+                    for (var i = 0; i < resultSet.length; i++) {
+                        var guiValue = resultSet[i].display;
+                        var uuid = resultSet[i].uuid;
+                        $("#searchResultDropDownMenuInternal").append("<a href='#' style='color: black;' onclick=\"searchService.select('" + uuid + "','" + guiValue + "')\"><li>" + guiValue + "</li></a>");
+                    }
+
+                    $("#searchResultDropDownMenuInternal").addClass("show");
+                }
+                else {
+                    $("#searchResultDropDownMenuInternal").removeClass("show");
+                }
+            }
+
+            this.select = function(uuid, gui) {
+                $("#selectedManagerUuid").val(uuid);
+                $('#manager_search').val(gui);
+
+                window.setTimeout(function(){
+                    searchService.updateDropdown(null);
+                }, 100);
+                $("#setManager").prop( "disabled", false );
+            }
+        }
+
+    /*]]>*/
+</script>
+</body>
+</html>

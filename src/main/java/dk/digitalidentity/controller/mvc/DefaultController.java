@@ -1,14 +1,8 @@
 package dk.digitalidentity.controller.mvc;
 
-import dk.digitalidentity.config.RoleConstants;
-import dk.digitalidentity.config.SessionConstants;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.SOFDFunctionAssignmentService;
 import dk.digitalidentity.service.SOFDManagerService;
-import dk.digitalidentity.service.SOFDManagerService.ContextDTO;
-import dk.digitalidentity.service.SOFDManagerService.ContextResultDTO;
-import dk.digitalidentity.service.SOFDManagerService.ContextRole;
-import dk.digitalidentity.service.TextService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.error.ErrorAttributeOptions;
@@ -50,115 +44,31 @@ public class DefaultController implements ErrorController {
 
     @GetMapping("/logincontexts")
     public String loginContexts(Model model, HttpServletRequest request) {
-        ContextResultDTO result = sofdManagerService.getLoginContexts();
-        if (result == null) {
-            return "error";
-        }
-
-        if (SecurityUtil.hasRole(RoleConstants.ADMIN.toString())) {
-            try {
-                result.contexts().add(new ContextDTO(SecurityUtil.getPersonUuid(), result.name(), ContextRole.ADMIN, sofdFunctionAssignmentService.getParentOUUuid()));
-            } catch (Exception e) {
-                log.warn("Failed to get parent ou: " + e.getMessage());
-                return "error";
+        try {
+            if( SecurityUtil.getCurrentContext() == null ) {
+                // choose the first available context when first logging in
+                SecurityUtil.setCurrentContext(SecurityUtil.getLoggedInUser().contexts().stream().findFirst().orElseThrow());
             }
-        }
-
-        if (SecurityUtil.hasRole(RoleConstants.READER.toString())) {
-            try {
-                result.contexts().add(new ContextDTO(SecurityUtil.getPersonUuid(), result.name(), ContextRole.READER, sofdFunctionAssignmentService.getParentOUUuid()));
-            } catch (Exception e) {
-                log.warn("Failed to get parent ou: " + e.getMessage());
-                return "error";
-            }
-        }
-
-        ContextDTO loginContext = null;
-
-        if (result.contexts().size() == 1) {
-            loginContext = result.contexts().get(0);
-        } else if (result.contexts().size() > 1) {
-            loginContext = result.contexts().stream().filter(c -> c.role().equals(ContextRole.SUBSTITUTE)).findFirst().orElse(null);
-            ContextDTO manager = result.contexts().stream().filter(c -> c.role().equals(ContextRole.MANAGER)).findFirst().orElse(null);
-            loginContext = manager != null ? manager : loginContext;
-            ContextDTO reader = result.contexts().stream().filter(c -> c.role().equals(ContextRole.READER)).findFirst().orElse(null);
-            loginContext = reader != null ? reader : loginContext;
-            ContextDTO admin = result.contexts().stream().filter(c -> c.role().equals(ContextRole.ADMIN)).findFirst().orElse(null);
-            loginContext = admin != null ? admin : loginContext;
-        }
-
-        // tried to save List<ContextDTO> on session, but can't retrieve it in DefaultRestController
-        //request.getSession().setAttribute(SessionConstants.SESSION_CONTEXT_LIST, contexts);
-
-        sofdFunctionAssignmentService.cleanUpTask();
-        if (loginContext != null) {
-            sofdFunctionAssignmentService.getAllAutoCompleteResultFunctionAssignmentPersons(loginContext.ouUuids());
-            chooseContext(request, loginContext);
             return "redirect:/";
         }
-
-        log.warn("Person with uuid " + SecurityUtil.getPersonUuid() + " logged in to the manager ui, but is not an admin, reader, manager or substitute.");
-
-        model.addAttribute("error","Ingen adgang");
-        return "error";
-    }
-
-    public void chooseContext(HttpServletRequest request, ContextDTO context) {
-        request.getSession().setAttribute(SessionConstants.SESSION_CONTEXT_NAME, context.name());
-        request.getSession().setAttribute(SessionConstants.SESSION_CONTEXT_UUID, context.uuid());
-        request.getSession().setAttribute(SessionConstants.SESSION_CONTEXT_OUS, context.ouUuids());
-        request.getSession().setAttribute(SessionConstants.SESSION_CONTEXT_ROLE, context.role());
-
-        if (context.role().equals(ContextRole.MANAGER)) {
-            securityUtil.switchToManagerContext();
-        } else if (context.role().equals(ContextRole.SUBSTITUTE)) {
-            securityUtil.switchToSubstituteContext();
-        } else if (context.role().equals(ContextRole.READER)) {
-            request.getSession().setAttribute(SessionConstants.SESSION_CONTEXT_UUID, "READER"+context.uuid());
-            securityUtil.switchToReaderContext();
-        } else if (context.role().equals(ContextRole.ADMIN)) {
-            request.getSession().setAttribute(SessionConstants.SESSION_CONTEXT_UUID, "ADMIN"+context.uuid());
-            securityUtil.switchToAdminContext();
-        } else {
-            log.error("Unknown ContextRole " + context.role().toString());
-        }
-    }
-
-    @GetMapping("/choosecontext")
-    public String chooseContext(Model model, HttpServletRequest request, @RequestParam String uuid, @RequestParam String name, @RequestParam String ous, @RequestParam ContextRole role) {
-        sofdFunctionAssignmentService.cleanUpTask();
-
-        request.getSession().setAttribute(SessionConstants.SESSION_CONTEXT_NAME, name);
-        request.getSession().setAttribute(SessionConstants.SESSION_CONTEXT_UUID, uuid);
-        request.getSession().setAttribute(SessionConstants.SESSION_CONTEXT_OUS, ous);
-        request.getSession().setAttribute(SessionConstants.SESSION_CONTEXT_ROLE, role);
-
-        if (role.equals(ContextRole.MANAGER)) {
-            securityUtil.switchToManagerContext();
-        } else if (role.equals(ContextRole.SUBSTITUTE)) {
-            securityUtil.switchToSubstituteContext();
-        } else if (role.equals(ContextRole.ADMIN)) {
-            if (SecurityUtil.getBooleanAttribute("admin")) {
-                securityUtil.switchToAdminContext();
-            } else {
-                log.error("Logged in person with uuid " + SecurityUtil.getPersonUuid() + " is not an admin, but tried to switch to admin context");
-                return "error";
-            }
-        } else if (role.equals(ContextRole.READER)) {
-            if (SecurityUtil.getBooleanAttribute("reader")) {
-                securityUtil.switchToReaderContext();
-            } else {
-                log.error("Logged in person with uuid " + SecurityUtil.getPersonUuid() + " is not an reader, but tried to switch to reader context");
-                return "error";
-            }
-        } else {
-            log.error("Unknown ContextRole " + role.toString());
+        catch( Exception e) {
+            model.addAttribute("error","Ingen adgang");
             return "error";
         }
+    }
 
-        sofdFunctionAssignmentService.getAllAutoCompleteResultFunctionAssignmentPersons(ous);
 
-        return "redirect:/";
+    @GetMapping("/chooseContext")
+    public String chooseContext(Model model, HttpServletRequest request, @RequestParam int id) {
+        try {
+            var chosenContext = SecurityUtil.getLoggedInUser().contexts().stream().filter(c -> c.id() == id).findFirst().orElseThrow();
+            SecurityUtil.setCurrentContext(chosenContext);
+            return "redirect:/";
+        }
+        catch(Exception e) {
+            model.addAttribute("error","Ingen adgang");
+            return "error";
+        }
     }
 
     @RequestMapping(value = "/error", produces = "text/html")

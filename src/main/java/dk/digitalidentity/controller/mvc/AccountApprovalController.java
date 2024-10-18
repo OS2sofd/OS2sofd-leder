@@ -1,8 +1,8 @@
 package dk.digitalidentity.controller.mvc;
 
 import dk.digitalidentity.config.ManagerConfiguration;
-import dk.digitalidentity.config.SessionConstants;
 import dk.digitalidentity.security.RequireSubstituteOrManagerAccess;
+import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.AccountApprovalService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +29,7 @@ public class AccountApprovalController {
         if (!config.getModules().getAccountApprovalModule().isEnabled()) {
             return "error";
         }
-        String uuid = (String) request.getSession().getAttribute(SessionConstants.SESSION_CONTEXT_UUID);
+        String uuid = SecurityUtil.getCurrentContext().uuid();
         model.addAttribute("orders", accountApprovalService.getApprovalPendingAccountOrders(uuid));
 
         return "accountApprovals/list";
@@ -41,7 +41,7 @@ public class AccountApprovalController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        if(accountApprovalService.approveApprovalPendingAccountOrder(id, (String) request.getSession().getAttribute(SessionConstants.SESSION_CONTEXT_UUID))) {
+        if(accountApprovalService.approveApprovalPendingAccountOrder(id, SecurityUtil.getCurrentContext().uuid())) {
             return ResponseEntity.ok().build();
         }
         return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).build();

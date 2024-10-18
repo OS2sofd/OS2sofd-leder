@@ -11,4 +11,5 @@ public class Modules {
 	private AffiliationModule affiliationModule = new AffiliationModule();
 	private PausePersonModule pausePersonModule = new PausePersonModule();
 	private AccountApprovalModule accountApprovalModule = new AccountApprovalModule();
+	private ManagerModule managerModule = new ManagerModule();
 }

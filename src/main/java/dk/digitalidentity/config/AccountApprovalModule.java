@@ -6,5 +6,5 @@ import lombok.Setter;
 @Getter
 @Setter
 public class AccountApprovalModule {
-    private boolean enabled = true;
+    private boolean enabled = false;
 }

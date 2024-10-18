@@ -4,7 +4,7 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
-import dk.digitalidentity.controller.mvc.SubstituteController;
+import dk.digitalidentity.security.SecurityUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import dk.digitalidentity.config.ManagerConfiguration;
-import dk.digitalidentity.config.SessionConstants;
 import dk.digitalidentity.security.RequireManagerAccess;
 import dk.digitalidentity.service.SOFDSubstituteService;
 import dk.digitalidentity.service.SOFDSubstituteService.AutoCompleteResult;
@@ -47,7 +46,7 @@ public class SubstituteRestController {
 	public ResponseEntity<?> searchPerson(@RequestParam("query") String query, HttpServletRequest request) {
 		String ousString = null;
 		if (config.isSubstituteAutoCompleteLimited()) {
-			ousString = (String) request.getSession().getAttribute(SessionConstants.SESSION_CONTEXT_OUS);
+			ousString = String.join(",", SecurityUtil.getCurrentContext().constraintOUs());;
 		}
 		AutoCompleteResult result = sofdSubstituteService.getAutoCompleteResult(query, ousString);
 		return new ResponseEntity<>(result.suggestions(), HttpStatus.OK);

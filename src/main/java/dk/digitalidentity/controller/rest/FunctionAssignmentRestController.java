@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
 
+import dk.digitalidentity.security.SecurityUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
@@ -20,7 +21,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
-import dk.digitalidentity.config.SessionConstants;
 import dk.digitalidentity.security.RequireSubstituteOrManagerOrAdminAccess;
 import dk.digitalidentity.service.SOFDFunctionAssignmentService;
 import dk.digitalidentity.service.SOFDFunctionAssignmentService.AutoCompleteResult;
@@ -45,7 +45,7 @@ public class FunctionAssignmentRestController {
 	
 	@GetMapping(value = "/rest/functionassignment/search/person")
 	public ResponseEntity<?> searchPerson(@RequestParam("query") String query, HttpServletRequest request) {
-		String ousString = (String) request.getSession().getAttribute(SessionConstants.SESSION_CONTEXT_OUS);
+		String ousString = String.join(",", SecurityUtil.getCurrentContext().constraintOUs());
 		
 		AutoCompleteResult result = sofdFunctionAssignmentService.getAllAutoCompleteResultFunctionAssignmentPersons(ousString);
 		return new ResponseEntity<>(result.suggestions().stream().filter(s -> s.value().toLowerCase().contains(query.toLowerCase())).collect(Collectors.toList()), HttpStatus.OK);

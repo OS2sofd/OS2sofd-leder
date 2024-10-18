@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html xmlns:th="http://www.w3.org/1999/html">
 <body>
 	<nav th:fragment="navbar-header" class="navbar navbar-static-top" role="navigation" style="color: #000000 !important; background-color: #FDFEFF !important; height: 70px;">
         <div class="navbar-header">
@@ -7,13 +7,26 @@
         
         <ul class="nav navbar-top-links navbar-right">
             <li sec:authorize="isAuthenticated()" class="dropdown show">
-            	<a  data-toggle="dropdown" href="#" aria-expanded="true" id="userMenuTopbar"><i class="fa fa-user"></i>&nbsp;<span th:if="${session.SESSION_CONTEXT_NAME != null}" th:text="${session.SESSION_CONTEXT_ROLE == T(dk.digitalidentity.service.SOFDManagerService.ContextRole).MANAGER} ? 'Leder ' + ${session.SESSION_CONTEXT_NAME} : (${session.SESSION_CONTEXT_ROLE == T(dk.digitalidentity.service.SOFDManagerService.ContextRole).ADMIN} ? 'Administrator ' + ${session.SESSION_CONTEXT_NAME} : (${session.SESSION_CONTEXT_ROLE == T(dk.digitalidentity.service.SOFDManagerService.ContextRole).READER} ? 'Læseadgang ' + ${session.SESSION_CONTEXT_NAME} : 'Stedfortræder for ' + ${session.SESSION_CONTEXT_NAME}))"></span></a>
-                <ul class="dropdown-menu" style="width: 250px;">
+            	<a  data-toggle="dropdown" href="#" aria-expanded="true" id="userMenuTopbar">
+					<i class="fa fa-user"></i>&nbsp;
+					<span th:text="${T(dk.digitalidentity.security.SecurityUtil).getCurrentContext().name()}"></span>
+				</a>
+                <ul class="dropdown-menu" style="width: 400px;">
                		<li>
                     	<div class="list-group">
 			                <div class="list-group-item">
 								<span style="font-size: medium;">Log ind som:</span>
-								<ul id="contextList" style="padding-left: 0px;"/>
+
+								<ul id="contextList" style="padding-left: 0px;">
+									<th:block th:each="context : ${T(dk.digitalidentity.security.SecurityUtil).getLoggedInUser().contexts()}">
+										<li>
+											<a th:href="@{'/chooseContext?id=' + ${context.id()}}" style="color: black; border: none; font-size: small;" class="list-group-item">
+												<em th:class="'fa ' + ${context.id() == T(dk.digitalidentity.security.SecurityUtil).getCurrentContext().id() ? 'fa-check-circle-o' : 'fa-circle-o'}"></em>
+												<span th:text="${context.name()}" style="padding-left: 10px"></span>
+											</a>
+										</li>
+									</th:block>
+								<ul>
 							</div>
 							
 							<div sec:authorize="hasRole('ROLE_ADMIN')" class="list-group-item">
@@ -55,7 +68,7 @@
                 </li>
                 <th:block sec:authorize="isAuthenticated()">
 					<li th:if="${@managerConfiguration.getModules().getFunctionHierarchy().isShowAllFunctionsEnabled()}" th:classappend="${page == 'allFunctionAssignments'} ? 'active' : ''">
-						<a href="/allFunctionassignments"><div><span class="nav-label"><em class="fa fa-list"></em> &nbsp; Alle medarbejderfunktioner</span></div></a>
+						<a sec:authorize="hasRole('ROLE_MANAGER') or hasRole('ROLE_SUBSTITUTE') or hasRole('ROLE_READER') or hasRole('ROLE_ADMIN')" href="/allFunctionassignments"><div><span class="nav-label"><em class="fa fa-list"></em> &nbsp; Alle medarbejderfunktioner</span></div></a>
 					</li>	
                 	<li th:each="category : ${@SOFDFunctionAssignmentService.getAllCategories()}" th:classappend="${#strings.equalsIgnoreCase(page, category.key)} ? 'active' : ''">
                 		<a sec:authorize="hasRole('ROLE_MANAGER') or hasRole('ROLE_SUBSTITUTE') or hasRole('ROLE_READER') or hasRole('ROLE_ADMIN')" href="#"><div><span class="nav-label"><em class="fa fa-list"></em> &nbsp;<span th:text="${category.key}"></span></span></div></a>
@@ -78,6 +91,9 @@
 					</li>
 					<li th:if="${@managerConfiguration.getModules().getPausePersonModule().isEnabled()}" th:classappend="${page == 'pausablePeople'} ? 'active' : ''">
 						<a sec:authorize="hasRole('ROLE_MANAGER') or hasRole('ROLE_SUBSTITUTE')" href="/leave"><div><span class="nav-label"><em class="fa fa-pause"></em> &nbsp; Pausemarkering</span></div></a>
+					</li>
+					<li th:if="${@managerConfiguration.getModules().getManagerModule().isEnabled()}" th:classappend="${page == 'managers'} ? 'active' : ''">
+						<a sec:authorize="hasRole('ROLE_ADMIN') or hasRole('ROLE_MANAGER_EDITOR')" href="/managers"><div><span class="nav-label"><em class="fa fa-chevron-circle-up"></em> &nbsp; Lederopmærkning</span></div></a>
 					</li>
                 </th:block>
                 <li>

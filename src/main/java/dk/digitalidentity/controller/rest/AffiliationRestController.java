@@ -2,7 +2,6 @@ package dk.digitalidentity.controller.rest;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import dk.digitalidentity.config.ManagerConfiguration;
-import dk.digitalidentity.config.SessionConstants;
 import dk.digitalidentity.security.RequireSubstituteOrManagerAccess;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.EmailService;
@@ -53,12 +52,12 @@ public class AffiliationRestController {
 			return new ResponseEntity<>("Stillingsbetegnelse og begrundelse skal være udfyldt", HttpStatus.BAD_REQUEST);
 		}
 
-		if (dto.stopDate() != null && dto.stopDate().isBefore(dto.startDate())) {
+		if (dto.startDate != null && dto.stopDate() != null && dto.stopDate().isBefore(dto.startDate())) {
 			return new ResponseEntity<>("Stopdato skal være efter startdato", HttpStatus.BAD_REQUEST);
 		}
 
 		// find the affiliation from SOFD, we need that to compare for the email later
-		String uuid = (String) request.getSession().getAttribute(SessionConstants.SESSION_CONTEXT_UUID);
+		String uuid = SecurityUtil.getCurrentContext().uuid();
 		List<SOFDService.SofdAffiliation> affiliations = sofdService.getEditableAffilations(uuid);
 		SOFDService.SofdAffiliation match = affiliations.stream().filter(a -> a.id() == dto.id()).findAny().orElse(null);
 		if (match == null) {
@@ -73,10 +72,8 @@ public class AffiliationRestController {
 		}
 
 		// send email
-		SOFDManagerService.ContextResultDTO loginContexts = sofdManagerService.getLoginContexts();
-
 		StringBuilder builder = new StringBuilder();
-		builder.append("<p>Et tilhørsforhold er opdateret af ").append(loginContexts.name()).append(" (uuid:").append(SecurityUtil.getPersonUuid()).append(").</p>");
+		builder.append("<p>Et tilhørsforhold er opdateret af ").append(SecurityUtil.getLoggedInUser().name()).append(" (uuid:").append(SecurityUtil.getLoggedInUser().personUuid()).append(").</p>");
 		builder.append("<p>Det drejer sig om tilhørsforholdet for ").append(match.personName()).append(" i ").append(match.orgUnitName()).append(" med stillingsbetegnelsen ").append(dto.position()).append("</p>");
 		builder.append("<p>Det er opdateret med begrundelsen: </p>");
 		builder.append("<p>").append(dto.reason()).append("</p>");
@@ -111,7 +108,7 @@ public class AffiliationRestController {
 		builder.append("<p>Dette er dokumentation samt revisionsspor. Forlængelsen er gennemført i SOFD Core og sagen kan lukkes med det samme i It-service og support</p>");
 
 		try {
-			emailService.sendMessage(configuration.getModules().getAffiliationModule().getReceiptEmail(), "Opdatering af tilhørsforhold for " + match.personName(), builder.toString(), loginContexts.email());
+			emailService.sendMessage(configuration.getModules().getAffiliationModule().getReceiptEmail(), "Opdatering af tilhørsforhold for " + match.personName(), builder.toString(), SecurityUtil.getLoggedInUser().email());
 		}
 		catch (Exception ex) {
 			log.error("Failed send mail after affiliation was updated. Affiliation id: " + dto.id(), ex);

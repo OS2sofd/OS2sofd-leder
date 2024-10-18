@@ -1,8 +1,8 @@
 package dk.digitalidentity.controller.mvc;
 
 import dk.digitalidentity.config.ManagerConfiguration;
-import dk.digitalidentity.config.SessionConstants;
 import dk.digitalidentity.security.RequireSubstituteOrManagerAccess;
+import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.SOFDService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,8 +28,7 @@ public class LeaveController {
 		if (!config.getModules().getPausePersonModule().isEnabled()) {
 			return "error";
 		}
-
-		String uuid = (String) request.getSession().getAttribute(SessionConstants.SESSION_CONTEXT_UUID);
+		String uuid = SecurityUtil.getCurrentContext().uuid();
 		model.addAttribute("pausablePeople", sofdService.getPausablePeople(uuid));
 
 		return "leave/list";

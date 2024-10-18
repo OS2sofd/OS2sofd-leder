@@ -71,43 +71,7 @@
 		<th:block th:if="${footables == true}">
 		<script th:src="@{/webjars/inspinia/2.9.3/js/plugins/footable/footable.all.min.js}"></script>
 		</th:block>
-		
-		<script sec:authorize="isAuthenticated()" th:inline="javascript">
-		 /*<![CDATA[*/
-			$(document).ready(function() {
-				var fetchedTopbar = false;
 
-				$("#userMenuTopbar").click(function() {
-					if (fetchedTopbar == false) {
-						fetchedTopbar = true;
-
-						$.ajax("/default/contexts", {
-							type : 'GET',
-							dataType : 'json',
-							cache : false,
-							success : function(data) {
-
-								// set context options
-								for (var i = 0; i < data.length; i++) {
-									var entry = data[i];
-									var menuItem = '<li><a href="/choosecontext?uuid=' + entry.uuid + '&name=' + entry.name + '&ous=' + entry.ous + '&role=' + entry.role + '" style="color: black; border: none; font-size: small;" class="list-group-item">'
-													+ '<em class="fa '+((entry.selected) ? 'fa-check-circle-o' : 'fa-circle-o')+' fa"></em>'
-													+ '<span style="padding-left: 10px">' + (entry.role == 'MANAGER'? 'Leder ' + entry.name : (entry.role == 'ADMIN'? 'Administrator ' + entry.name : (entry.role == 'READER'? 'Læseadgang ' + entry.name : 'Stedfortræder for ' + entry.name))) + '</span>'
-													+ '</a></li>';
-		
-									$("#contextList").append(menuItem);
-								}
-							},
-							error : function(xhr, status) {
-								console.log(status);
-								console.log(xhr.responseText);
-							}
-						});
-					}
-				});
-			});
-		/*]]>*/
-		</script>
 	</div>
 </body>
 </html>

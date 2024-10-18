@@ -30,9 +30,9 @@ public class AccountApprovalService {
     public record AccountOrderDTO (long id, @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date activationTimestamp, PersonDTO person, String userId, String userType) {}
     public record PersonDTO (String firstname, String surname) {}
 
-    public List<AccountOrderDTO> getApprovalPendingAccountOrders(String sessionUuid) {
+    public List<AccountOrderDTO> getApprovalPendingAccountOrders(String managerUuid) {
         HttpEntity<String> request = new HttpEntity<>(getHeaders());
-        String query = "/api/manager/" + sessionUuid + "/accountorders";
+        String query = "/api/manager/" + managerUuid + "/accountorders";
         List<AccountOrderDTO> fetchedOrders = new ArrayList<>();
         ResponseEntity<AccountOrderDTO[]> response = restTemplate.exchange(managerConfiguration.getSofdBaseUrl() + query, HttpMethod.GET, request, AccountOrderDTO[].class);
         if (!response.getStatusCode().equals(HttpStatus.OK)) {
@@ -48,15 +48,15 @@ public class AccountApprovalService {
         return fetchedOrders;
     }
 
-    public boolean approveApprovalPendingAccountOrder(long id, String sessionUuid) {
+    public boolean approveApprovalPendingAccountOrder(long id, String managerUuid) {
         HttpEntity<String> request = new HttpEntity<>(getHeaders());
 
         //Checks if allowed to process them, but using the logic of getApprovalPendingAccountOrders
         //if it's not allowed to show it, it's not allowed to approve it
-        if(getApprovalPendingAccountOrders(sessionUuid).stream().noneMatch(approval -> approval.id == id)) {
+        if(getApprovalPendingAccountOrders(managerUuid).stream().noneMatch(approval -> approval.id == id)) {
             return false;
         }
-        String query = "/api/manager/" + SecurityUtil.getPersonUuid() + "/accountorders/approve/" + id;
+        String query = "/api/manager/" + SecurityUtil.getLoggedInUser().personUuid() + "/accountorders/approve/" + id;
         ResponseEntity<AccountOrderDTO[]> response = restTemplate.exchange(managerConfiguration.getSofdBaseUrl() + query, HttpMethod.POST, request, AccountOrderDTO[].class);
         if (!response.getStatusCode().equals(HttpStatus.OK)) {
             log.warn("Failed to approve account order " + id + " from sofd-core. " + response.getStatusCodeValue() + ", response=" + Arrays.toString(response.getBody()));

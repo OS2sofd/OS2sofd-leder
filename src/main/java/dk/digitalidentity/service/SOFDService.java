@@ -67,7 +67,7 @@ public class SOFDService {
         String url = config.getSofdBaseUrl();
         String query = "/api/manager/" + uuid + "/affiliations/edit";
         ZoneId defaultZoneId = ZoneId.systemDefault();
-        EditAffiliationDTO dto = new EditAffiliationDTO(id, position, positionDisplayName, Date.from(startDate.atStartOfDay(defaultZoneId).toInstant()), stopDate == null ? null : Date.from(stopDate.atStartOfDay(defaultZoneId).toInstant()), internalReference);
+        EditAffiliationDTO dto = new EditAffiliationDTO(id, position, positionDisplayName, startDate == null ? null : Date.from(startDate.atStartOfDay(defaultZoneId).toInstant()), stopDate == null ? null : Date.from(stopDate.atStartOfDay(defaultZoneId).toInstant()), internalReference);
 
         HttpEntity<EditAffiliationDTO> request = new HttpEntity<>(dto, getHeaders());
 

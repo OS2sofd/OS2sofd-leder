@@ -16,6 +16,16 @@
 	cursor: default;
 }
 
+/* badges */
+.badge {
+    padding-bottom: 2px;
+}
+
+.badge-primary{
+    background-color: var(--primary-color) !important;
+    color: white;
+}
+
 /*Rules for viewing on a smaller device*/
 @media only screen and (max-width: 990px) {
 

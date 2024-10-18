@@ -56,7 +56,8 @@ public class TextService {
         ,ALL_FUNCTION_ASSIGNMENTS_HELPTEXT("Alle medarbejderfunktioner hjælpetekst",2)
         ,SUBSTITUTE_HELPTEXT("Stedfortrædere hjælpetekst",3)
         ,AFFILIATION_HELPTEXT("Tilhørsforhold hjælpetekst",4)
-        ,LEAVE_HELPTEXT("Pausemarkering hjælpetekst",5);
+        ,LEAVE_HELPTEXT("Pausemarkering hjælpetekst",5)
+        ,MANAGER_HELPTEXT("Lederopmærkning hjælpetekst",6);
 
 
         private final String displayValue;

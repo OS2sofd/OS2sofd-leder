@@ -2,7 +2,6 @@ package dk.digitalidentity.controller.rest;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import dk.digitalidentity.config.ManagerConfiguration;
-import dk.digitalidentity.config.SessionConstants;
 import dk.digitalidentity.security.RequireSubstituteOrManagerAccess;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.EmailService;
@@ -13,7 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -21,9 +19,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDate;
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
 
 @Slf4j
 @RequireSubstituteOrManagerAccess
@@ -60,7 +55,7 @@ public class LeaveRestController {
 		}
 
 		// save in SOFD
-		String uuid = (String) request.getSession().getAttribute(SessionConstants.SESSION_CONTEXT_UUID);
+		String uuid = SecurityUtil.getCurrentContext().uuid();
 		boolean success = sofdService.editLeave(uuid, dto);
 
 		if (!success) {

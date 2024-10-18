@@ -24,7 +24,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import dk.digitalidentity.config.ManagerConfiguration;
-import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.dto.OUTreeFormDto;
 import dk.digitalidentity.service.dto.OUTreeFormWithOpenDto;
 import lombok.extern.slf4j.Slf4j;
@@ -159,13 +158,12 @@ public class SOFDFunctionAssignmentService {
 		HttpEntity<String> request = new HttpEntity<>(getHeaders());
 		String url = config.getSofdBaseUrl();
 
-		String userUuid = SecurityUtil.getPersonUuid();
 		String query = "/api/functionhierarchy/search/all/?ous=" + ous;
 		AutoCompleteResult result = null;
 
 		ResponseEntity<AutoCompleteResult> response = restTemplate.exchange(url + query, HttpMethod.GET, request, AutoCompleteResult.class);
 		if (!response.getStatusCode().equals(HttpStatus.OK)) {
-			log.warn("Failed to fetch all AutoCompleteResultFunctionAssignmentPersons for person with uuid " + userUuid + ". " + response.getStatusCodeValue() + ", response=" + response.getBody());
+			log.warn("Failed to fetch all AutoCompleteResultFunctionAssignmentPersons. " + response.getStatusCodeValue() + ", response=" + response.getBody());
 			return null;
 		}
 
@@ -173,7 +171,7 @@ public class SOFDFunctionAssignmentService {
 			result = response.getBody();
 		}
 		else {
-			log.warn("Response body was null when fetching all AutoCompleteResultFunctionAssignmentPersons for person with uuid " + userUuid);
+			log.warn("Response body was null when fetching all AutoCompleteResultFunctionAssignmentPersons)");
 		}
 
 		return result;
@@ -232,7 +230,7 @@ public class SOFDFunctionAssignmentService {
 		return false;
 	}
 
-	public String getParentOUUuid() throws Exception {
+	public String getRootOUUuid() throws Exception {
 		var allOus = self.getAllOus();
 		var topNode = allOus.stream().filter(o -> o.getParent().equals("#")).findFirst();
 		if (!topNode.isPresent()) {
@@ -287,7 +285,7 @@ public class SOFDFunctionAssignmentService {
 	}
 
 	@Scheduled(fixedRate = 10 * 60 * 1000)
-	public void cleanUpTask() {
+	public void clearCache() {
 		self.cleanUpOus();
 		self.cleanUpFunctions();
 		self.cleanUpFunctionAssignments();

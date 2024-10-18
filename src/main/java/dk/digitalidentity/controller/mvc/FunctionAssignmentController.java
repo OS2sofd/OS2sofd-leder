@@ -1,8 +1,8 @@
 package dk.digitalidentity.controller.mvc;
 
 import dk.digitalidentity.config.ManagerConfiguration;
-import dk.digitalidentity.config.SessionConstants;
 import dk.digitalidentity.security.RequireSubstituteOrManagerOrReaderOrAdminAccess;
+import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.SOFDFunctionAssignmentService;
 import dk.digitalidentity.service.SOFDFunctionAssignmentService.FacetDTO;
 import dk.digitalidentity.service.SOFDFunctionAssignmentService.FacetValueDTO;
@@ -46,7 +46,7 @@ public class FunctionAssignmentController {
 			return "error";
 		}
 
-		String ousString = (String) request.getSession().getAttribute(SessionConstants.SESSION_CONTEXT_OUS);
+		String ousString = String.join(",", SecurityUtil.getCurrentContext().constraintOUs());
 		if (ousString == null) {
 			return "error";
 		}
@@ -61,7 +61,7 @@ public class FunctionAssignmentController {
 		List<String> ouUuids = Arrays.asList(ousString.split(","));
 
 		List<FunctionAssignmentDTO> functionAssignments = new ArrayList<>();
-		if (ousString.equals(sofdFunctionAssignmentService.getParentOUUuid())) {
+		if (ousString.equals(sofdFunctionAssignmentService.getRootOUUuid())) {
 			functionAssignments = sofdFunctionAssignmentService.getFunctionAssignments(null).stream().filter(f -> f.function().id() == functionId).collect(Collectors.toList());
 		} else {
 			functionAssignments = sofdFunctionAssignmentService.getFunctionAssignments(ousString).stream().filter(f -> f.function().id() == functionId).collect(Collectors.toList());
@@ -107,13 +107,13 @@ public class FunctionAssignmentController {
 
 		List<FunctionDTO> functionsAndFacets = sofdFunctionAssignmentService.getFunctionsAndFacets();
 
-		String ousString = (String) request.getSession().getAttribute(SessionConstants.SESSION_CONTEXT_OUS);
+		String ousString = String.join(",", SecurityUtil.getCurrentContext().constraintOUs());
 		if (ousString == null) {
 			return "error";
 		}
 		List<String> ouUuids = Arrays.asList(ousString.split(","));
 		List<FunctionAssignmentDTO> functionAssignments = new ArrayList<>();
-		if (ousString.equals(sofdFunctionAssignmentService.getParentOUUuid())) {
+		if (ousString.equals(sofdFunctionAssignmentService.getRootOUUuid())) {
 			functionAssignments = sofdFunctionAssignmentService.getFunctionAssignments(null);
 		} else {
 			functionAssignments = sofdFunctionAssignmentService.getFunctionAssignments(ousString);
