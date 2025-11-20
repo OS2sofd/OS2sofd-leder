@@ -1,0 +1,19 @@
+Fetch NameId:
+c1:[Type == "http://schemas.microsoft.com/ws/2008/06/identity/claims/windowsaccountname", Issuer == "AD AUTHORITY"]
+ => add(store = "RoleCatalogueAttributeStore", types = ("http://rollekatalog.dk/nameid"), query = "getNameID", param = c1.Value);
+
+
+Issue NameId:
+c:[Type == "http://rollekatalog.dk/nameid"]
+ => issue(Type = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier", Issuer = c.Issuer, OriginalIssuer = c.OriginalIssuer, Value = c.Value, Properties["http://schemas.xmlsoap.org/ws/2005/05/identity/claimproperties/format"] = "urn:oasis:names:tc:SAML:1.1:nameid-format:X509SubjectName");
+
+
+Fetch Roles
+c:[Type == "http://schemas.microsoft.com/ws/2008/06/identity/claims/windowsaccountname"]
+ => add(store = "RoleCatalogueAttributeStore", types = ("http://rollekatalog.dk/oio-bpp"), query = "oio-bpp", param = c.Value, param = "managerui");
+
+
+Issue Roles 
+ c:[Type == "http://rollekatalog.dk/oio-bpp"]
+ => issue(Type = "dk:gov:saml:attribute:Privileges_intermediate", Issuer = c.Issuer, OriginalIssuer = c.OriginalIssuer, Value = c.Value, Properties["http:/ /schemas.xmlsoap.org/ws/2005/05/identity/claimproperties/attributename"] = "urn:oasis:names:tc:SAML:2.0:attrname-format:basic", Properties["http://schemas. xmlsoap.org/ws/2005/05/identity/claimproperties/spnamequalifier"] = "Privileges");
+

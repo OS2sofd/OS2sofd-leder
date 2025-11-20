@@ -48,9 +48,14 @@ public class AffiliationRestController {
 			return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 		}
 
-		if (!StringUtils.hasLength(dto.position().trim()) || !StringUtils.hasLength(dto.reason().trim())) {
-			return new ResponseEntity<>("Stillingsbetegnelse og begrundelse skal være udfyldt", HttpStatus.BAD_REQUEST);
+		if (!StringUtils.hasLength(dto.position().trim())) {
+			return new ResponseEntity<>("Stillingsbetegnelse skal være udfyldt", HttpStatus.BAD_REQUEST);
 		}
+
+		if (configuration.getEmail().isEnabled() && !StringUtils.hasLength(dto.reason().trim())) {
+			return new ResponseEntity<>("Begrundelse skal være udfyldt", HttpStatus.BAD_REQUEST);
+		}
+
 
 		if (dto.startDate != null && dto.stopDate() != null && dto.stopDate().isBefore(dto.startDate())) {
 			return new ResponseEntity<>("Stopdato skal være efter startdato", HttpStatus.BAD_REQUEST);
@@ -71,49 +76,51 @@ public class AffiliationRestController {
 			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 		}
 
-		// send email
-		StringBuilder builder = new StringBuilder();
-		builder.append("<p>Et tilhørsforhold er opdateret af ").append(SecurityUtil.getLoggedInUser().name()).append(" (uuid:").append(SecurityUtil.getLoggedInUser().personUuid()).append(").</p>");
-		builder.append("<p>Det drejer sig om tilhørsforholdet for ").append(match.personName()).append(" i ").append(match.orgUnitName()).append(" med stillingsbetegnelsen ").append(dto.position()).append("</p>");
-		builder.append("<p>Det er opdateret med begrundelsen: </p>");
-		builder.append("<p>").append(dto.reason()).append("</p>");
-		builder.append("<br/>");
-		builder.append("<p>Ændringer:<p/>");
-		builder.append("<ul>");
+		if( configuration.getEmail().isEnabled() ) {
+			// send email
+			StringBuilder builder = new StringBuilder();
+			builder.append("<p>Et tilhørsforhold er opdateret af ").append(SecurityUtil.getLoggedInUser().name()).append(" (uuid:").append(SecurityUtil.getLoggedInUser().personUuid()).append(").</p>");
+			builder.append("<p>Det drejer sig om tilhørsforholdet for ").append(match.personName()).append(" i ").append(match.orgUnitName()).append(" med stillingsbetegnelsen ").append(dto.position()).append("</p>");
+			builder.append("<p>It-bruger: ").append(match.adUserInfo()).append("</p>");
+			builder.append("<p>Det er opdateret med begrundelsen: </p>");
+			builder.append("<p>").append(dto.reason()).append("</p>");
+			builder.append("<br/>");
+			builder.append("<p>Ændringer:<p/>");
+			builder.append("<ul>");
 
-		String matchPositionName = match.positionName() != null && match.positionName().trim().equals("") ? null : match.positionName();
-		String dtoPositionName = dto.position() != null && dto.position().trim().equals("") ? null : dto.position();
-		if (!Objects.equals(matchPositionName, dtoPositionName)) {
-			builder.append("<li>Stillingsbetegnelse er ændret fra ").append(matchPositionName == null ? "ikke angivet" : matchPositionName).append(" til ").append(dtoPositionName == null ? "ikke angivet" : dtoPositionName).append("</li>");
+			String matchPositionName = match.positionName() != null && match.positionName().trim().equals("") ? null : match.positionName();
+			String dtoPositionName = dto.position() != null && dto.position().trim().equals("") ? null : dto.position();
+			if (!Objects.equals(matchPositionName, dtoPositionName)) {
+				builder.append("<li>Stillingsbetegnelse er ændret fra ").append(matchPositionName == null ? "ikke angivet" : matchPositionName).append(" til ").append(dtoPositionName == null ? "ikke angivet" : dtoPositionName).append("</li>");
+			}
+
+			String matchPositionDisplayName = match.positionDisplayName() != null && match.positionDisplayName().trim().equals("") ? null : match.positionDisplayName();
+			String dtoPositionDisplayName = dto.positionDisplayName() != null && dto.positionDisplayName().trim().equals("") ? null : dto.positionDisplayName();
+			if (!Objects.equals(matchPositionDisplayName, dtoPositionDisplayName)) {
+				builder.append("<li>Alternativ stillingsbetegnelse er ændret fra ").append(matchPositionDisplayName == null ? "ikke angivet" : matchPositionDisplayName).append(" til ").append(dtoPositionDisplayName == null ? "ikke angivet" : dtoPositionDisplayName).append("</li>");
+			}
+
+			if (!Objects.equals(match.stopDate(), dto.stopDate())) {
+				builder.append("<li>Stopdato er ændret fra ").append(match.stopDate() == null ? "ikke angivet" : match.stopDate()).append(" til ").append(dto.stopDate() == null ? "ikke angivet" : dto.stopDate()).append("</li>");
+			}
+
+			String matchInternalReference = match.internalReference() != null && match.internalReference().trim().equals("") ? null : match.internalReference();
+			String dtoInternalReference = dto.internalReference() != null && dto.internalReference().trim().equals("") ? null : dto.internalReference();
+			if (!Objects.equals(matchInternalReference, dtoInternalReference)) {
+				builder.append("<li>Intern reference er ændret fra ").append(matchInternalReference == null ? "ikke angivet" : matchInternalReference).append(" til ").append(dtoInternalReference == null ? "ikke angivet" : dtoInternalReference).append("</li>");
+			}
+
+			builder.append("</ul>");
+			builder.append("<br/>");
+			builder.append("<p>Dette er dokumentation samt revisionsspor. Forlængelsen er gennemført i SOFD Core og sagen kan lukkes med det samme i It-service og support</p>");
+
+			try {
+				emailService.sendMessage(configuration.getModules().getAffiliationModule().getReceiptEmail(), "Opdatering af tilhørsforhold for " + match.personName(), builder.toString(), SecurityUtil.getLoggedInUser().email());
+			}
+			catch (Exception ex) {
+				log.error("Failed send mail after affiliation was updated. Affiliation id: " + dto.id(), ex);
+			}
 		}
-
-		String matchPositionDisplayName = match.positionDisplayName() != null && match.positionDisplayName().trim().equals("") ? null : match.positionDisplayName();
-		String dtoPositionDisplayName = dto.positionDisplayName() != null && dto.positionDisplayName().trim().equals("") ? null : dto.positionDisplayName();
-		if (!Objects.equals(matchPositionDisplayName, dtoPositionDisplayName)) {
-			builder.append("<li>Alternativ stillingsbetegnelse er ændret fra ").append(matchPositionDisplayName == null ? "ikke angivet" : matchPositionDisplayName).append(" til ").append(dtoPositionDisplayName == null ? "ikke angivet" : dtoPositionDisplayName).append("</li>");
-		}
-
-		if (!Objects.equals(match.stopDate(), dto.stopDate())) {
-			builder.append("<li>Stopdato er ændret fra ").append(match.stopDate() == null ? "ikke angivet" : match.stopDate()).append(" til ").append(dto.stopDate() == null ? "ikke angivet" : dto.stopDate()).append("</li>");
-		}
-
-		String matchInternalReference = match.internalReference() != null && match.internalReference().trim().equals("") ? null : match.internalReference();
-		String dtoInternalReference = dto.internalReference() != null && dto.internalReference().trim().equals("") ? null : dto.internalReference();
-		if (!Objects.equals(matchInternalReference, dtoInternalReference)) {
-			builder.append("<li>Intern reference er ændret fra ").append(matchInternalReference == null ? "ikke angivet" : matchInternalReference).append(" til ").append(dtoInternalReference == null ? "ikke angivet" : dtoInternalReference).append("</li>");
-		}
-
-		builder.append("</ul>");
-		builder.append("<br/>");
-		builder.append("<p>Dette er dokumentation samt revisionsspor. Forlængelsen er gennemført i SOFD Core og sagen kan lukkes med det samme i It-service og support</p>");
-
-		try {
-			emailService.sendMessage(configuration.getModules().getAffiliationModule().getReceiptEmail(), "Opdatering af tilhørsforhold for " + match.personName(), builder.toString(), SecurityUtil.getLoggedInUser().email());
-		}
-		catch (Exception ex) {
-			log.error("Failed send mail after affiliation was updated. Affiliation id: " + dto.id(), ex);
-		}
-
 		return new ResponseEntity<>(HttpStatus.OK);
 	}
 }

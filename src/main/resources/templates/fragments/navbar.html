@@ -9,7 +9,7 @@
             <li sec:authorize="isAuthenticated()" class="dropdown show">
             	<a  data-toggle="dropdown" href="#" aria-expanded="true" id="userMenuTopbar">
 					<i class="fa fa-user"></i>&nbsp;
-					<span th:text="${T(dk.digitalidentity.security.SecurityUtil).getCurrentContext().name()}"></span>
+					<span th:text="${T(dk.digitalidentity.security.SecurityUtil).getCurrentContext()?.name()}"></span>
 				</a>
                 <ul class="dropdown-menu" style="width: 400px;">
                		<li>
@@ -18,10 +18,10 @@
 								<span style="font-size: medium;">Log ind som:</span>
 
 								<ul id="contextList" style="padding-left: 0px;">
-									<th:block th:each="context : ${T(dk.digitalidentity.security.SecurityUtil).getLoggedInUser().contexts()}">
+									<th:block th:if="${T(dk.digitalidentity.security.SecurityUtil).getLoggedInUser() != null}" th:each="context : ${T(dk.digitalidentity.security.SecurityUtil).getLoggedInUser()?.contexts()}">
 										<li>
 											<a th:href="@{'/chooseContext?id=' + ${context.id()}}" style="color: black; border: none; font-size: small;" class="list-group-item">
-												<em th:class="'fa ' + ${context.id() == T(dk.digitalidentity.security.SecurityUtil).getCurrentContext().id() ? 'fa-check-circle-o' : 'fa-circle-o'}"></em>
+												<em th:class="'fa ' + ${context.id() == T(dk.digitalidentity.security.SecurityUtil).getCurrentContext()?.id() ? 'fa-check-circle-o' : 'fa-circle-o'}"></em>
 												<span th:text="${context.name()}" style="padding-left: 10px"></span>
 											</a>
 										</li>

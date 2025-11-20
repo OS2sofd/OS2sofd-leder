@@ -41,7 +41,7 @@ public class LeaveRestController {
 	@ResponseBody
 	@PostMapping(value = "/rest/leave/edit")
 	public HttpEntity<?> editAffiliation(HttpServletRequest request, @RequestBody EditLeaveDTO dto) {
-		if (!configuration.getModules().getAffiliationModule().isEnabled()) {
+		if (!configuration.getModules().getPausePersonModule().isEnabled()) {
 			return new ResponseEntity<>(HttpStatus.FORBIDDEN);
 		}
 

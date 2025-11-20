@@ -32,8 +32,12 @@ public class RolePostProcesser implements SamlLoginPostProcessor {
 	public void process(TokenUser tokenUser) {
 		var contextId = 0;
 		// add contexts from OS2sofd (managers and substitutes)
-		var personUuid = StaticContextAccessor.getBean(SOFDService.class).ConvertKombitUuidToPersonUuid(tokenUser.getUsername());
-		var userId = StaticContextAccessor.getBean(SOFDService.class).ConvertKombitUuidToUserId(tokenUser.getUsername());
+		var kombitUuid = convertSerialToUuid(tokenUser.getUsername());
+		log.debug("KombitUuid: " + kombitUuid);
+		var personUuid = StaticContextAccessor.getBean(SOFDService.class).ConvertKombitUuidToPersonUuid(kombitUuid);
+		log.debug("PersonUuid: " + personUuid);
+		var userId = StaticContextAccessor.getBean(SOFDService.class).ConvertKombitUuidToUserId(kombitUuid);
+		log.debug("UserId: " + userId);
 		var sofdLoginContexts = sofdManagerService.getLoginContexts(personUuid);
 
 		if( sofdLoginContexts == null ) {
@@ -81,6 +85,10 @@ public class RolePostProcesser implements SamlLoginPostProcessor {
 			}
         }
 
+		if( loggedInUser.contexts.isEmpty() ) {
+			log.warn("No contexts found for user");
+		}
+
 		tokenUser.getAttributes().put(LOGGED_IN_USER_ATTRIBUTE, loggedInUser);
 	}
 
@@ -90,5 +98,13 @@ public class RolePostProcesser implements SamlLoginPostProcessor {
 			result.addAll( getAllChildren(managerOus, managerOus.stream().filter(o -> orgUnitUuids.contains(o.parentOrgUnitUuid())).map(SOFDManagerService.OrgUnitManagerDto::orgUnitUuid).toList()) );
 		}
 		return result;
+	}
+
+	private static String convertSerialToUuid(String serial) {
+		if (serial.length() != 36) {
+			String[] split = serial.split(",");
+			serial = split[split.length - 1].replace("Serial=", "");
+		}
+		return serial;
 	}
 }

@@ -325,6 +325,8 @@
 							{ "orderable": false, "searchable": false, "targets": 3 }
 						  ],
 						"order": [ 0, 'asc' ],
+                        "stateSave": true,
+                        "stateDuration": -1,
 						"language" : {
 							"search" : "Søg",
 							"lengthMenu" : "_MENU_ stedfortrædere per side",
@@ -601,7 +603,7 @@
 
 								for (var j = 0; j < response.length; j++) {
 
-									var hit = { value: response[j].value, uuid: response[j].data};
+									var hit = { value: response[j].value.replace(/'/g, '\u2019'), uuid: response[j].data};
 									resultSet.push(hit);
 								}
 								

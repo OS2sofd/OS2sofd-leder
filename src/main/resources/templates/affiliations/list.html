@@ -95,7 +95,7 @@
 							<input type="text" class="form-control cleanable" id="internalReference"/>
 						</div>
 					</div>
-					<div class="form-group row">
+					<div class="form-group row" th:if="${@managerConfiguration.getEmail().isEnabled()}">
 						<label class="col-sm-2 control-label">Begrundelse for ændring *</label>
 						<div class="col-sm-8">
 							<textarea rows="4" class="form-control cleanable" id="reason"></textarea>
@@ -117,6 +117,7 @@
 		
 			/*[+
 				var affiliationRestUrl = [[@{/rest/affiliations}]];
+				var mailEnabled = [[${@managerConfiguration.getEmail().isEnabled()}]];
 			+]*/
 			
 			var token = $("meta[name='_csrf']").attr("content");
@@ -160,7 +161,9 @@
 							{ "type": "date-dk", targets: "_all" }
 						  ],
 						"order": [ 0, 'asc' ],
-						"language" : {
+                        "stateSave": true,
+                        "stateDuration": -1,
+                        "language" : {
 							"search" : "Søg",
 							"lengthMenu" : "_MENU_ tilhørsforhold per side",
 							"info" : "Viser _START_ til _END_ af _TOTAL_ tilhørsforhold",
@@ -199,10 +202,16 @@
 				this.editAffiliation = function() {
 					var position = $("#position").val();
 					var reason = $("#reason").val();
-					if (position == null || position === "" || reason == null || reason === "") {
-						toastr.error("Stillingsbetegnelse og begrundelse skal være udfyldt");
+					if (position == null || position === "") {
+						toastr.error("Stillingsbetegnelse skal være udfyldt");
 						return;
 					}
+
+					if (mailEnabled && (reason == null || reason === "")) {
+						toastr.error("Begrundelse skal være udfyldt");
+						return;
+					}
+
 					payload = {
 						id: $("#id").val(),
 						position: position,

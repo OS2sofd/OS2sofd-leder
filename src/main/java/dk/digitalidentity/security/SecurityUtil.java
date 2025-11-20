@@ -5,6 +5,7 @@ import dk.digitalidentity.config.StaticContextAccessor;
 import dk.digitalidentity.samlmodule.model.SamlGrantedAuthority;
 import dk.digitalidentity.samlmodule.model.TokenUser;
 import dk.digitalidentity.service.SOFDFunctionAssignmentService;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -25,19 +26,35 @@ public class SecurityUtil {
 	private HttpServletRequest request;
 
 	public static RolePostProcesser.LoggedInUser getLoggedInUser() {
-		if( SecurityContextHolder.getContext().getAuthentication() != null ) {
-			var tokenUser = ((TokenUser) SecurityContextHolder.getContext().getAuthentication().getDetails());
-			return (RolePostProcesser.LoggedInUser) tokenUser.getAttributes().get(RolePostProcesser.LOGGED_IN_USER_ATTRIBUTE);
+		try {
+			if( SecurityContextHolder.getContext().getAuthentication() != null ) {
+				var tokenUser = ((TokenUser) SecurityContextHolder.getContext().getAuthentication().getDetails());
+				return (RolePostProcesser.LoggedInUser) tokenUser.getAttributes().get(RolePostProcesser.LOGGED_IN_USER_ATTRIBUTE);
+			}
+			return null;
 		}
-		return null;
+		catch( Exception e ) {
+			return null;
+		}
 	}
 
+	@SneakyThrows
 	public static RolePostProcesser.ManagerUIContext getCurrentContext() {
-		if( SecurityContextHolder.getContext().getAuthentication() != null ) {
+		if( SecurityContextHolder.getContext().getAuthentication() != null && getLoggedInUser() != null ) {
 			var tokenUser = ((TokenUser) SecurityContextHolder.getContext().getAuthentication().getDetails());
-			return (RolePostProcesser.ManagerUIContext) tokenUser.getAttributes().get(RolePostProcesser.CURRENT_CONTEXT_ATTRIBUTE);
+			var context = (RolePostProcesser.ManagerUIContext) tokenUser.getAttributes().get(RolePostProcesser.CURRENT_CONTEXT_ATTRIBUTE);
+			if( context == null ) {
+				// no context set yet - set one
+				context = getLoggedInUser().contexts().stream().findFirst().orElse(null);
+				if( context != null ) {
+					setCurrentContext(context);
+				}
+			}
+			return context;
 		}
-		return null;
+		else {
+			return null;
+		}
 	}
 
 	public static void setCurrentContext(RolePostProcesser.ManagerUIContext managerUIContext) {

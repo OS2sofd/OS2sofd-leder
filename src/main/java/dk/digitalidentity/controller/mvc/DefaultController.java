@@ -38,17 +38,19 @@ public class DefaultController implements ErrorController {
     private ErrorAttributes errorAttributes = new DefaultErrorAttributes();
 
     @GetMapping("/")
-    public String defaultPage() {
+    public String defaultPage(Model model) {
+        if( SecurityUtil.getLoggedInUser() != null && SecurityUtil.getCurrentContext() == null ) {
+            model.addAttribute("error","Ingen adgang");
+            return "error";
+        }
         return "index";
     }
 
     @GetMapping("/logincontexts")
     public String loginContexts(Model model, HttpServletRequest request) {
         try {
-            if( SecurityUtil.getCurrentContext() == null ) {
-                // choose the first available context when first logging in
-                SecurityUtil.setCurrentContext(SecurityUtil.getLoggedInUser().contexts().stream().findFirst().orElseThrow());
-            }
+            // try to get a context before sending user back to frontpage where a context is required for it to render properly
+            var context =  SecurityUtil.getCurrentContext();
             return "redirect:/";
         }
         catch( Exception e) {

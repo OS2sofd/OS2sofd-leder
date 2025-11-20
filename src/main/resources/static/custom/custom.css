@@ -1,8 +1,8 @@
 :root {
-  --primary-color: #9D1D5E;
-  --darker-primary-color: #911655;
+  --primary-color: #86bc25;
+  --darker-primary-color: color-mix(in srgb, #86bc25 90%, black);
   --danger-color: #c82333;
-  --darker-danger-color: #bd2130;
+  --darker-danger-color: color-mix(in srgb, #c82333 90%, black);
 }
 
 /* buttons */
