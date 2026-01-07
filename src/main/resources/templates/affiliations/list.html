@@ -123,17 +123,29 @@
 			var token = $("meta[name='_csrf']").attr("content");
 			var affiliationService;
 			$(document).ready(function () {
-				affiliationService = new AffiliationService();
-				affiliationService.init();
-
 				// sorts dd/mm/yyyy dates
 				$.extend( jQuery.fn.dataTableExt.oSort, {
-					"date-dk-pre": function (x){
-						var date = moment(x, "DD/MM/YYYY");
-						return date.isValid() ? date.format("YYYY-MM-DD") : x;
+					"date-dk-pre": function (x) {
+						// uses infinity for unknown values
+						if (!x || x.trim() === '' || x === 'null' || x === 'undefined') {
+							return Infinity;
+						}
+						var date = moment(x.trim(), "DD/MM/YYYY", true);
+						return date.isValid() ? date.valueOf() : Infinity;
+					},
+					"date-dk-asc": function (a, b) {
+						return a - b;
+					},
+					"date-dk-desc": function (a, b) {
+						if (a === Infinity && b === Infinity) return 0;
+						if (a === Infinity) return 1;
+						if (b === Infinity) return -1;
+						return b - a;
 					}
 				});
 
+				affiliationService = new AffiliationService();
+				affiliationService.init();
 			});
 			
 			function AffiliationService() {
@@ -158,7 +170,7 @@
 						"autoWidth": false,
 						"columnDefs": [
 							{ "orderable": false, "searchable": false, "targets": lastColIndex },
-							{ "type": "date-dk", targets: "_all" }
+							{ "type": "date-dk", targets: [3, 4] }
 						  ],
 						"order": [ 0, 'asc' ],
                         "stateSave": true,

@@ -56,20 +56,33 @@
 			var functionService;
 
 			$(document).ready(function () {
-				functionService = new FunctionService();				
-				functionService.init();
-
 				// sorts dd/mm/yyyy dates
 				$.extend( jQuery.fn.dataTableExt.oSort, {
-					"date-dk-pre": function (x){
-						var date = moment(x, "DD/MM/YYYY");
-						return date.isValid() ? date.format("YYYY-MM-DD") : x;
+					"date-dk-pre": function (x) {
+						// uses infinity for unknown values
+						if (!x || x.trim() === '' || x === 'null' || x === 'undefined') {
+							return Infinity;
+						}
+						var date = moment(x.trim(), "DD/MM/YYYY", true);
+						return date.isValid() ? date.valueOf() : Infinity;
+					},
+					"date-dk-asc": function (a, b) {
+						return a - b;
+					},
+					"date-dk-desc": function (a, b) {
+						if (a === Infinity && b === Infinity) return 0;
+						if (a === Infinity) return 1;
+						if (b === Infinity) return -1;
+						return b - a;
 					}
 				});
+
+				functionService = new FunctionService();
+				functionService.init();
 			});
 			
 			function FunctionService() {				
-				this.init = function() {										
+				this.init = function() {
 					var table = $('#functionAssignments').DataTable({
 						"pageLength" : 50,
 						"dom": '<"html5buttons"B>lTfgitp',
@@ -80,8 +93,8 @@
 						"responsive" : true,
 						"autoWidth": false,
 						"columnDefs": [
-							{ "type": "date-dk", targets: "_all" }
-						  ],
+							{ "type": "date-dk", targets: [1, 2] }
+						],
 						"order": [ 0, 'asc' ],
                         "stateSave": true,
                         "stateDuration": -1,

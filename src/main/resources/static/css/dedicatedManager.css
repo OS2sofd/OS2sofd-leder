@@ -30,3 +30,22 @@
 @media only screen and (max-width: 990px) {
 
 }
+
+/* Fullscreen mode */
+.wrapper-content.fullscreen {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    z-index: 9999 !important;
+    background: white !important;
+    overflow: auto !important;
+}
+
+/* Disable body/html scroll when fullscreen is active */
+body:has(.wrapper-content.fullscreen),
+html:has(.wrapper-content.fullscreen) {
+    overflow: hidden !important;
+    height: 100vh !important;
+}

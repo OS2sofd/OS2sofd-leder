@@ -7,7 +7,7 @@
 	    <div id="page-wrapper" class="gray-bg">
 	    	<nav th:replace="fragments/navbar :: navbar-header" />
 
-	        <div class="wrapper wrapper-content">
+	        <div class="wrapper wrapper-content" th:classappend="${fullscreen} ? 'fullscreen' : ''">
 	            <div class="row">
 	                <div class="col-lg-12">
                         <div class="ibox">
@@ -303,6 +303,27 @@
 			var token = $("meta[name='_csrf']").attr("content");
 			var functionService, searchService, ouService;
 			$(document).ready(function () {
+				// sorts dd/mm/yyyy dates
+				$.extend( jQuery.fn.dataTableExt.oSort, {
+					"date-dk-pre": function (x) {
+						// uses infinity for unknown values
+						if (!x || x.trim() === '' || x === 'null' || x === 'undefined') {
+							return Infinity;
+						}
+						var date = moment(x.trim(), "DD/MM/YYYY", true);
+						return date.isValid() ? date.valueOf() : Infinity;
+					},
+					"date-dk-asc": function (a, b) {
+						return a - b;
+					},
+					"date-dk-desc": function (a, b) {
+						if (a === Infinity && b === Infinity) return 0;
+						if (a === Infinity) return 1;
+						if (b === Infinity) return -1;
+						return b - a;
+					}
+				});
+
 				functionService = new FunctionService();
 				searchService = new SearchService();
 				ouService = new OUService();
@@ -310,14 +331,6 @@
 				functionService.init();
 				searchService.init();
 				ouService.init();
-
-				// sorts dd/mm/yyyy dates
-				$.extend( jQuery.fn.dataTableExt.oSort, {
-					"date-dk-pre": function (x){
-						var date = moment(x, "DD/MM/YYYY");
-						return date.isValid() ? date.format("YYYY-MM-DD") : x;
-					}
-				});
 			});
 			
 			function FunctionService() {
@@ -351,7 +364,7 @@
 						"autoWidth": false,
 						"columnDefs": [
 							{ "orderable": false, "searchable": false, "targets": lastColIndex },
-							{ "type": "date-dk", targets: "_all" }
+							{ "type": "date-dk", targets: [1, 2] }
 						  ],
 						"order": [ 0, 'asc' ],
                         "stateSave": true,
@@ -687,7 +700,7 @@
 								toastr.error("Der opstod en fejl. Tjek dine indtastninger og prøv igen.")
 							},
 							success: function(response) {
-								window.location.href="/functionassignments?function=" + payload.functionId
+								window.location.href="/functionassignments/" + payload.functionId
 							}
 						});
 					}

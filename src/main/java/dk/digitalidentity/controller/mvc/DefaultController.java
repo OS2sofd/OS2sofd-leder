@@ -11,6 +11,7 @@ import org.springframework.boot.web.servlet.error.ErrorAttributes;
 import org.springframework.boot.web.servlet.error.ErrorController;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -39,26 +40,8 @@ public class DefaultController implements ErrorController {
 
     @GetMapping("/")
     public String defaultPage(Model model) {
-        if( SecurityUtil.getLoggedInUser() != null && SecurityUtil.getCurrentContext() == null ) {
-            model.addAttribute("error","Ingen adgang");
-            return "error";
-        }
         return "index";
     }
-
-    @GetMapping("/logincontexts")
-    public String loginContexts(Model model, HttpServletRequest request) {
-        try {
-            // try to get a context before sending user back to frontpage where a context is required for it to render properly
-            var context =  SecurityUtil.getCurrentContext();
-            return "redirect:/";
-        }
-        catch( Exception e) {
-            model.addAttribute("error","Ingen adgang");
-            return "error";
-        }
-    }
-
 
     @GetMapping("/chooseContext")
     public String chooseContext(Model model, HttpServletRequest request, @RequestParam int id) {

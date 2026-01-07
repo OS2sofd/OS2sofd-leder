@@ -1,7 +1,8 @@
 package dk.digitalidentity.controller.mvc;
 
 import dk.digitalidentity.config.ManagerConfiguration;
-import dk.digitalidentity.security.RequireSubstituteOrManagerOrReaderOrAdminAccess;
+import dk.digitalidentity.config.RoleConstants;
+import dk.digitalidentity.security.RequireSubstituteOrManagerOrReaderOrAdminOrManagerEditorAccess;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.SOFDFunctionAssignmentService;
 import dk.digitalidentity.service.SOFDFunctionAssignmentService.FacetDTO;
@@ -13,7 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
@@ -23,7 +24,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@RequireSubstituteOrManagerOrReaderOrAdminAccess
+@RequireSubstituteOrManagerOrReaderOrAdminOrManagerEditorAccess
 @Slf4j
 @Controller
 public class FunctionAssignmentController {
@@ -34,11 +35,15 @@ public class FunctionAssignmentController {
 	@Autowired
 	private ManagerConfiguration config;
 
-	@GetMapping("/functionassignments")
-	public String listFunctionAssignments(Model model, HttpServletRequest request, @RequestParam(name = "function") long functionId) throws Exception {
+	@GetMapping({"/functionassignments/{functionId}", "/functionassignments/{functionId}/{mode}"})
+	public String listFunctionAssignments(Model model, HttpServletRequest request, @PathVariable(name = "functionId") long functionId, @PathVariable(required = false) String mode) throws Exception {
 		if (!config.getModules().getFunctionHierarchy().isEnabled()) {
 			return "error";
 		}
+		var isFullScreen = "fullscreen".equals(mode);
+		if (isFullScreen) {
+            SecurityUtil.getLoggedInUser().contexts().stream().filter(c -> c.role().equals(RoleConstants.READER)).findFirst().ifPresent(SecurityUtil::setCurrentContext);
+        }
 		
 		List<FunctionDTO> functionsAndFacets = sofdFunctionAssignmentService.getFunctionsAndFacets();
 		FunctionDTO function = functionsAndFacets.stream().filter(f -> f.id() == functionId).findFirst().orElse(null);
@@ -95,6 +100,8 @@ public class FunctionAssignmentController {
 			log.warn("Failed to filter ous: " + e.getMessage());
 			return "error";
 		}
+
+		model.addAttribute("fullscreen", isFullScreen);
 		
 		return "functionAssignments/list";
 	}
@@ -107,6 +114,9 @@ public class FunctionAssignmentController {
 
 		List<FunctionDTO> functionsAndFacets = sofdFunctionAssignmentService.getFunctionsAndFacets();
 
+		if (SecurityUtil.getCurrentContext() == null || SecurityUtil.getCurrentContext().constraintOUs() == null) {
+			return "error";
+		}
 		String ousString = String.join(",", SecurityUtil.getCurrentContext().constraintOUs());
 		if (ousString == null) {
 			return "error";
