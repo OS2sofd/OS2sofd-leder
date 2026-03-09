@@ -31,6 +31,7 @@ public class SubstituteController {
 	private ManagerConfiguration config;
 
 	public record SubstituteAssignmentDTO(long id, long substituteContextId, String substituteContextName, List<ConstraintOrgUnit> constraintOrgUnits, Substitute substitute, List<String> constraintOrgUnitsUuids, boolean isOrgUnitAssignment) {}
+
 	@GetMapping("/substitutes")
 	public String listSubstitutes(Model model) {
 		if (!config.getModules().getSubstituteModule().isEnabled()) {

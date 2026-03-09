@@ -19,13 +19,15 @@ import java.util.List;
 @Service
 @Slf4j
 public class SOFDSubstituteService {
-    @Autowired
+
+	@Autowired
     private RestTemplate restTemplate;
 	
 	@Autowired
 	private ManagerConfiguration config;
 
 	public record SubstituteContext(long id, String name, String identifier, boolean supportsConstraints, boolean canBeDeleted, boolean assignableToOrgunit, boolean inherit) {}
+
 	public List<SubstituteContext> getSubstituteContexts() {
 		HttpEntity<String> request = new HttpEntity<>(getHeaders());
 		String url = config.getSofdBaseUrl();
@@ -35,7 +37,7 @@ public class SOFDSubstituteService {
 
 		ResponseEntity<SubstituteContext[]> response = restTemplate.exchange(url + query, HttpMethod.GET, request, SubstituteContext[].class);
 		if (!response.getStatusCode().equals(HttpStatus.OK)) {
-			log.warn("Failed to fetch list of substitute contexts. " + response.getStatusCodeValue() + ", response=" + response.getBody());
+			log.warn("Failed to fetch list of substitute contexts. " + response.getStatusCode().value() + ", response=" + response.getBody());
 			return null;
 		}
 		
@@ -53,6 +55,7 @@ public class SOFDSubstituteService {
 	public record Substitute(String uuid, String name) {}
 	public record ConstraintOrgUnit(String uuid, String name, long assignmentId) {}
 	public record SubstituteAssignment(long id, long substituteContextId, String substituteContextName, List<ConstraintOrgUnit> constraintOrgUnits, Substitute substitute, boolean orgUnitAssignment) {}
+
 	public List<SubstituteAssignment> getSubstituteAssignments() {
 		HttpEntity<String> request = new HttpEntity<>(getHeaders());
 		String url = config.getSofdBaseUrl();
@@ -63,7 +66,7 @@ public class SOFDSubstituteService {
 
 		ResponseEntity<SubstituteAssignment[]> response = restTemplate.exchange(url + query, HttpMethod.GET, request, SubstituteAssignment[].class);
 		if (!response.getStatusCode().equals(HttpStatus.OK)) {
-			log.warn("Failed to fetch list of substitute assignment for person with uuid " + userUuid + ". " + response.getStatusCodeValue() + ", response=" + response.getBody());
+			log.warn("Failed to fetch list of substitute assignment for person with uuid " + userUuid + ". " + response.getStatusCode().value() + ", response=" + response.getBody());
 			return null;
 		}
 		
@@ -90,7 +93,7 @@ public class SOFDSubstituteService {
 
 		ResponseEntity<ConstraintOrgUnit[]> response = restTemplate.exchange(url + query, HttpMethod.GET, request, ConstraintOrgUnit[].class);
 		if (!response.getStatusCode().equals(HttpStatus.OK)) {
-			log.warn("Failed to fetch list of managed orgUnits for person with uuid " + userUuid + ". " + response.getStatusCodeValue() + ", response=" + response.getBody());
+			log.warn("Failed to fetch list of managed orgUnits for person with uuid " + userUuid + ". " + response.getStatusCode().value() + ", response=" + response.getBody());
 			return null;
 		}
 		
@@ -131,7 +134,7 @@ public class SOFDSubstituteService {
 
 		ResponseEntity<AutoCompleteResult> response = restTemplate.exchange(url + query, HttpMethod.GET, request, AutoCompleteResult.class);
 		if (!response.getStatusCode().equals(HttpStatus.OK)) {
-			log.warn("Failed to fetch AutoCompleteResult for person with uuid " + userUuid + ". " + response.getStatusCodeValue() + ", response=" + response.getBody());
+			log.warn("Failed to fetch AutoCompleteResult for person with uuid " + userUuid + ". " + response.getStatusCode().value() + ", response=" + response.getBody());
 			return null;
 		}
 		

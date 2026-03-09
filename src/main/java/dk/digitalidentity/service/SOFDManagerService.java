@@ -17,15 +17,17 @@ import java.util.List;
 @Service
 @Slf4j
 public class SOFDManagerService {
-    @Autowired
+	public enum ContextRole { MANAGER, SUBSTITUTE }
+
+	@Autowired
     private RestTemplate restTemplate;
 	
 	@Autowired
 	private ManagerConfiguration config;
 
-	public enum ContextRole { MANAGER, SUBSTITUTE }
 	public record ContextDTO(String uuid, String name, ContextRole role, String ouUuids) {}
 	public record ContextResultDTO(String name, String username, String email, List<ContextDTO> contexts) {}
+
 	public ContextResultDTO getLoginContexts(String personUuid) {
 		HttpEntity<String> request = new HttpEntity<>(getHeaders());
 		String url = config.getSofdBaseUrl();
@@ -35,7 +37,7 @@ public class SOFDManagerService {
 
 		ResponseEntity<ContextResultDTO> response = restTemplate.exchange(url + query, HttpMethod.GET, request, ContextResultDTO.class);
 		if (!response.getStatusCode().equals(HttpStatus.OK)) {
-			log.warn("Failed to fetch list of contexts. " + response.getStatusCodeValue() + ", response=" + response.getBody());
+			log.warn("Failed to fetch list of contexts. " + response.getStatusCode().value() + ", response=" + response.getBody());
 			return null;
 		}
 		
@@ -49,6 +51,7 @@ public class SOFDManagerService {
 	}
 
 	public record OrgUnitManagerDto(String orgUnitUuid, String parentOrgUnitUuid, String orgUnitName, boolean managerExists, String managerUuid, String managerName, String source, boolean inherited) {}
+
 	public List<OrgUnitManagerDto> getOrgUnitManagers() {
 		HttpEntity<String> request = new HttpEntity<>(getHeaders());
 		String url = config.getSofdBaseUrl();
@@ -64,6 +67,7 @@ public class SOFDManagerService {
 	}
 
 	public record ManagerSuggestion(String uuid, String display) {}
+
 	public List<ManagerSuggestion> searchManagers(String query) {
 		HttpEntity<String> request = new HttpEntity<>(getHeaders());
 		String url = config.getSofdBaseUrl() + "/api/manager/searchManagers?query=";

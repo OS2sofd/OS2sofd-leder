@@ -23,6 +23,7 @@ import java.util.List;
 @Service
 @Slf4j
 public class SOFDService {
+	
     @Autowired
     private RestTemplate restTemplate;
 
@@ -30,7 +31,7 @@ public class SOFDService {
     private ManagerConfiguration config;
 
     @Autowired
-    SOFDService self;
+    private SOFDService self;
 
     public record SofdAffiliation(long id, String personName, String positionName, String positionDisplayName,
                                   String orgUnitName, boolean active, LocalDate startDate, LocalDate stopDate,
@@ -46,7 +47,7 @@ public class SOFDService {
 
         ResponseEntity<SofdAffiliation[]> response = restTemplate.exchange(url + query, HttpMethod.GET, request, SofdAffiliation[].class);
         if (!response.getStatusCode().equals(HttpStatus.OK)) {
-            log.warn("Failed to fetch list of editable affiliations for manager with uuid " + uuid + ". " + response.getStatusCodeValue() + ", response=" + response.getBody());
+            log.warn("Failed to fetch list of editable affiliations for manager with uuid " + uuid + ". " + response.getStatusCode().value() + ", response=" + response.getBody());
             return null;
         }
 
@@ -76,7 +77,8 @@ public class SOFDService {
             return true;
         }
 
-        log.warn("Failed to edit affiliation with id " + id);
+        log.warn("Failed to edit affiliation with id " + id + ", response = " + response.getBody());
+
         return false;
     }
 
@@ -91,7 +93,7 @@ public class SOFDService {
 
         ResponseEntity<Person> response = restTemplate.exchange(url + query, HttpMethod.GET, request, Person.class);
         if (!response.getStatusCode().equals(HttpStatus.OK)) {
-            log.warn("Failed to get person with kombituuid " + kombitUuid + ". " + response.getStatusCodeValue() + ", response=" + response.getBody());
+            log.warn("Failed to get person with kombituuid " + kombitUuid + ". " + response.getStatusCode().value() + ", response=" + response.getBody());
             return null;
         }
 
@@ -126,7 +128,7 @@ public class SOFDService {
 
         ResponseEntity<PausablePersonDTO[]> response = restTemplate.exchange(url + query, HttpMethod.GET, request, PausablePersonDTO[].class);
         if (!response.getStatusCode().equals(HttpStatus.OK)) {
-            log.warn("Failed to fetch list of pausable people for manager with uuid " + uuid + ". " + response.getStatusCodeValue() + ", response=" + response.getBody());
+            log.warn("Failed to fetch list of pausable people for manager with uuid " + uuid + ". " + response.getStatusCode().value() + ", response=" + response.getBody());
             return null;
         }
 

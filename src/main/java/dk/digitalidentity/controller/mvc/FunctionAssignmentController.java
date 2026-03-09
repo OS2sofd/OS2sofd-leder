@@ -1,5 +1,18 @@
 package dk.digitalidentity.controller.mvc;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+
 import dk.digitalidentity.config.ManagerConfiguration;
 import dk.digitalidentity.config.RoleConstants;
 import dk.digitalidentity.security.RequireSubstituteOrManagerOrReaderOrAdminOrManagerEditorAccess;
@@ -9,20 +22,8 @@ import dk.digitalidentity.service.SOFDFunctionAssignmentService.FacetDTO;
 import dk.digitalidentity.service.SOFDFunctionAssignmentService.FacetValueDTO;
 import dk.digitalidentity.service.SOFDFunctionAssignmentService.FunctionAssignmentDTO;
 import dk.digitalidentity.service.SOFDFunctionAssignmentService.FunctionDTO;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-
-import javax.servlet.http.HttpServletRequest;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @RequireSubstituteOrManagerOrReaderOrAdminOrManagerEditorAccess
 @Slf4j

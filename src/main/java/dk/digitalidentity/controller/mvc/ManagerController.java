@@ -1,11 +1,5 @@
 package dk.digitalidentity.controller.mvc;
 
-import dk.digitalidentity.config.ManagerConfiguration;
-import dk.digitalidentity.security.RequireManagerEditorOrAdminAccess;
-import dk.digitalidentity.security.SecurityUtil;
-import dk.digitalidentity.service.SOFDManagerService;
-import dk.digitalidentity.service.SOFDService;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -13,7 +7,12 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import javax.servlet.http.HttpServletRequest;
+import dk.digitalidentity.config.ManagerConfiguration;
+import dk.digitalidentity.security.RequireManagerEditorOrAdminAccess;
+import dk.digitalidentity.security.SecurityUtil;
+import dk.digitalidentity.service.SOFDManagerService;
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 
 @RequireManagerEditorOrAdminAccess
 @Slf4j
@@ -24,12 +23,10 @@ public class ManagerController {
 	private ManagerConfiguration config;
 
 	@Autowired
-	private SOFDService sofdService;
-
-	@Autowired
 	private SOFDManagerService sofdManagerService;
 
 	private record OrgUnitManagerTreeDto(String id, String parent, String orgUnitName, boolean managerExists, String managerName, String source, boolean inherited, boolean access ) {}
+
 	@GetMapping("/managers")
 	public String managers(Model model, HttpServletRequest request) {
 		if (!config.getModules().getManagerModule().isEnabled()) {

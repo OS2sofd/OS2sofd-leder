@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html>
-<head th:replace="fragments/header :: header(datatables = true, datepicker = true, checkbox = true)" />
+<head th:replace="~{fragments/header :: header(datatables = true, datepicker = true, checkbox = true)}" />
 <body class="top-navigation">
 	<div id="wrapper">
-	    <nav th:replace="fragments/navbar :: navbar-aside(page='pausablePeople')" />
+	    <nav th:replace="~{fragments/navbar :: navbar-aside(page='pausablePeople')}" />
 	    <div id="page-wrapper" class="gray-bg">
-	    	<nav th:replace="fragments/navbar :: navbar-header" />
+	    	<nav th:replace="~{fragments/navbar :: navbar-header}" />
 
 	        <div class="wrapper wrapper-content">
 	            <div class="row">
@@ -142,7 +142,7 @@
 		</div>
 	</div>
 	
-	<div th:replace="fragments/footer :: scripts(datatables = true, datepicker = true, checkbox = true)"></div>
+	<div th:replace="~{fragments/footer :: scripts(datatables = true, datepicker = true, checkbox = true)}"></div>
 	<script th:inline="javascript">
 		/*<![CDATA[*/
 		

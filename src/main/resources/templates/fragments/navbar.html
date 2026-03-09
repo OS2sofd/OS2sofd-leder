@@ -42,9 +42,10 @@
 							<div class="list-group-item">
 								<ul style="padding-left: 0px;">
 									<li>
-			                            <a th:href="@{/saml/logout}" style="color: black; font-size: medium;">
+										<form th:action="@{/logout}" id="logout_form" method="post"></form>
+										<a href="#" onclick="$('#logout_form').submit();">
 			                                <i class="fa fa-sign-out"></i> &nbsp; Log ud
-			                            </a>
+										</a>
 			                        </li>
 			                    </ul>
 			                </div>
@@ -97,7 +98,7 @@
 					</li>
                 </th:block>
                 <li>
-                	<a sec:authorize="!isAuthenticated()" href="/saml/login"><span class="nav-label"><em class="fa fa-sign-in"></em> &nbsp; Login</span></a>
+                	<a sec:authorize="!isAuthenticated()" href="/startLogin"><span class="nav-label"><em class="fa fa-sign-in"></em> &nbsp; Login</span></a>
                 </li>
             </ul>
         </div>

@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "manager")
 public class ManagerConfiguration {
     private boolean schedulingEnabled = true;
-    private Modules modules;
+    private Modules modules = new Modules();
     private String sofdBaseUrl;
     private String sofdApiKey;
     private HTMLConfig html = new HTMLConfig();

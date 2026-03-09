@@ -1,16 +1,16 @@
 package dk.digitalidentity.controller.mvc;
 
-import dk.digitalidentity.config.ManagerConfiguration;
-import dk.digitalidentity.security.RequireSubstituteOrManagerAccess;
-import dk.digitalidentity.security.SecurityUtil;
-import dk.digitalidentity.service.SOFDService;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
-import javax.servlet.http.HttpServletRequest;
+import dk.digitalidentity.config.ManagerConfiguration;
+import dk.digitalidentity.security.RequireSubstituteOrManagerAccess;
+import dk.digitalidentity.security.SecurityUtil;
+import dk.digitalidentity.service.SOFDService;
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 
 @RequireSubstituteOrManagerAccess
 @Slf4j

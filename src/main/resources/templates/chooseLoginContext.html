@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html>
-<head th:replace="fragments/header :: header" />
+<head th:replace="~{fragments/header :: header}" />
 <body class="top-navigation">
 	<div id="wrapper">
 	    <div id="page-wrapper" class="gray-bg">
@@ -28,7 +28,7 @@
 	    </div>
 	</div>
 
-	<div th:replace="fragments/footer :: scripts"></div>
+	<div th:replace="~{fragments/footer :: scripts}"></div>
 	<script th:inline="javascript">
 		/*<![CDATA[*/
 		

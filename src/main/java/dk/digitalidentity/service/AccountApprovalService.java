@@ -36,7 +36,7 @@ public class AccountApprovalService {
         List<AccountOrderDTO> fetchedOrders = new ArrayList<>();
         ResponseEntity<AccountOrderDTO[]> response = restTemplate.exchange(managerConfiguration.getSofdBaseUrl() + query, HttpMethod.GET, request, AccountOrderDTO[].class);
         if (!response.getStatusCode().equals(HttpStatus.OK)) {
-            log.warn("Failed to fetch list of account orders from sofd-core. " + response.getStatusCodeValue() + ", response=" + Arrays.toString(response.getBody()));
+            log.warn("Failed to fetch list of account orders from sofd-core. " + response.getStatusCode().value() + ", response=" + Arrays.toString(response.getBody()));
             return null;
         }
         if (response.getBody() != null) {
@@ -59,7 +59,7 @@ public class AccountApprovalService {
         String query = "/api/manager/" + SecurityUtil.getLoggedInUser().personUuid() + "/accountorders/approve/" + id;
         ResponseEntity<AccountOrderDTO[]> response = restTemplate.exchange(managerConfiguration.getSofdBaseUrl() + query, HttpMethod.POST, request, AccountOrderDTO[].class);
         if (!response.getStatusCode().equals(HttpStatus.OK)) {
-            log.warn("Failed to approve account order " + id + " from sofd-core. " + response.getStatusCodeValue() + ", response=" + Arrays.toString(response.getBody()));
+            log.warn("Failed to approve account order " + id + " from sofd-core. " + response.getStatusCode().value() + ", response=" + Arrays.toString(response.getBody()));
             return false;
         }
         return true;

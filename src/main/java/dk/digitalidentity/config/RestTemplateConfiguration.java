@@ -1,49 +1,67 @@
 package dk.digitalidentity.config;
 
-import org.apache.http.client.config.CookieSpecs;
-import org.apache.http.client.config.RequestConfig;
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.ssl.SSLContextBuilder;
+import java.io.IOException;
+import java.net.URI;
+import java.security.cert.X509Certificate;
+
+import javax.net.ssl.SSLContext;
+
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
+import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactory;
+import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactoryBuilder;
+import org.apache.hc.core5.ssl.SSLContextBuilder;
+import org.apache.hc.core5.ssl.TrustStrategy;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.client.BufferingClientHttpRequestFactory;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.web.client.ResponseErrorHandler;
 import org.springframework.web.client.RestTemplate;
 
-import java.io.IOException;
-
 @Configuration
 public class RestTemplateConfiguration {
     
+	// TODO: Use RestClient
+	@SuppressWarnings("deprecation")
 	@Bean
 	public RestTemplate restTemplate() throws Exception {
-		SSLContextBuilder builder = new SSLContextBuilder();
-		builder.loadTrustMaterial(null, new TrustSelfSignedStrategy());
+		TrustStrategy acceptingTrustStrategy = (X509Certificate[] _, String _) -> true;
 
-		SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(builder.build());
-		CloseableHttpClient httpclient = HttpClients.custom()
-				.setDefaultRequestConfig(RequestConfig.custom().setCookieSpec(CookieSpecs.STANDARD).build())
-				.setSSLSocketFactory(sslsf)
-				.build();
+		SSLContext sslContext = SSLContextBuilder.create()
+            .loadTrustMaterial(acceptingTrustStrategy)
+            .build();
 
-		BufferingClientHttpRequestFactory requestFactory = new BufferingClientHttpRequestFactory(new HttpComponentsClientHttpRequestFactory(httpclient));
+		SSLConnectionSocketFactory sslSocketFactory = SSLConnectionSocketFactoryBuilder.create()
+                .setSslContext(sslContext)
+                .build();
+        
+        PoolingHttpClientConnectionManager connectionManager = PoolingHttpClientConnectionManagerBuilder.create()
+                .setSSLSocketFactory(sslSocketFactory)
+                .build();
+        
+        // Build the HTTP client
+        CloseableHttpClient client = HttpClients.custom()
+                .setConnectionManager(connectionManager)
+                .build();
 
-		var restTemplate = new RestTemplate(requestFactory);
+		BufferingClientHttpRequestFactory requestFactory = new BufferingClientHttpRequestFactory(new HttpComponentsClientHttpRequestFactory(client));
 
+		RestTemplate restTemplate = new RestTemplate(requestFactory);
 		restTemplate.setErrorHandler(new ResponseErrorHandler() {
+			
 			@Override
 			public boolean hasError(ClientHttpResponse response) throws IOException {
 				return false;
 			}
-
+			
 			@Override
-			public void handleError(ClientHttpResponse response) throws IOException {
-
+			public void handleError(URI url, HttpMethod method, ClientHttpResponse response) throws IOException {
+				;
 			}
 		});
 

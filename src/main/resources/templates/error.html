@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html>
-<head th:replace="fragments/header :: header" />
+<head th:replace="~{fragments/header :: header}" />
 <body class="top-navigation">
 	<div id="wrapper">
-	    <nav th:replace="fragments/navbar :: navbar-aside(page='welcome')" />
+	    <nav th:replace="~{fragments/navbar :: navbar-aside(page='welcome')}" />
 	    <div id="page-wrapper" class="gray-bg">
-	    	<nav th:replace="fragments/navbar :: navbar-header" />
+	    	<nav th:replace="~{fragments/navbar :: navbar-header}" />
 
 	        <div class="wrapper wrapper-content">
 	            <div class="row">
@@ -22,6 +22,6 @@
 	    </div>
 	</div>
 
-	<div th:replace="fragments/footer :: scripts"></div>
+	<div th:replace="~{fragments/footer :: scripts}"></div>
 </body>
 </html>

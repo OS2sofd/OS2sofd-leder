@@ -1,11 +1,5 @@
 package dk.digitalidentity.controller.mvc;
 
-import dk.digitalidentity.config.ManagerConfiguration;
-import dk.digitalidentity.security.RequireSubstituteOrManagerAccess;
-import dk.digitalidentity.security.SecurityUtil;
-import dk.digitalidentity.service.AccountApprovalService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -14,7 +8,13 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 
-import javax.servlet.http.HttpServletRequest;
+import dk.digitalidentity.config.ManagerConfiguration;
+import dk.digitalidentity.security.RequireSubstituteOrManagerAccess;
+import dk.digitalidentity.security.SecurityUtil;
+import dk.digitalidentity.service.AccountApprovalService;
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Controller
 @RequiredArgsConstructor

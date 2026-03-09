@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html>
-<head th:replace="fragments/header :: header(datatables = true, datepicker = true)"></head>
+<head th:replace="~{fragments/header :: header(datatables = true, datepicker = true)}"></head>
 <body class="top-navigation">
 <div id="wrapper">
-    <nav th:replace="fragments/navbar :: navbar-aside (page = 'pendingapprovals')"></nav>
+    <nav th:replace="~{fragments/navbar :: navbar-aside (page = 'pendingapprovals')}"></nav>
     <div id="page-wrapper" class="gray-bg">
-        <nav th:replace="fragments/navbar :: navbar-header (page = 'pendingapprovals')"></nav>
+        <nav th:replace="~{fragments/navbar :: navbar-header (page = 'pendingapprovals')}"></nav>
         <div class="wrapper wrapper-content">
             <div class="row">
                 <div class="col-lg-12">
@@ -55,7 +55,7 @@
         </div>
     </div>
 </div>
-<div th:replace="fragments/footer :: scripts(datatables = true, datepicker = true)"></div>
+<div th:replace="~{fragments/footer :: scripts(datatables = true, datepicker = true)}"></div>
 
 <script th:inline="javascript">
     /*<![CDATA[*/

@@ -4,9 +4,6 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import javax.servlet.http.HttpServletRequest;
-
-import dk.digitalidentity.security.SecurityUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
@@ -22,8 +19,10 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fasterxml.jackson.annotation.JsonFormat;
 
 import dk.digitalidentity.security.RequireSubstituteOrManagerOrAdminAccess;
+import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.SOFDFunctionAssignmentService;
 import dk.digitalidentity.service.SOFDFunctionAssignmentService.AutoCompleteResult;
+import jakarta.servlet.http.HttpServletRequest;
 
 @RequireSubstituteOrManagerOrAdminAccess
 @RestController
@@ -53,6 +52,7 @@ public class FunctionAssignmentRestController {
 
 	private record AddFunctionAssignmentDTO(@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy") LocalDate startDate, @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy") LocalDate stopDate, String affiliationUuid, long functionId, List<FacetValueDTO> facetValues) {}
 	public record FacetValueDTO(long facetId, String facetName, String text, String facetListItem, List<String> facetValueOrgunitUuids, String facetValueOrgunitNames, String facetValueAffiliationUuid, String facetValueAffiliationPersonName, @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy") LocalDate date) {}
+	
 	@ResponseBody
 	@PostMapping(value = "/rest/functionassignment/add")
 	public HttpEntity<?> createSubstituteAssignment(@RequestBody AddFunctionAssignmentDTO dto) {

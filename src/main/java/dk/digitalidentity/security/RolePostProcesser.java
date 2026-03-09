@@ -19,15 +19,15 @@ import java.util.List;
 @Component
 @Slf4j
 public class RolePostProcesser implements SamlLoginPostProcessor {
-
 	public static final String LOGGED_IN_USER_ATTRIBUTE = "loggedInUser";
 	public static final String CURRENT_CONTEXT_ATTRIBUTE = "currentContext";
 
 	@Autowired
-	SOFDManagerService sofdManagerService;
+	private SOFDManagerService sofdManagerService;
 
 	public record LoggedInUser(String personUuid, String userId, String name, String email, List<ManagerUIContext> contexts) {}
 	public record ManagerUIContext(int id, String uuid, String name, String role, List<String> constraintOUs) {}
+	
 	@Override
 	public void process(TokenUser tokenUser) {
 		var contextId = 0;

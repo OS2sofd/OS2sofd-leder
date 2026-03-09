@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html>
-<head th:replace="fragments/header :: header(datatables = true, checkbox = true, datepicker = true, jstree = true)" />
+<head th:replace="~{fragments/header :: header(datatables = true, checkbox = true, datepicker = true, jstree = true)}" />
 <body class="top-navigation">
 	<div id="wrapper">
-		<nav th:replace="fragments/navbar :: navbar-aside(page = 'allFunctionAssignments')" />
+		<nav th:replace="~{fragments/navbar :: navbar-aside(page = 'allFunctionAssignments')}" />
 	    <div id="page-wrapper" class="gray-bg">
-	    	<nav th:replace="fragments/navbar :: navbar-header" />
+	    	<nav th:replace="~{fragments/navbar :: navbar-header}" />
 
 	        <div class="wrapper wrapper-content">
 	            <div class="row">
@@ -49,7 +49,7 @@
 	
 	
 	
-	<div th:replace="fragments/footer :: scripts(datatables = true, checkbox = true, datepicker = true, jstree = true)"></div>
+	<div th:replace="~{fragments/footer :: scripts(datatables = true, checkbox = true, datepicker = true, jstree = true)}"></div>
 	<script th:inline="javascript">
 		/*<![CDATA[*/					
 			var token = $("meta[name='_csrf']").attr("content");

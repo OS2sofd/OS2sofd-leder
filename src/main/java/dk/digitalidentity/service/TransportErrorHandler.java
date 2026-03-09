@@ -1,9 +1,8 @@
 package dk.digitalidentity.service;
 
+import jakarta.mail.event.TransportEvent;
+import jakarta.mail.event.TransportListener;
 import lombok.extern.slf4j.Slf4j;
-
-import javax.mail.event.TransportEvent;
-import javax.mail.event.TransportListener;
 
 @Slf4j
 public class TransportErrorHandler implements TransportListener {

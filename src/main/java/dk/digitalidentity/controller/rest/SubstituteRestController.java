@@ -2,9 +2,6 @@ package dk.digitalidentity.controller.rest;
 
 import java.util.List;
 
-import javax.servlet.http.HttpServletRequest;
-
-import dk.digitalidentity.security.SecurityUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
@@ -19,8 +16,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import dk.digitalidentity.config.ManagerConfiguration;
 import dk.digitalidentity.security.RequireManagerAccess;
+import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.SOFDSubstituteService;
 import dk.digitalidentity.service.SOFDSubstituteService.AutoCompleteResult;
+import jakarta.servlet.http.HttpServletRequest;
 
 @RequireManagerAccess
 @RestController
@@ -28,6 +27,7 @@ public class SubstituteRestController {
 	
 	@Autowired
 	private SOFDSubstituteService sofdSubstituteService;
+	
 	@Autowired
 	private ManagerConfiguration config;
 

@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -45,6 +45,7 @@ public class SOFDFunctionAssignmentService {
 
 	public record FunctionDTO(long id, String name, String category, String description, List<FacetDTO> facets) {}
 	public record FacetDTO(long id, String name, String description, String type, String pattern, Long sortKey, List<String> listItems) {}
+
 	@Cacheable("functions")
 	public List<FunctionDTO> getFunctionsAndFacets() {
 		HttpEntity<String> request = new HttpEntity<>(getHeaders());
@@ -55,7 +56,7 @@ public class SOFDFunctionAssignmentService {
 
 		ResponseEntity<FunctionDTO[]> response = restTemplate.exchange(url + query, HttpMethod.GET, request, FunctionDTO[].class);
 		if (!response.getStatusCode().equals(HttpStatus.OK)) {
-			log.warn("Failed to fetch list of functions and facets. " + response.getStatusCodeValue() + ", response=" + response.getBody());
+			log.warn("Failed to fetch list of functions and facets. " + response.getStatusCode().value() + ", response=" + response.getBody());
 			return null;
 		}
 
@@ -85,7 +86,7 @@ public class SOFDFunctionAssignmentService {
 
 		ResponseEntity<FunctionAssignmentDTO[]> response = restTemplate.exchange(url + query, HttpMethod.GET, request, FunctionAssignmentDTO[].class);
 		if (!response.getStatusCode().equals(HttpStatus.OK)) {
-			log.warn("Failed to fetch list of functionAssignments. " + response.getStatusCodeValue() + ", response=" + response.getBody());
+			log.warn("Failed to fetch list of functionAssignments. " + response.getStatusCode().value() + ", response=" + response.getBody());
 			return null;
 		}
 
@@ -129,7 +130,7 @@ public class SOFDFunctionAssignmentService {
 			return true;
 		}
 
-		log.warn("Failed to create function assignment: StatusCode: " + response.getStatusCodeValue() + " Body: " + response.getBody() );
+		log.warn("Failed to create function assignment: StatusCode: " + response.getStatusCode().value() + " Body: " + response.getBody() );
 		return false;
 	}
 
@@ -153,17 +154,18 @@ public class SOFDFunctionAssignmentService {
 
 	public record AutoCompleteResult(List<ValueData> suggestions) {}
 	public record ValueData(String value, String data) {}
+
 	@Cacheable(value = "autocompleteAll")
 	public AutoCompleteResult getAllAutoCompleteResultFunctionAssignmentPersons(String ous) {
 		HttpEntity<String> request = new HttpEntity<>(getHeaders());
 		String url = config.getSofdBaseUrl();
 
-		String query = "/api/functionhierarchy/search/all/?ous=" + ous;
+		String query = "/api/functionhierarchy/search/all?ous=" + ous;
 		AutoCompleteResult result = null;
 
 		ResponseEntity<AutoCompleteResult> response = restTemplate.exchange(url + query, HttpMethod.GET, request, AutoCompleteResult.class);
 		if (!response.getStatusCode().equals(HttpStatus.OK)) {
-			log.warn("Failed to fetch all AutoCompleteResultFunctionAssignmentPersons. " + response.getStatusCodeValue() + ", response=" + response.getBody());
+			log.warn("Failed to fetch all AutoCompleteResultFunctionAssignmentPersons. " + response.getStatusCode().value() + ", response=" + response.getBody());
 			return null;
 		}
 
@@ -173,7 +175,7 @@ public class SOFDFunctionAssignmentService {
 		else {
 			log.warn("Response body was null when fetching all AutoCompleteResultFunctionAssignmentPersons)");
 		}
-
+		
 		return result;
 	}
 
@@ -187,7 +189,7 @@ public class SOFDFunctionAssignmentService {
 
 		ResponseEntity<OUTreeFormDto[]> response = restTemplate.exchange(url + query, HttpMethod.GET, request, OUTreeFormDto[].class);
 		if (!response.getStatusCode().equals(HttpStatus.OK)) {
-			log.warn("Failed to fetch list of ous. " + response.getStatusCodeValue() + ", response=" + response.getBody());
+			log.warn("Failed to fetch list of ous. " + response.getStatusCode().value() + ", response=" + response.getBody());
 			return null;
 		}
 

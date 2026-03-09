@@ -1,18 +1,19 @@
 package dk.digitalidentity.service;
 
-import dk.digitalidentity.config.ManagerConfiguration;
-import lombok.extern.slf4j.Slf4j;
+import java.util.Properties;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import javax.mail.Message;
-import javax.mail.Session;
-import javax.mail.Transport;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeMessage;
-
-import java.util.Properties;
+import dk.digitalidentity.config.ManagerConfiguration;
+import jakarta.mail.Address;
+import jakarta.mail.Message;
+import jakarta.mail.Session;
+import jakarta.mail.Transport;
+import jakarta.mail.internet.InternetAddress;
+import jakarta.mail.internet.MimeMessage;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
@@ -42,35 +43,41 @@ public class EmailService {
 			MimeMessage msg = new MimeMessage(session);
 
 			if (StringUtils.hasLength(replyTo)) {
-				msg.setReplyTo(new javax.mail.Address[]
-								{
-									new javax.mail.internet.InternetAddress(replyTo)
-								});
+				msg.setReplyTo(new Address[] {
+					new InternetAddress(replyTo)
+				});
 			}
 
-			msg.setFrom(new InternetAddress(configuration.getEmail().getFrom(),
-					configuration.getEmail().getFromName()));
+			msg.setFrom(new InternetAddress(
+				configuration.getEmail().getFrom(),
+				configuration.getEmail().getFromName()
+			));
 			msg.setRecipient(Message.RecipientType.TO, new InternetAddress(email));
 			msg.setSubject(subject, "UTF-8");
 			msg.setText(message, "UTF-8");
 			msg.setHeader("Content-Type", "text/html; charset=UTF-8");
 
 			transport = session.getTransport();
-			transport.connect(configuration.getEmail().getHost(),
-					configuration.getEmail().getUsername(),
-					configuration.getEmail().getPassword());
+			transport.connect(
+				configuration.getEmail().getHost(),
+				configuration.getEmail().getUsername(),
+				configuration.getEmail().getPassword()
+			);
 			transport.addTransportListener(new TransportErrorHandler());
 			transport.sendMessage(msg, msg.getAllRecipients());
-		} catch (Exception ex) {
+		}
+		catch (Exception ex) {
 			log.error("Failed to send email to '" + email + "'", ex);
 
 			return false;
-		} finally {
+		}
+		finally {
 			try {
 				if (transport != null) {
 					transport.close();
 				}
-			} catch (Exception ex) {
+			}
+			catch (Exception ex) {
 				log.warn("Error occured while trying to terminate connection", ex);
 			}
 		}
