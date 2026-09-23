@@ -175,7 +175,7 @@
                 var query = $('#manager_search').val();
                 if (query.length >= 2) {
                     $.ajax({
-                        url: managerRestUrl + "/search/person?query=" + query,
+                        url: managerRestUrl + "/search/person?query=" + encodeURIComponent(query),
                         method: "get",
                         success: function(response) {
                             searchService.updateDropdown(response);

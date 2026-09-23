@@ -35,6 +35,7 @@
         <th:block th:if="${datatables == true}">
 		<script th:src="@{/webjars/inspinia/2.9.3/js/plugins/dataTables/datatables.min.js}"></script>
 		<script th:src="@{/webjars/inspinia/2.9.3/js/plugins/dataTables/dataTables.bootstrap4.min.js}"></script>
+		<script th:src="@{/js/datatable-enhancements.js(cache=${@buildProperties.getTime().getEpochSecond()})}"></script>
 		</th:block>
 		
 		<th:block th:if="${jstree == true}">
@@ -66,6 +67,12 @@
 		<th:block th:if="${datepicker == true}">
 		<script th:src="@{/webjars/inspinia/2.9.3/js/plugins/datapicker/bootstrap-datepicker.js}"></script>
 		<script th:src="@{/js/bootstrap-datepicker.da.min.js}"></script>
+		<script>
+			$(document).ready(function () {
+				// suppress the browser autocomplete dropdown on datepicker inputs - it overlaps the calendar
+				$('input.date').attr('autocomplete', 'off');
+			});
+		</script>
 		</th:block>
 		
 		<th:block th:if="${footables == true}">

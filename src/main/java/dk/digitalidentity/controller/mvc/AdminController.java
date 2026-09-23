@@ -2,6 +2,8 @@ package dk.digitalidentity.controller.mvc;
 
 import dk.digitalidentity.security.RequireAdminAccess;
 import dk.digitalidentity.security.RequireReadOrAdminAccess;
+import dk.digitalidentity.service.FeatureSettingsService;
+import dk.digitalidentity.service.FeatureSettingsService.FlagDescriptor;
 import dk.digitalidentity.service.TextService;
 import org.owasp.html.HtmlPolicyBuilder;
 import org.owasp.html.PolicyFactory;
@@ -12,6 +14,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @Controller
@@ -19,6 +22,9 @@ public class AdminController {
 
     @Autowired
     private TextService textService;
+
+    @Autowired
+    private FeatureSettingsService featureSettingsService;
 
     @RequireReadOrAdminAccess
     @GetMapping("/admin/helptext/edit")
@@ -36,6 +42,34 @@ public class AdminController {
             }
         }
         return "redirect:/admin/helptext/edit";
+    }
+
+    @RequireAdminAccess
+    @GetMapping("/admin/features")
+    public String editFeatures(Model model) {
+        Map<String, Object> values = new LinkedHashMap<>();
+        for (FlagDescriptor desc : featureSettingsService.all()) {
+            values.put(desc.getKey(), featureSettingsService.currentValue(desc));
+        }
+        model.addAttribute("flagsGrouped", featureSettingsService.grouped());
+        model.addAttribute("values", values);
+        return "admin/features";
+    }
+
+    @RequireAdminAccess
+    @PostMapping("/admin/features")
+    public String editFeaturesPost(@RequestParam Map<String, String> parameters) {
+        for (FlagDescriptor desc : featureSettingsService.all()) {
+            String formKey = desc.getKey();
+            String value;
+            if (desc.getType() == FeatureSettingsService.FieldType.BOOLEAN) {
+                value = parameters.containsKey(formKey) ? "true" : "false";
+            } else {
+                value = parameters.getOrDefault(formKey, "");
+            }
+            featureSettingsService.setValue(formKey, value);
+        }
+        return "redirect:/admin/features";
     }
 
     private String getSafeHtml(String html) {

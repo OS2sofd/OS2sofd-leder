@@ -16,6 +16,18 @@
                             </div>
                             <div class="ibox-content" >
 								<div th:utext="${@textService.getText('AFFILIATION_HELPTEXT')}"></div>
+
+								<div id="personFilter" style="margin-bottom: 10px;">
+									<label style="margin-right: 20px;">
+										<input type="radio" name="personFilter" value="active" class="i-checks" checked/>
+										Vis aktuelle personer
+									</label>
+									<label>
+										<input type="radio" name="personFilter" value="deleted" class="i-checks"/>
+										Vis slettemarkerede personer
+									</label>
+								</div>
+
 	                        	<table id="affiliations" class="table table-hover col-lg-12">
 			                		<thead>
 										<tr>
@@ -28,21 +40,32 @@
 											<th class="col-lg-1">Status</th>
 											<th class="col-lg-1">Handlinger</th>
 										</tr>
+										<tr class="dt-column-filters">
+											<th><input type="text" class="form-control input-sm" placeholder="Filtrér"/></th>
+											<th><input type="text" class="form-control input-sm" placeholder="Filtrér"/></th>
+											<th><input type="text" class="form-control input-sm" placeholder="Filtrér"/></th>
+											<th><input type="text" class="form-control input-sm" placeholder="Filtrér"/></th>
+											<th><input type="text" class="form-control input-sm" placeholder="Filtrér"/></th>
+											<th><input type="text" class="form-control input-sm" placeholder="Filtrér"/></th>
+											<th><input type="text" class="form-control input-sm" placeholder="Filtrér"/></th>
+											<th></th>
+										</tr>
 									</thead>
 					                <tbody>
-						                <tr th:each="affiliation: ${affiliations}">
+						                <tr th:each="affiliation: ${affiliations}" th:attr="data-deleted=${affiliation.deleted}">
 						                	<td th:text="${affiliation.personName}"/>
 						                	<td th:text="${affiliation.positionName}"/>
 											<td th:text="${affiliation.orgUnitName}"/>
-											<td th:text="${#temporals.format(affiliation.startDate, 'dd/MM/yyyy')}"/>
-											<td th:text="${#temporals.format(affiliation.stopDate, 'dd/MM/yyyy')}"/>
+											<td th:text="${#temporals.format(affiliation.startDate, 'dd/MM/yyyy')}" th:attr="data-order=${affiliation.startDate != null ? #temporals.format(affiliation.startDate, 'yyyy-MM-dd') : '9999-12-31'}"/>
+											<td th:text="${#temporals.format(affiliation.stopDate, 'dd/MM/yyyy')}" th:attr="data-order=${affiliation.stopDate != null ? #temporals.format(affiliation.stopDate, 'yyyy-MM-dd') : '9999-12-31'}"/>
 											<td th:text="${affiliation.adUserInfo}"/>
 											<td>
-												<span th:unless="${affiliation.active}" class="badge badge-warning">Inaktiv</span>
-												<span th:if="${affiliation.active}" class="badge badge-primary">Aktiv</span>
+												<span th:if="${affiliation.deleted}" class="badge badge-danger">Slettemarkeret</span>
+												<span th:if="${!affiliation.deleted and !affiliation.active}" class="badge badge-warning">Inaktiv</span>
+												<span th:if="${!affiliation.deleted and affiliation.active}" class="badge badge-primary">Aktiv</span>
 											</td>
 											<td>
-												<em onclick="affiliationService.openEditModal(this);" style="cursor:pointer;color: black;" th:attr="data-id=${affiliation.id}, data-position=${affiliation.positionName}, data-positiondisplayname=${affiliation.positionDisplayName}, data-start=${affiliation.startDate}, data-stop=${affiliation.stopDate}, data-internalreference=${affiliation.internalReference}" class="fa fa-fw fa-pencil"></em>
+												<em onclick="affiliationService.openEditModal(this);" style="cursor:pointer;color: black;" th:attr="data-id=${affiliation.id}, data-position=${affiliation.positionName}, data-positiondisplayname=${affiliation.positionDisplayName}, data-start=${affiliation.startDate}, data-stop=${affiliation.stopDate}, data-internalreference=${affiliation.internalReference}, data-personname=${affiliation.personName}, data-orgunitname=${affiliation.orgUnitName}, data-aduserinfo=${affiliation.adUserInfo}" class="fa fa-fw fa-pencil"></em>
 											</td>
 										</tr>
 					                </tbody>
@@ -65,6 +88,25 @@
 	
 				<div class="modal-body">
 					<input id="id" hidden>
+					<div class="form-group row">
+						<label class="col-sm-2 control-label">Navn</label>
+						<div class="col-sm-8">
+							<p class="form-control-static" id="modalPersonName"></p>
+						</div>
+					</div>
+					<div class="form-group row">
+						<label class="col-sm-2 control-label">Enhed</label>
+						<div class="col-sm-8">
+							<p class="form-control-static" id="modalOrgUnitName"></p>
+						</div>
+					</div>
+					<div class="form-group row">
+						<label class="col-sm-2 control-label">It-bruger</label>
+						<div class="col-sm-8">
+							<p class="form-control-static" id="modalAdUserInfo"></p>
+						</div>
+					</div>
+					<hr/>
 					<div class="form-group row">
 						<label class="col-sm-2 control-label">Stilling *</label>
 						<div class="col-sm-8">
@@ -95,16 +137,17 @@
 							<input type="text" class="form-control cleanable" id="internalReference"/>
 						</div>
 					</div>
-					<div class="form-group row" th:if="${@managerConfiguration.getEmail().isEnabled()}">
-						<label class="col-sm-2 control-label">Begrundelse for ændring *</label>
+					<div class="form-group row">
+						<label class="col-sm-2 control-label" th:text="${@managerConfiguration.getEmail().isEnabled()} ? 'Begrundelse for ændring *' : 'Begrundelse for ændring'"></label>
 						<div class="col-sm-8">
-							<textarea rows="4" class="form-control cleanable" id="reason"></textarea>
+							<textarea rows="4" class="form-control cleanable" id="reason" maxlength="1000"></textarea>
 						</div>
 					</div>
 				</div>
 	
 				<div class="modal-footer">
 					<button id="saveEdit" type="button" class="btn btn-primary" onclick="affiliationService.editAffiliation()">Gem</button>
+					<button id="endAffiliation" type="button" class="btn btn-warning" onclick="affiliationService.endAffiliation()">Afslut tilhørsforhold</button>
 					<button type="button" class="btn btn-danger" data-dismiss="modal">Annuller</button>
 				</div>
 			</div>
@@ -118,40 +161,36 @@
 			/*[+
 				var affiliationRestUrl = [[@{/rest/affiliations}]];
 				var mailEnabled = [[${@managerConfiguration.getEmail().isEnabled()}]];
+				var maxStopDateFutureDays = [[${maxStopDateFutureDays}]];
 			+]*/
-			
+
 			var token = $("meta[name='_csrf']").attr("content");
 			var affiliationService;
 			$(document).ready(function () {
-				// sorts dd/mm/yyyy dates
-				$.extend( jQuery.fn.dataTableExt.oSort, {
-					"date-dk-pre": function (x) {
-						// uses infinity for unknown values
-						if (!x || x.trim() === '' || x === 'null' || x === 'undefined') {
-							return Infinity;
-						}
-						var date = moment(x.trim(), "DD/MM/YYYY", true);
-						return date.isValid() ? date.valueOf() : Infinity;
-					},
-					"date-dk-asc": function (a, b) {
-						return a - b;
-					},
-					"date-dk-desc": function (a, b) {
-						if (a === Infinity && b === Infinity) return 0;
-						if (a === Infinity) return 1;
-						if (b === Infinity) return -1;
-						return b - a;
-					}
-				});
-
 				affiliationService = new AffiliationService();
 				affiliationService.init();
 			});
-			
+
 			function AffiliationService() {
-				
+
 				this.init = function() {
-					$('.date').datepicker({
+					var datepickerOptions = {
+						forceParse: false,
+						autoclose: true,
+						weekStart: 1,
+						format: "dd/mm/yyyy",
+						orientation: "bottom",
+						enableOnReadonly: false,
+						language: "da"
+					};
+					if (maxStopDateFutureDays != null) {
+						datepickerOptions.endDate = "+" + maxStopDateFutureDays + "d";
+					}
+					var self = this;
+					$('#stopDate').datepicker(datepickerOptions)
+						.on('changeDate clearDate', function () { self.refreshEndButtonState(); });
+					$('#stopDate').on('input', function () { self.refreshEndButtonState(); });
+					$('#startDate').datepicker({
 						forceParse: false,
 						autoclose: true,
 						weekStart: 1,
@@ -161,32 +200,27 @@
 						language: "da"
 					});
 
-					var lastColIndex = $("#affiliations").find("th").length - 1;
+					var lastColIndex = $("#affiliations thead tr:first th").length - 1;
 
-					var table = $('#affiliations').DataTable({
-						"pageLength" : 50,
-						"bLengthChange": false,
-						"responsive" : true,
-						"autoWidth": false,
-						"columnDefs": [
-							{ "orderable": false, "searchable": false, "targets": lastColIndex },
-							{ "type": "date-dk", targets: [3, 4] }
-						  ],
-						"order": [ 0, 'asc' ],
-                        "stateSave": true,
-                        "stateDuration": -1,
-                        "language" : {
-							"search" : "Søg",
-							"lengthMenu" : "_MENU_ tilhørsforhold per side",
-							"info" : "Viser _START_ til _END_ af _TOTAL_ tilhørsforhold",
-							"zeroRecords" : "Ingen data...",
-							"infoEmpty" : "",
-							"infoFiltered" : "(ud af _MAX_ tilhørsforhold)",
-							"paginate" : {
-								"previous" : "Forrige",
-								"next" : "Næste"
-							}
+					// custom row-level filter: aktiv vs slettemarkeret toggle. Affiliation-specific so it stays here.
+					$.fn.dataTable.ext.search.push(function(settings, data, rowIdx, rowData, counter) {
+						if (settings.nTable.id !== "affiliations") {
+							return true;
 						}
+						var mode = $('input[name="personFilter"]:checked').val() || "active";
+						var row = settings.aoData[rowIdx].nTr;
+						var isDeleted = $(row).attr('data-deleted') === "true";
+						return mode === "deleted" ? isDeleted : !isDeleted;
+					});
+
+					var table = $('#affiliations').DataTable($.extend(true, {},
+						DTEnhance.standardOptions({ itemNamePlural: 'tilhørsforhold', excelTitle: 'Tilhørsforhold' }),
+						{ columnDefs: [ { orderable: false, searchable: false, targets: lastColIndex } ] }
+					));
+					DTEnhance.applyEnhancements(table);
+
+					$('input[name="personFilter"]').on('ifChanged change', function () {
+						table.draw();
 					});
 				}
 				
@@ -199,16 +233,60 @@
 					var startDate = $(elem).data('start');
 					var stopDate = $(elem).data('stop');
 					var internalReference = $(elem).data('internalreference');
+					var personName = $(elem).data('personname');
+					var orgUnitName = $(elem).data('orgunitname');
+					var adUserInfo = $(elem).data('aduserinfo');
 
 					$("#id").val(id);
 					$("#position").val(position);
 					$("#positionDisplayName").val(positionDisplayName);
 					$("#internalReference").val(internalReference);
+					$("#modalPersonName").text(personName || "");
+					$("#modalOrgUnitName").text(orgUnitName || "");
+					$("#modalAdUserInfo").text(adUserInfo || "");
 
-					$("#startDate").datepicker("update", new Date(startDate));
-					$("#stopDate").datepicker("update", new Date(stopDate));
+					$("#startDate").datepicker("update", startDate ? new Date(startDate) : null);
+					$("#stopDate").datepicker("update", stopDate ? new Date(stopDate) : null);
+					this.refreshEndButtonState();
 
 					$('#modal-edit-affiliation').modal('show');
+				}
+
+				this.refreshEndButtonState = function() {
+					var val = $("#stopDate").val();
+					var disabled = false;
+					if (val) {
+						var parts = val.split('/');
+						if (parts.length === 3) {
+							var stop = new Date(parseInt(parts[2], 10), parseInt(parts[1], 10) - 1, parseInt(parts[0], 10));
+							stop.setHours(0, 0, 0, 0);
+							var today = new Date();
+							today.setHours(0, 0, 0, 0);
+							disabled = stop <= today;
+						}
+					}
+					$("#endAffiliation").prop("disabled", disabled);
+				}
+
+				this.endAffiliation = function() {
+					var self = this;
+					swal({
+						title : "Afslut tilhørsforhold",
+						text : "Er du sikker på at du vil afslutte tilhørsforholdet med dags dato?",
+						type : "warning",
+						showCancelButton : true,
+						confirmButtonColor : "#DD6B55",
+						confirmButtonText : "Afslut",
+						cancelButtonText : "Annuller",
+						closeOnConfirm : true,
+						closeOnCancel : true
+					},
+					function(isConfirm) {
+						if (isConfirm) {
+							$("#stopDate").datepicker("update", new Date());
+							self.editAffiliation();
+						}
+					});
 				}
 				
 				this.editAffiliation = function() {

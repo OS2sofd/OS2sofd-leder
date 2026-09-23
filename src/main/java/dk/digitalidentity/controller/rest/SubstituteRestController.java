@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import dk.digitalidentity.config.ManagerConfiguration;
+import dk.digitalidentity.config.settings.ManagerConfiguration;
 import dk.digitalidentity.security.RequireManagerAccess;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.SOFDSubstituteService;
@@ -33,6 +33,10 @@ public class SubstituteRestController {
 
 	@PostMapping(value = "/rest/substituteAssignment/delete/{id}")
 	public HttpEntity<?> deleteSubstituteAssignemnt(@PathVariable("id") long id) {
+		if (!ownsAssignment(id, sofdSubstituteService.getSubstituteAssignments())) {
+			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+		}
+
 		boolean success = sofdSubstituteService.delete(id);
 		
 		if (!success) {
@@ -91,12 +95,16 @@ public class SubstituteRestController {
 	@PostMapping(value = "/rest/substituteAssignment/edit")
 	public HttpEntity<?> editSubstituteAssignment(@RequestBody SubstituteAssignmentEditDTO dto) {
 		List<SOFDSubstituteService.SubstituteAssignment> all = sofdSubstituteService.getSubstituteAssignments();
+		if (!dto.orgUnitAssignment() && !ownsAssignment(dto.id(), all)) {
+			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+		}
+
 		if (dto.orgUnitAssignment()) {
 			if ((dto.constraints() == null || dto.constraints().isEmpty()) && !dto.deleteOrgUnitAssignment()) {
 				return new ResponseEntity<>("Der skal vælges minimum en enhed", HttpStatus.BAD_REQUEST);
 			}
 
-			SOFDSubstituteService.SubstituteAssignment match = all.stream().filter(a -> a.orgUnitAssignment() && a.substitute().uuid().equals(dto.substituteUuid()) && a.substituteContextId() == dto.contextId()).findAny().orElse(null);
+			SOFDSubstituteService.SubstituteAssignment match = all.stream().filter(a -> a.orgUnitAssignment() && !a.inherited() && a.substitute().uuid().equals(dto.substituteUuid()) && a.substituteContextId() == dto.contextId()).findAny().orElse(null);
 			if (match == null) {
 				return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 			}
@@ -162,5 +170,15 @@ public class SubstituteRestController {
 		}
 
 		return new ResponseEntity<>(HttpStatus.OK);
+	}
+
+	// a person can only change their own assignments. Assignments inherited from an orgUnit further up
+	// the hierarchy are shown on the page, but belong to another manager and are read-only here
+	private boolean ownsAssignment(long assignmentId, List<SOFDSubstituteService.SubstituteAssignment> assignments) {
+		if (assignments == null) {
+			return false;
+		}
+
+		return assignments.stream().anyMatch(a -> !a.orgUnitAssignment() && !a.inherited() && a.id() == assignmentId);
 	}
 }

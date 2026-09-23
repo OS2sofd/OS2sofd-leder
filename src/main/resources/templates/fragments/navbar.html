@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.w3.org/1999/html">
 <body>
-	<nav th:fragment="navbar-header" class="navbar navbar-static-top" role="navigation" style="color: #000000 !important; background-color: #FDFEFF !important; height: 70px;">
+	<nav th:fragment="navbar-header" class="navbar navbar-static-top app-navbar-header" role="navigation">
         <div class="navbar-header">
         </div>
         
@@ -36,6 +36,11 @@
 			                                <i class="fa fa-pencil"></i> &nbsp; Rediger tekster
 			                            </a>
 			                        </li>
+									<li>
+			                            <a th:href="@{/admin/features}" style="color: black; border: none; font-size: small;">
+			                                <i class="fa fa-cogs"></i> &nbsp; Indstillinger
+			                            </a>
+			                        </li>
 			                    </ul>
 			                </div>
 
@@ -57,13 +62,13 @@
 
     </nav>
 
-	<nav th:fragment="navbar-aside" class="navbar-default navbar-static-side navbar-expand" role="navigation" style="color: #000000 !important; background-color: #FDFEFF !important; width: 275px;">
+	<nav th:fragment="navbar-aside" class="navbar-default navbar-static-side navbar-expand" role="navigation" style="color: #000000 !important; background-color: #FDFEFF !important; width: 220px;">
         <div class="sidebar-collapse">
-			<a href="/">
-				<img th:src="@{/custom/logo.svg(cache=${@buildProperties.getTime().getEpochSecond()})}" alt="logo" style="margin: 10px 20px 5px 20px">
+			<a href="/" class="sidebar-logo">
+				<img th:src="@{/custom/logo.svg(cache=${@buildProperties.getTime().getEpochSecond()})}" alt="logo">
 			</a>
 
-            <ul class="nav metismenu" id="side-menu" style="margin-top: 25px;">
+            <ul class="nav metismenu" id="side-menu">
                 <li th:classappend="${page == 'welcome'} ? 'active' : ''">
                     <a href="/"><div><span class="nav-label"><em class="fa fa-home"></em> &nbsp; Velkommen</span></div></a>
                 </li>
@@ -91,7 +96,7 @@
 						<a sec:authorize="hasRole('ROLE_MANAGER') or hasRole('ROLE_SUBSTITUTE')" href="/affiliations"><div><span class="nav-label"><em class="fa fa-handshake-o"></em> &nbsp; Tilhørsforhold</span></div></a>
 					</li>
 					<li th:if="${@managerConfiguration.getModules().getPausePersonModule().isEnabled()}" th:classappend="${page == 'pausablePeople'} ? 'active' : ''">
-						<a sec:authorize="hasRole('ROLE_MANAGER') or hasRole('ROLE_SUBSTITUTE')" href="/leave"><div><span class="nav-label"><em class="fa fa-pause"></em> &nbsp; Pausemarkering</span></div></a>
+						<a sec:authorize="hasRole('ROLE_MANAGER') or hasRole('ROLE_SUBSTITUTE') or hasRole('ROLE_PAUSE_EDITOR')" href="/leave"><div><span class="nav-label"><em class="fa fa-pause"></em> &nbsp; Pausemarkering</span></div></a>
 					</li>
 					<li th:if="${@managerConfiguration.getModules().getManagerModule().isEnabled()}" th:classappend="${page == 'managers'} ? 'active' : ''">
 						<a sec:authorize="hasRole('ROLE_ADMIN') or hasRole('ROLE_MANAGER_EDITOR')" href="/managers"><div><span class="nav-label"><em class="fa fa-chevron-circle-up"></em> &nbsp; Lederopmærkning</span></div></a>

@@ -1,5 +1,6 @@
 package dk.digitalidentity.config;
 
+import dk.digitalidentity.config.settings.ManagerConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.CacheControl;

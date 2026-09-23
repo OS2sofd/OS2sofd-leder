@@ -24,6 +24,13 @@
                                         <th class="col-md-2">Bruger type</th>
                                         <th class="col-md-1">Handlinger</th>
                                     </tr>
+                                    <tr class="dt-column-filters">
+                                        <th><input type="text" class="form-control input-sm" placeholder="Filtrér"/></th>
+                                        <th><input type="text" class="form-control input-sm" placeholder="Filtrér"/></th>
+                                        <th><input type="text" class="form-control input-sm" placeholder="Filtrér"/></th>
+                                        <th><input type="text" class="form-control input-sm" placeholder="Filtrér"/></th>
+                                        <th></th>
+                                    </tr>
                                     </thead>
 
                                     <tbody>
@@ -37,15 +44,6 @@
                                         </td>
                                     </tr>
                                     </tbody>
-                                    <tfoot>
-                                    <tr>
-                                        <th th:text="aktivering"></th>
-                                        <th th:text="navn"></th>
-                                        <th th:text="id"></th>
-                                        <th th:text="typer"></th>
-                                        <th class="disabled"></th>
-                                    </tr>
-                                    </tfoot>
                                 </table>
                             </div>
                         </div>
@@ -69,63 +67,14 @@
 
     function AccountOrderDatatableService() {
         this.init = function() {
-            accountOrderDatatableService.addSearchBoxes();
-            accountOrderDatatableService.initDataTable();
-        }
-
-        this.addSearchBoxes = function() {
-            // Add searchbox based on column title to each footer
-            $('#listTable tfoot th').each( function () {
-                if (!$(this).hasClass('disabled')) {
-                    var title = $(this).text();
-                    $(this).html('<input class="form-control" style="width:100%;" type="text" placeholder="Søg i '+title+'" />');
+            var table = $('#listTable').DataTable($.extend(true, {},
+                DTEnhance.standardOptions({ itemNamePlural: 'kontogodkendelser', excelTitle: 'Kontogodkendelser' }),
+                {
+                    columnDefs: [ { orderable: false, searchable: false, targets: 4 } ],
+                    order: [[ 0, 'desc' ]]
                 }
-            });
-        }
-
-        this.initDataTable = function() {
-            // Initialize with searchfunction
-            var table = $('#listTable').DataTable({
-                "bDestroy": true,
-                //'paging':   paging,
-                'ordering': true,
-                'info':     true,
-                'pageLength': 50,
-                'initComplete': function () {
-                    // Apply the search
-                    this.api().columns().every( function () {
-                        var that = this;
-
-                        $( 'input', this.footer() ).on('keyup change clear', function () {
-                            if (that.search() !== this.value) {
-                                that.search(this.value).draw();
-                            }
-                        });
-                    });
-
-                    // Put the footer under the header
-                    var r = $('#listTable tfoot tr');
-                    r.find('th').each(function(){
-                        $(this).css('padding', 8);
-                    });
-                    $('#listTable thead').append(r);
-                },
-                "stateSave": true,
-                "stateDuration": -1,
-                "language" : {
-                    "search" : "Søg",
-                    "lengthMenu" : "_MENU_ tilhørsforhold per side",
-                    "info" : "Viser _START_ til _END_ af _TOTAL_ tilhørsforhold",
-                    "zeroRecords" : "Ingen data...",
-                    "infoEmpty" : "",
-                    "infoFiltered" : "(ud af _MAX_ tilhørsforhold)",
-                    "paginate" : {
-                        "previous" : "Forrige",
-                        "next" : "Næste"
-                    }
-                }
-            });
-            table.order([0, 'desc']).draw();
+            ));
+            DTEnhance.applyEnhancements(table);
         }
 
         this.approve = function(element) {

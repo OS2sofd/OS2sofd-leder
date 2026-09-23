@@ -30,7 +30,10 @@ public class SecurityUtil {
 	public static RolePostProcesser.LoggedInUser getLoggedInUser() {
 		try {
 			if (SecurityContextHolder.getContext().getAuthentication() != null) {
-				TokenUser tokenUser = ((TokenUser) SecurityContextHolder.getContext().getAuthentication().getDetails());
+				// during SAML login the details are still Spring Security's WebAuthenticationDetails, so there is no user yet
+				if (!(SecurityContextHolder.getContext().getAuthentication().getDetails() instanceof TokenUser tokenUser)) {
+					return null;
+				}
 
 				return (RolePostProcesser.LoggedInUser) tokenUser.getAttributes().get(RolePostProcesser.LOGGED_IN_USER_ATTRIBUTE);
 			}

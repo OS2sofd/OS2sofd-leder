@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import dk.digitalidentity.config.ManagerConfiguration;
+import dk.digitalidentity.config.settings.ManagerConfiguration;
 import dk.digitalidentity.security.RequireManagerEditorOrAdminAccess;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.SOFDManagerService;

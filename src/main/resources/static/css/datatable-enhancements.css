@@ -1,0 +1,19 @@
+/* Visual indication that a DataTable filter (column filter or global Søg) is active. */
+.dt-column-filters input.has-value,
+.dataTables_filter input.has-value {
+	background-color: #fff7d6;
+	border-color: #f8ac59;
+}
+
+/* The Ryd filtre button, positioned next to the DataTables global search field. */
+.dataTables_filter {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+}
+.dataTables_filter label {
+	margin-bottom: 0;
+}
+.dataTables_filter .dt-clear-filters {
+	margin-right: 10px;
+}

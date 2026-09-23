@@ -32,6 +32,13 @@
 											<th th:each="facet : ${function.facets}" th:text="${facet.name}"/>
 											<th sec:authorize="hasRole('ROLE_MANAGER') or hasRole('ROLE_SUBSTITUTE') or hasRole('ROLE_ADMIN')">Handlinger</th>
 										</tr>
+										<tr class="dt-column-filters">
+											<th><input type="text" class="form-control input-sm" placeholder="Filtrér"/></th>
+											<th><input type="text" class="form-control input-sm" placeholder="Filtrér"/></th>
+											<th><input type="text" class="form-control input-sm" placeholder="Filtrér"/></th>
+											<th th:each="facet : ${function.facets}"><input type="text" class="form-control input-sm" placeholder="Filtrér"/></th>
+											<th sec:authorize="hasRole('ROLE_MANAGER') or hasRole('ROLE_SUBSTITUTE') or hasRole('ROLE_ADMIN')"></th>
+										</tr>
 										</thead>
 										<tbody>
 										<tr th:each="assignment: ${functionAssignments}">
@@ -39,8 +46,8 @@
 												<span th:text="${assignment.affiliationPersonUserId} == null ? ${assignment.affiliationPersonName} : (${assignment.affiliationPersonName} + ' (' + ${assignment.affiliationPersonUserId} + ')')" />
 												<i th:if="${assignment.otherAssignments != null && assignment.otherAssignments != ''}" style="width: 10px;" class="fa fa-exclamation-circle" data-toggle="tooltip" data-placement="right" th:title="'Denne medarbejder har andre tildelinger: ' + ${assignment.otherAssignments}"></i>
 											</td>
-											<td th:text="${#temporals.format(assignment.startDate, 'dd/MM/yyyy')}"/>
-											<td th:text="${#temporals.format(assignment.stopDate, 'dd/MM/yyyy')}"/>
+											<td th:text="${#temporals.format(assignment.startDate, 'dd/MM/yyyy')}" th:attr="data-order=${assignment.startDate != null ? #temporals.format(assignment.startDate, 'yyyy-MM-dd') : '9999-12-31'}"/>
+											<td th:text="${#temporals.format(assignment.stopDate, 'dd/MM/yyyy')}" th:attr="data-order=${assignment.stopDate != null ? #temporals.format(assignment.stopDate, 'yyyy-MM-dd') : '9999-12-31'}"/>
 											<td th:each="value : ${assignment.facetValues}">
 												<th:block th:if="${value.text != null && value.text != ''}" th:text="${value.text}"/>
 												<th:block th:if="${value.date != null && value.date != ''}" th:text="${#temporals.format(value.date, 'dd/MM/yyyy')}" />
@@ -263,24 +270,22 @@
 			height: calc(1.5em + 0.75rem + 2px);
 		}
 
-		/* making sure the table doesn't overflow the screen */
-
-		.table-wrapper{
-    		display: grid;
-    		grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    		overflow-x: scroll;
+		/* fills its parent for slim tables; scrolls horizontally when content overflows (many facet columns) */
+		.table-wrapper {
+			overflow-x: auto;
+			width: 100%;
 		}
 
-		thead {
+		.table-wrapper table {
+			width: 100% !important;
+		}
+
+		#functionAssignments thead th {
 			white-space: nowrap;
 		}
 
-		td {
+		#functionAssignments td {
 			word-break: break-word;
-		}
-
-		.dataTables_wrapper {
-			width: auto;
 		}
 
 
@@ -303,31 +308,10 @@
 			var token = $("meta[name='_csrf']").attr("content");
 			var functionService, searchService, ouService;
 			$(document).ready(function () {
-				// sorts dd/mm/yyyy dates
-				$.extend( jQuery.fn.dataTableExt.oSort, {
-					"date-dk-pre": function (x) {
-						// uses infinity for unknown values
-						if (!x || x.trim() === '' || x === 'null' || x === 'undefined') {
-							return Infinity;
-						}
-						var date = moment(x.trim(), "DD/MM/YYYY", true);
-						return date.isValid() ? date.valueOf() : Infinity;
-					},
-					"date-dk-asc": function (a, b) {
-						return a - b;
-					},
-					"date-dk-desc": function (a, b) {
-						if (a === Infinity && b === Infinity) return 0;
-						if (a === Infinity) return 1;
-						if (b === Infinity) return -1;
-						return b - a;
-					}
-				});
-
 				functionService = new FunctionService();
 				searchService = new SearchService();
 				ouService = new OUService();
-				
+
 				functionService.init();
 				searchService.init();
 				ouService.init();
@@ -351,37 +335,17 @@
 						language: "da"
 					});
 					
-					var lastColIndex = $("#functionAssignments").find("th").length - 1;
+					var lastColIndex = $("#functionAssignments thead tr:first th").length - 1;
+					var hasActionColumn = $("#functionAssignments thead tr.dt-column-filters th").last().find('input').length === 0;
 
-					var table = $('#functionAssignments').DataTable({
-						"pageLength" : 50,
-						"dom": '<"html5buttons"B>lTfgitp',
-						"buttons": [
-							{ "extend": "excel", title: functionName}
-						],
-						"bLengthChange": false,
-						"responsive" : true,
-						"autoWidth": false,
-						"columnDefs": [
-							{ "orderable": false, "searchable": false, "targets": lastColIndex },
-							{ "type": "date-dk", targets: [1, 2] }
-						  ],
-						"order": [ 0, 'asc' ],
-                        "stateSave": true,
-                        "stateDuration": -1,
-						"language" : {
-							"search" : "Søg",
-							"lengthMenu" : "_MENU_ medarbejderfunktioner per side",
-							"info" : "Viser _START_ til _END_ af _TOTAL_ medarbejderfunktioner",
-							"zeroRecords" : "Ingen data...",
-							"infoEmpty" : "",
-							"infoFiltered" : "(ud af _MAX_ medarbejderfunktioner)",
-							"paginate" : {
-								"previous" : "Forrige",
-								"next" : "Næste"
-							}
-						}
-					});
+					var table = $('#functionAssignments').DataTable($.extend(true, {},
+						DTEnhance.standardOptions({ itemNamePlural: 'medarbejderfunktioner', excelTitle: functionName, excludeLastColFromExport: hasActionColumn }),
+						{ responsive: false },
+						hasActionColumn
+							? { columnDefs: [ { orderable: false, searchable: false, targets: lastColIndex } ] }
+							: {}
+					));
+					DTEnhance.applyEnhancements(table);
 
 					$('#modal-add-functionAssignment').on('shown.bs.modal', function() {
 						$('[data-toggle="tooltip"]').tooltip();
@@ -832,7 +796,7 @@
 
 					if (value.length >= 2) {
 						$.ajax({
-							url: functionRestUrl + "/search/person?query=" + value,
+							url: functionRestUrl + "/search/person?query=" + encodeURIComponent(value),
 							method: "get",
 							success: function(response) {
 								if (response == null || response.length < 1) {

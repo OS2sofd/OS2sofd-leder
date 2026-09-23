@@ -25,6 +25,13 @@
 											<th>Kategori</th>
 											<th>Funktion</th>
 										</tr>
+										<tr class="dt-column-filters">
+											<th><input type="text" class="form-control input-sm" placeholder="Filtrér"/></th>
+											<th><input type="text" class="form-control input-sm" placeholder="Filtrér"/></th>
+											<th><input type="text" class="form-control input-sm" placeholder="Filtrér"/></th>
+											<th><input type="text" class="form-control input-sm" placeholder="Filtrér"/></th>
+											<th><input type="text" class="form-control input-sm" placeholder="Filtrér"/></th>
+										</tr>
 									</thead>
 					                <tbody>
 						                <tr th:each="assignment: ${functionAssignments}">
@@ -32,8 +39,8 @@
 												<span th:text="${assignment.affiliationPersonUserId} == null ? ${assignment.affiliationPersonName} : (${assignment.affiliationPersonName} + ' (' + ${assignment.affiliationPersonUserId} + ')')" />
 												<i th:if="${assignment.otherAssignments != null && assignment.otherAssignments != ''}" style="width: 10px;" class="fa fa-exclamation-circle" data-toggle="tooltip" data-placement="right" th:title="'Denne medarbejder har andre tildelinger: ' + ${assignment.otherAssignments}"></i>
 											</td>
-						                	<td th:text="${#temporals.format(assignment.startDate, 'dd/MM/yyyy')}"/>
-						                	<td th:text="${#temporals.format(assignment.stopDate, 'dd/MM/yyyy')}"/>
+						                	<td th:text="${#temporals.format(assignment.startDate, 'dd/MM/yyyy')}" th:attr="data-order=${assignment.startDate != null ? #temporals.format(assignment.startDate, 'yyyy-MM-dd') : '9999-12-31'}"/>
+						                	<td th:text="${#temporals.format(assignment.stopDate, 'dd/MM/yyyy')}" th:attr="data-order=${assignment.stopDate != null ? #temporals.format(assignment.stopDate, 'yyyy-MM-dd') : '9999-12-31'}"/>
 											<td th:text="${assignment.function.category}" />
 											<td th:text="${assignment.function.name}" />
 										</tr>
@@ -56,62 +63,17 @@
 			var functionService;
 
 			$(document).ready(function () {
-				// sorts dd/mm/yyyy dates
-				$.extend( jQuery.fn.dataTableExt.oSort, {
-					"date-dk-pre": function (x) {
-						// uses infinity for unknown values
-						if (!x || x.trim() === '' || x === 'null' || x === 'undefined') {
-							return Infinity;
-						}
-						var date = moment(x.trim(), "DD/MM/YYYY", true);
-						return date.isValid() ? date.valueOf() : Infinity;
-					},
-					"date-dk-asc": function (a, b) {
-						return a - b;
-					},
-					"date-dk-desc": function (a, b) {
-						if (a === Infinity && b === Infinity) return 0;
-						if (a === Infinity) return 1;
-						if (b === Infinity) return -1;
-						return b - a;
-					}
-				});
-
 				functionService = new FunctionService();
 				functionService.init();
 			});
-			
-			function FunctionService() {				
+
+			function FunctionService() {
 				this.init = function() {
-					var table = $('#functionAssignments').DataTable({
-						"pageLength" : 50,
-						"dom": '<"html5buttons"B>lTfgitp',
-						"buttons": [
-							{ "extend": "excel", title: "Alle medarbejderfunktioner"}
-						],
-						"bLengthChange": false,
-						"responsive" : true,
-						"autoWidth": false,
-						"columnDefs": [
-							{ "type": "date-dk", targets: [1, 2] }
-						],
-						"order": [ 0, 'asc' ],
-                        "stateSave": true,
-                        "stateDuration": -1,
-						"language" : {
-							"search" : "Søg",
-							"lengthMenu" : "_MENU_ medarbejderfunktioner per side",
-							"info" : "Viser _START_ til _END_ af _TOTAL_ medarbejderfunktioner",
-							"zeroRecords" : "Ingen data...",
-							"infoEmpty" : "",
-							"infoFiltered" : "(ud af _MAX_ medarbejderfunktioner)",
-							"paginate" : {
-								"previous" : "Forrige",
-								"next" : "Næste"
-							}
-						}
-					});
-				}				
+					var table = $('#functionAssignments').DataTable($.extend(true, {},
+						DTEnhance.standardOptions({ itemNamePlural: 'medarbejderfunktioner', excelTitle: 'Alle medarbejderfunktioner', excludeLastColFromExport: false })
+					));
+					DTEnhance.applyEnhancements(table);
+				}
 			}										
 			
 		/*]]>*/

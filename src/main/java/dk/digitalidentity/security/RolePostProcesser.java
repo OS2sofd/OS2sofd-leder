@@ -2,6 +2,7 @@ package dk.digitalidentity.security;
 
 import dk.digitalidentity.config.RoleConstants;
 import dk.digitalidentity.config.StaticContextAccessor;
+import dk.digitalidentity.config.settings.ManagerConfiguration;
 import dk.digitalidentity.samlmodule.model.SamlGrantedAuthority;
 import dk.digitalidentity.samlmodule.model.SamlLoginPostProcessor;
 import dk.digitalidentity.samlmodule.model.TokenUser;
@@ -25,6 +26,9 @@ public class RolePostProcesser implements SamlLoginPostProcessor {
 	@Autowired
 	private SOFDManagerService sofdManagerService;
 
+	@Autowired
+	private ManagerConfiguration managerConfiguration;
+
 	public record LoggedInUser(String personUuid, String userId, String name, String email, List<ManagerUIContext> contexts) {}
 	public record ManagerUIContext(int id, String uuid, String name, String role, List<String> constraintOUs) {}
 	
@@ -47,17 +51,21 @@ public class RolePostProcesser implements SamlLoginPostProcessor {
 
 		var loggedInUser = new LoggedInUser(personUuid, userId, sofdLoginContexts.name(),sofdLoginContexts.email(), new ArrayList<>());
 
-		for( var context : sofdLoginContexts.contexts() ) {
-            switch (context.role()) {
-                case MANAGER -> {
-					var constraintOUs = StringUtils.hasText(context.ouUuids()) ? Arrays.asList(context.ouUuids().split(",")) : null;
-					loggedInUser.contexts.add(new ManagerUIContext(++contextId, context.uuid(),"Leder " + context.name(), RoleConstants.MANAGER,constraintOUs));
-                }
-                case SUBSTITUTE -> {
-					var constraintOUs = StringUtils.hasText(context.ouUuids()) ? Arrays.asList(context.ouUuids().split(",")) : null;
-					loggedInUser.contexts.add(new ManagerUIContext(++contextId, context.uuid(),"Stedfortræder for " + context.name(), RoleConstants.SUBSTITUTE, constraintOUs));
-                }
-            }
+		// When disableAutoSofdContexts is enabled, the automatic leder/stedfortræder contexts
+		// fetched from SOFD Core are suppressed; access is then granted only via SAML role claims.
+		if (!managerConfiguration.isDisableAutoSofdContexts()) {
+			for( var context : sofdLoginContexts.contexts() ) {
+	            switch (context.role()) {
+	                case MANAGER -> {
+						var constraintOUs = StringUtils.hasText(context.ouUuids()) ? Arrays.asList(context.ouUuids().split(",")) : null;
+						loggedInUser.contexts.add(new ManagerUIContext(++contextId, context.uuid(),"Leder " + context.name(), RoleConstants.MANAGER,constraintOUs));
+	                }
+	                case SUBSTITUTE -> {
+						var constraintOUs = StringUtils.hasText(context.ouUuids()) ? Arrays.asList(context.ouUuids().split(",")) : null;
+						loggedInUser.contexts.add(new ManagerUIContext(++contextId, context.uuid(),"Stedfortræder for " + context.name(), RoleConstants.SUBSTITUTE, constraintOUs));
+	                }
+	            }
+			}
 		}
 
 		// add contexts from the SAML token
@@ -79,6 +87,15 @@ public class RolePostProcesser implements SamlLoginPostProcessor {
 					}
 					loggedInUser.contexts.add(new ManagerUIContext(++contextId, loggedInUser.personUuid, "Lederopmærker", RoleConstants.MANAGER_EDITOR, constraintOus));
 				}
+				case "ROLE_leder" -> {
+					loggedInUser.contexts.add(new ManagerUIContext(++contextId, loggedInUser.personUuid, "Leder", RoleConstants.MANAGER, parseOrgUnitConstraint(grantedAuthority, managerOus)));
+				}
+				case "ROLE_stedfortraeder" -> {
+					loggedInUser.contexts.add(new ManagerUIContext(++contextId, loggedInUser.personUuid, "Stedfortræder", RoleConstants.SUBSTITUTE, parseOrgUnitConstraint(grantedAuthority, managerOus)));
+				}
+				case "ROLE_pause_editor" -> {
+					loggedInUser.contexts.add(new ManagerUIContext(++contextId, loggedInUser.personUuid, "Pauseopmærker", RoleConstants.PAUSE_EDITOR, rootOUList));
+				}
 				case "ROLE_read" -> {
 					loggedInUser.contexts.add(new ManagerUIContext(++contextId, loggedInUser.personUuid, "Læseadgang", RoleConstants.READER, rootOUList));
 				}
@@ -90,6 +107,20 @@ public class RolePostProcesser implements SamlLoginPostProcessor {
 		}
 
 		tokenUser.getAttributes().put(LOGGED_IN_USER_ATTRIBUTE, loggedInUser);
+	}
+
+	private List<String> parseOrgUnitConstraint(SamlGrantedAuthority grantedAuthority, List<SOFDManagerService.OrgUnitManagerDto> managerOus) {
+		if (grantedAuthority.getConstraints() == null) {
+			return null;
+		}
+		var constraint = grantedAuthority.getConstraints().stream()
+				.filter(c -> c.getConstraintType().equalsIgnoreCase("http://digital-identity.dk/constraints/orgunit/1"))
+				.findFirst()
+				.orElse(null);
+		if (constraint == null) {
+			return null;
+		}
+		return getAllChildren(managerOus, Arrays.stream(constraint.getConstraintValue().split(",")).toList());
 	}
 
 	private List<String> getAllChildren(List<SOFDManagerService.OrgUnitManagerDto> managerOus, List<String> orgUnitUuids) {

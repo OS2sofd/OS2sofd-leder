@@ -20,24 +20,38 @@
 			                		<thead>
 										<tr>
 											<th class="col-lg-3">Navn</th>
-											<th class="col-lg-2">Tilhørsforhold</th>
+											<th class="col-lg-1">Brugere</th>
+											<th class="col-lg-1">Tilhørsforhold</th>
 											<th class="col-lg-1">Pause startdato</th>
 											<th class="col-lg-1">Pause stopdato</th>
 											<th class="col-lg-1">Årsag</th>
 											<th class="col-lg-3">Uddybning</th>
 											<th class="col-lg-1">Handlinger</th>
 										</tr>
+										<tr class="dt-column-filters">
+											<th><input type="text" class="form-control input-sm" placeholder="Filtrér"/></th>
+											<th><input type="text" class="form-control input-sm" placeholder="Filtrér"/></th>
+											<th><input type="text" class="form-control input-sm" placeholder="Filtrér"/></th>
+											<th><input type="text" class="form-control input-sm" placeholder="Filtrér"/></th>
+											<th><input type="text" class="form-control input-sm" placeholder="Filtrér"/></th>
+											<th><input type="text" class="form-control input-sm" placeholder="Filtrér"/></th>
+											<th><input type="text" class="form-control input-sm" placeholder="Filtrér"/></th>
+											<th></th>
+										</tr>
 									</thead>
 					                <tbody>
 						                <tr th:each="person: ${pausablePeople}">
 						                	<td th:text="${person.personName}"/>
 											<td>
+												<p th:each="adUser : ${person.adUsers}" th:text="${adUser}"></p>
+											</td>
+											<td>
 												<p th:each="position : ${person.positions}" th:text="${position}"></p>
 											</td>
-											<td>
+											<td th:attr="data-order=${person.leaveDTO != null and person.leaveDTO.startDate != null ? #temporals.format(person.leaveDTO.startDate, 'yyyy-MM-dd') : '9999-12-31'}">
 												<p th:if="${person.leaveDTO != null AND person.leaveDTO.startDate != null}" th:text="${#temporals.format(person.leaveDTO.startDate, 'dd/MM/yyyy')}"></p>
 											</td>
-											<td>
+											<td th:attr="data-order=${person.leaveDTO != null and person.leaveDTO.stopDate != null ? #temporals.format(person.leaveDTO.stopDate, 'yyyy-MM-dd') : '9999-12-31'}">
 												<p th:if="${person.leaveDTO != null AND person.leaveDTO.stopDate != null}" th:text="${#temporals.format(person.leaveDTO.stopDate, 'dd/MM/yyyy')}"></p>
 											</td>
 											<td>
@@ -156,15 +170,6 @@
 			$(document).ready(function () {
 				pauseService = new PauseService();
 				pauseService.init();
-
-				// sorts dd/mm/yyyy dates
-				$.extend( jQuery.fn.dataTableExt.oSort, {
-					"date-dk-pre": function (x){
-						var date = moment(x, "DD/MM/YYYY");
-						return date.isValid() ? date.format("YYYY-MM-DD") : x;
-					}
-				});
-
 			});
 			
 			function PauseService() {
@@ -200,33 +205,13 @@
 						$('[data-toggle="tooltip"]').tooltip();
 					});
 
-					var lastColIndex = $("#people").find("th").length - 1;
+					var lastColIndex = $("#people thead tr:first th").length - 1;
 
-					var table = $('#people').DataTable({
-						"pageLength" : 50,
-						"bLengthChange": false,
-						"responsive" : true,
-						"autoWidth": false,
-						"columnDefs": [
-							{ "orderable": false, "searchable": false, "targets": lastColIndex },
-							{ "type": "date-dk", targets: "_all" }
-						  ],
-						"order": [ 0, 'asc' ],
-                        "stateSave": true,
-                        "stateDuration": -1,
-						"language" : {
-							"search" : "Søg",
-							"lengthMenu" : "_MENU_ tilhørsforhold per side",
-							"info" : "Viser _START_ til _END_ af _TOTAL_ tilhørsforhold",
-							"zeroRecords" : "Ingen data...",
-							"infoEmpty" : "",
-							"infoFiltered" : "(ud af _MAX_ tilhørsforhold)",
-							"paginate" : {
-								"previous" : "Forrige",
-								"next" : "Næste"
-							}
-						}
-					});
+					var table = $('#people').DataTable($.extend(true, {},
+						DTEnhance.standardOptions({ itemNamePlural: 'medarbejdere', excelTitle: 'Pausemarkering' }),
+						{ columnDefs: [ { orderable: false, searchable: false, targets: lastColIndex } ] }
+					));
+					DTEnhance.applyEnhancements(table);
 				}
 				
 				this.openEditModal = function(elem) {

@@ -23,7 +23,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import dk.digitalidentity.config.ManagerConfiguration;
+import dk.digitalidentity.config.settings.ManagerConfiguration;
 import dk.digitalidentity.service.dto.OUTreeFormDto;
 import dk.digitalidentity.service.dto.OUTreeFormWithOpenDto;
 import lombok.extern.slf4j.Slf4j;

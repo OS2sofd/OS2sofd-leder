@@ -33,6 +33,7 @@
 
 	<th:block th:if="${datatables == true}">
 	<link rel="stylesheet" th:href="@{/webjars/inspinia/2.9.3/css/plugins/dataTables/datatables.min.css}" />
+	<link rel="stylesheet" th:href="@{/css/datatable-enhancements.css(cache=${@buildProperties.getTime().getEpochSecond()})}" />
 	<style>
 		ul.pagination {
 			float:right;

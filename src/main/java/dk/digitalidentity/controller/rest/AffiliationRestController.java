@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
-import dk.digitalidentity.config.ManagerConfiguration;
+import dk.digitalidentity.config.settings.ManagerConfiguration;
 import dk.digitalidentity.security.RequireSubstituteOrManagerAccess;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.EmailService;
@@ -60,6 +60,11 @@ public class AffiliationRestController {
 			return new ResponseEntity<>("Stopdato skal være efter startdato", HttpStatus.BAD_REQUEST);
 		}
 
+		Integer maxFutureDays = configuration.getModules().getAffiliationModule().getMaxStopDateFutureDays();
+		if (maxFutureDays != null && dto.stopDate() != null && dto.stopDate().isAfter(LocalDate.now().plusDays(maxFutureDays))) {
+			return new ResponseEntity<>("Stopdato må ikke ligge mere end " + maxFutureDays + " dage frem i tiden", HttpStatus.BAD_REQUEST);
+		}
+
 		// find the affiliation from SOFD, we need that to compare for the email later
 		String uuid = SecurityUtil.getCurrentContext().uuid();
 		List<SOFDService.SofdAffiliation> affiliations = sofdService.getEditableAffilations(uuid);
@@ -69,7 +74,7 @@ public class AffiliationRestController {
 		}
 
 		// save in SOFD
-		boolean success = sofdService.editAffiliation(uuid, dto.id(), dto.position(), dto.positionDisplayName(), dto.startDate(), dto.stopDate(), dto.internalReference());
+		boolean success = sofdService.editAffiliation(uuid, dto.id(), dto.position(), dto.positionDisplayName(), dto.startDate(), dto.stopDate(), dto.internalReference(), dto.reason());
 
 		if (!success) {
 			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);

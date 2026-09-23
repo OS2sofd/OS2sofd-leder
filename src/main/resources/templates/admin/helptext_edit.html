@@ -47,8 +47,13 @@
 			var token = $("meta[name='_csrf']").attr("content");
 			$(document).ready(function () {
 				$('input[type=text], textarea').summernote({
-					"height": 150,
-					"toolbar": []
+					"height": 200,
+					"toolbar": [
+						['style', ['style', 'bold', 'italic', 'underline', 'strikethrough', 'clear']],
+						['para', ['ul', 'ol', 'paragraph']],
+						['insert', ['link']],
+						['view', ['codeview']]
+					]
 				});
 			});
 			

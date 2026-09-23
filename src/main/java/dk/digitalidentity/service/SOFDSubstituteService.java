@@ -1,6 +1,6 @@
 package dk.digitalidentity.service;
 
-import dk.digitalidentity.config.ManagerConfiguration;
+import dk.digitalidentity.config.settings.ManagerConfiguration;
 import dk.digitalidentity.security.SecurityUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,7 +11,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -43,8 +45,9 @@ public class SOFDSubstituteService {
 		
 		if (response.getBody() != null) {
 			result = new ArrayList<>(Arrays.asList(response.getBody()));
-			// remove the global context
-			result.removeIf(c -> c.identifier.equalsIgnoreCase("global"));
+			if (!config.getModules().getSubstituteModule().isIncludeGlobalContext()) {
+				result.removeIf(c -> c.identifier.equalsIgnoreCase("global"));
+			}
 		} else {
 			log.warn("Response body was null when fetching a list of substitute contexts");
 		}
@@ -54,7 +57,7 @@ public class SOFDSubstituteService {
 	
 	public record Substitute(String uuid, String name) {}
 	public record ConstraintOrgUnit(String uuid, String name, long assignmentId) {}
-	public record SubstituteAssignment(long id, long substituteContextId, String substituteContextName, List<ConstraintOrgUnit> constraintOrgUnits, Substitute substitute, boolean orgUnitAssignment) {}
+	public record SubstituteAssignment(long id, long substituteContextId, String substituteContextName, List<ConstraintOrgUnit> constraintOrgUnits, Substitute substitute, boolean orgUnitAssignment, boolean inherited, String inheritedFrom) {}
 
 	public List<SubstituteAssignment> getSubstituteAssignments() {
 		HttpEntity<String> request = new HttpEntity<>(getHeaders());
@@ -73,9 +76,10 @@ public class SOFDSubstituteService {
 		if (response.getBody() != null) {
 			result = new ArrayList<>(Arrays.asList(response.getBody()));
 
-			// remove the global context assignments
-			// todo: get the identifier out as well so we can compare on that instead of name. "Global" should be pretty static though.
-			result.removeIf(a -> a.substituteContextName.equalsIgnoreCase("Global"));
+			if (!config.getModules().getSubstituteModule().isIncludeGlobalContext()) {
+				// todo: get the identifier out as well so we can compare on that instead of name. "Global" should be pretty static though.
+				result.removeIf(a -> a.substituteContextName.equalsIgnoreCase("Global"));
+			}
 		} else {
 			log.warn("Response body was null when fetching a list of substitute assignmentfor person with uuid " + userUuid);
 		}
@@ -106,6 +110,9 @@ public class SOFDSubstituteService {
 		return result;
 	}
 
+	// userId in the body is kept for SOFD Core versions that do not read the OnBehalfOf header yet.
+	// Newer versions prefer the header and only fall back to this value when the header is missing.
+	// TODO: remove userId from the DTOs in this class once all customers run a SOFD Core that reads the header (GH-53)
 	record deleteSubstituteDTO(long assignmentId, String userId) {}
 	public boolean delete(long id) {
 		var request = new HttpEntity<>(new deleteSubstituteDTO(id, SecurityUtil.getLoggedInUser().userId()), getHeaders());
@@ -129,10 +136,15 @@ public class SOFDSubstituteService {
 		String url = config.getSofdBaseUrl();
 
 		String userUuid = SecurityUtil.getLoggedInUser().personUuid();
-		String query = "/api/substitutes/search/person/" + userUuid + "?query=" + term + (ousString != null ? "&ous="+ousString : "");
+		UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(url + "/api/substitutes/search/person/" + userUuid)
+				.queryParam("query", term);
+		if (ousString != null) {
+			builder.queryParam("ous", ousString);
+		}
+		URI uri = builder.encode().build().toUri();
 		AutoCompleteResult result = null;
 
-		ResponseEntity<AutoCompleteResult> response = restTemplate.exchange(url + query, HttpMethod.GET, request, AutoCompleteResult.class);
+		ResponseEntity<AutoCompleteResult> response = restTemplate.exchange(uri, HttpMethod.GET, request, AutoCompleteResult.class);
 		if (!response.getStatusCode().equals(HttpStatus.OK)) {
 			log.warn("Failed to fetch AutoCompleteResult for person with uuid " + userUuid + ". " + response.getStatusCode().value() + ", response=" + response.getBody());
 			return null;

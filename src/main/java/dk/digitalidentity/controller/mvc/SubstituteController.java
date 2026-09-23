@@ -1,6 +1,6 @@
 package dk.digitalidentity.controller.mvc;
 
-import dk.digitalidentity.config.ManagerConfiguration;
+import dk.digitalidentity.config.settings.ManagerConfiguration;
 import dk.digitalidentity.security.RequireManagerAccess;
 import dk.digitalidentity.service.SOFDFunctionAssignmentService;
 import dk.digitalidentity.service.SOFDSubstituteService;
@@ -30,7 +30,7 @@ public class SubstituteController {
 	@Autowired
 	private ManagerConfiguration config;
 
-	public record SubstituteAssignmentDTO(long id, long substituteContextId, String substituteContextName, List<ConstraintOrgUnit> constraintOrgUnits, Substitute substitute, List<String> constraintOrgUnitsUuids, boolean isOrgUnitAssignment) {}
+	public record SubstituteAssignmentDTO(long id, long substituteContextId, String substituteContextName, List<ConstraintOrgUnit> constraintOrgUnits, Substitute substitute, List<String> constraintOrgUnitsUuids, boolean isOrgUnitAssignment, boolean inherited, String inheritedFrom) {}
 
 	@GetMapping("/substitutes")
 	public String listSubstitutes(Model model) {
@@ -51,7 +51,7 @@ public class SubstituteController {
 			return "error";
 		}
 
-		List<SubstituteAssignmentDTO> substituteAssignments = sofdSubstituteService.getSubstituteAssignments().stream().map(s -> new SubstituteAssignmentDTO(s.id(), s.substituteContextId(), s.substituteContextName(), s.constraintOrgUnits(), s.substitute(), s.constraintOrgUnits().stream().map(o -> o.uuid()).collect(Collectors.toList()), s.orgUnitAssignment())).collect(Collectors.toList());
+		List<SubstituteAssignmentDTO> substituteAssignments = sofdSubstituteService.getSubstituteAssignments().stream().map(s -> new SubstituteAssignmentDTO(s.id(), s.substituteContextId(), s.substituteContextName(), s.constraintOrgUnits(), s.substitute(), s.constraintOrgUnits().stream().map(o -> o.uuid()).collect(Collectors.toList()), s.orgUnitAssignment(), s.inherited(), s.inheritedFrom())).collect(Collectors.toList());
 
 		if (substituteAssignments == null || managedOrgUnits == null || substituteContexts == null) {
 			return "error";

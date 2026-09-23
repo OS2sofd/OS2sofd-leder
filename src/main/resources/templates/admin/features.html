@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head th:replace="~{fragments/header :: header(checkbox = true)}" />
+<body class="top-navigation">
+	<div id="wrapper">
+		<nav th:replace="~{fragments/navbar :: navbar-aside}" />
+	    <div id="page-wrapper" class="gray-bg">
+	    	<nav th:replace="~{fragments/navbar :: navbar-header}" />
+
+	        <div class="wrapper wrapper-content">
+	            <div class="row">
+	                <div class="col-lg-12">
+                        <div class="ibox" sec:authorize="hasRole('ROLE_ADMIN')">
+                            <div class="ibox-title">
+                                <h5><em class="fa fa-cogs"></em> &nbsp; Indstillinger</h5>
+                            </div>
+
+							<div class="ibox-content">
+								<p>
+									Her kan du slå moduler til og fra og redigere modulernes indstillinger.
+									Ændringer træder i kraft med det samme.
+								</p>
+								<form action="#" th:action="@{/admin/features}" method="post">
+									<th:block th:each="group : ${flagsGrouped}">
+										<h3 th:text="${group.key}" style="margin-top: 20px;"></h3>
+										<div class="form-group row" th:each="flag : ${group.value}">
+											<label class="col-sm-5 col-form-label" th:text="${flag.label}" th:for="${flag.key}"></label>
+											<div class="col-sm-7">
+												<th:block th:switch="${flag.type.name()}">
+													<input th:case="'BOOLEAN'"
+														   type="checkbox"
+														   class="i-checks"
+														   th:id="${flag.key}"
+														   th:name="${flag.key}"
+														   th:checked="${values[flag.key]}"/>
+													<input th:case="'INTEGER'"
+														   type="number"
+														   class="form-control"
+														   th:id="${flag.key}"
+														   th:name="${flag.key}"
+														   th:value="${values[flag.key]}"
+														   min="0"/>
+													<input th:case="*"
+														   type="text"
+														   class="form-control"
+														   th:id="${flag.key}"
+														   th:name="${flag.key}"
+														   th:value="${values[flag.key]}"/>
+												</th:block>
+											</div>
+										</div>
+									</th:block>
+
+									<div class="form-group row" style="margin-top: 30px;">
+										<button type="submit" class="btn btn-primary block full-width m-b">Gem</button>
+										<a th:href="@{/}" class="btn btn-danger block full-width m-b">Annuller</a>
+									</div>
+								</form>
+							</div>
+
+	                    </div>
+	                </div>
+	            </div>
+	        </div>
+	    </div>
+	</div>
+
+	<div th:replace="~{fragments/footer :: scripts(checkbox = true)}"></div>
+</body>
+</html>

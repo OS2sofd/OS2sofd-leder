@@ -1,7 +1,7 @@
 package dk.digitalidentity.service;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import dk.digitalidentity.config.ManagerConfiguration;
+import dk.digitalidentity.config.settings.ManagerConfiguration;
 import dk.digitalidentity.security.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

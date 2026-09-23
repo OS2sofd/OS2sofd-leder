@@ -2,6 +2,7 @@ package dk.digitalidentity.controller.rest;
 
 import java.time.LocalDate;
 
+import dk.digitalidentity.security.RequireSubstituteOrManagerOrPauseEditorAccess;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
@@ -13,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
-import dk.digitalidentity.config.ManagerConfiguration;
+import dk.digitalidentity.config.settings.ManagerConfiguration;
 import dk.digitalidentity.security.RequireSubstituteOrManagerAccess;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.SOFDService;
@@ -21,7 +22,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@RequireSubstituteOrManagerAccess
+@RequireSubstituteOrManagerOrPauseEditorAccess
 @RestController
 public class LeaveRestController {
 

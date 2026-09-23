@@ -1,6 +1,6 @@
 package dk.digitalidentity.service;
 
-import dk.digitalidentity.config.ManagerConfiguration;
+import dk.digitalidentity.config.settings.ManagerConfiguration;
 import dk.digitalidentity.controller.rest.LeaveRestController;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,8 +33,8 @@ public class SOFDService {
     @Autowired
     private SOFDService self;
 
-    public record SofdAffiliation(long id, String personName, String positionName, String positionDisplayName,
-                                  String orgUnitName, boolean active, LocalDate startDate, LocalDate stopDate,
+    public record SofdAffiliation(long id, String affiliationUuid, String personName, String positionName, String positionDisplayName,
+                                  String orgUnitName, boolean active, boolean deleted, LocalDate startDate, LocalDate stopDate,
                                   String internalReference, String adUserInfo) {
     }
 
@@ -61,14 +61,14 @@ public class SOFDService {
     }
 
     private record EditAffiliationDTO(long id, String position, String positionDisplayName, Date startDate,
-                                      Date stopDate, String internalReference) {
+                                      Date stopDate, String internalReference, String reason) {
     }
 
-    public boolean editAffiliation(String uuid, long id, String position, String positionDisplayName, LocalDate startDate, LocalDate stopDate, String internalReference) {
+    public boolean editAffiliation(String uuid, long id, String position, String positionDisplayName, LocalDate startDate, LocalDate stopDate, String internalReference, String reason) {
         String url = config.getSofdBaseUrl();
         String query = "/api/manager/" + uuid + "/affiliations/edit";
         ZoneId defaultZoneId = ZoneId.systemDefault();
-        EditAffiliationDTO dto = new EditAffiliationDTO(id, position, positionDisplayName, startDate == null ? null : Date.from(startDate.atStartOfDay(defaultZoneId).toInstant()), stopDate == null ? null : Date.from(stopDate.atStartOfDay(defaultZoneId).toInstant()), internalReference);
+        EditAffiliationDTO dto = new EditAffiliationDTO(id, position, positionDisplayName, startDate == null ? null : Date.from(startDate.atStartOfDay(defaultZoneId).toInstant()), stopDate == null ? null : Date.from(stopDate.atStartOfDay(defaultZoneId).toInstant()), internalReference, reason);
 
         HttpEntity<EditAffiliationDTO> request = new HttpEntity<>(dto, getHeaders());
 
@@ -117,13 +117,14 @@ public class SOFDService {
         return user == null ? null : user.userId();
     }
 
-    private record PausablePersonDTO(String uuid, String personName, LeaveDTO leaveDTO, List<String> positions) {}
+    private record PausablePersonDTO(String uuid, String personName, LeaveDTO leaveDTO, List<String> positions, List<String> adUsers) {}
     private record LeaveDTO(LocalDate startDate, LocalDate stopDate, String leaveReasonValue, String leaveReasonMessage, String reasonText, boolean disableAccountOrders, boolean expireAccounts) {}
-    public List<PausablePersonDTO> getPausablePeople(String uuid) {
+    public List<PausablePersonDTO> getPausablePeople(String uuid, boolean everyone) {
         HttpEntity<String> request = new HttpEntity<>(getHeaders());
         String url = config.getSofdBaseUrl();
 
-        String query = "/api/manager/" + uuid + "/pausablepeople";
+        String query = "/api/manager/" + uuid + "/pausablepeople?everyone=" + everyone;
+
         List<PausablePersonDTO> result = new ArrayList<>();
 
         ResponseEntity<PausablePersonDTO[]> response = restTemplate.exchange(url + query, HttpMethod.GET, request, PausablePersonDTO[].class);

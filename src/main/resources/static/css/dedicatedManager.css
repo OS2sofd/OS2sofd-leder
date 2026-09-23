@@ -6,6 +6,39 @@
 	background-color: #FDFEFF !important;
 }
 
+/* layout: sidebar + header strip */
+.navbar-static-side {
+	border-right: 1px solid #e7eaec;
+}
+
+.app-navbar-header {
+	color: #000000 !important;
+	background-color: #FDFEFF !important;
+	height: 70px;
+	border-bottom: 1px solid #e7eaec;
+	margin-bottom: 0;
+}
+
+.sidebar-logo {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 70px;
+	padding: 8px 12px;
+	border-bottom: 1px solid #e7eaec;
+	box-sizing: border-box;
+}
+
+.sidebar-logo img {
+	max-height: 54px;
+	max-width: 100%;
+	width: auto;
+}
+
+#side-menu {
+	margin-top: 15px;
+}
+
 
 .tooltip {
     z-index: 10000;

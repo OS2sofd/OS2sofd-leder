@@ -30,17 +30,26 @@
 											<th class="col-lg-4">Afgrænsning</th>
 											<th class="col-lg-1">Handlinger</th>
 										</tr>
+										<tr class="dt-column-filters">
+											<th><input type="text" class="form-control input-sm" placeholder="Filtrér"/></th>
+											<th><input type="text" class="form-control input-sm" placeholder="Filtrér"/></th>
+											<th><input type="text" class="form-control input-sm" placeholder="Filtrér"/></th>
+											<th></th>
+										</tr>
 									</thead>
 					                <tbody>
 						                <tr th:each="assignment: ${substituteAssignments}">
-						                	<td th:text="${assignment.substitute.name}"/>
+						                	<td>
+						                		<span th:text="${assignment.substitute.name}"></span>
+						                		<div th:if="${assignment.inherited}" style="font-size: smaller; color: red;" th:text="'Nedarvet fra ' + ${assignment.inheritedFrom}"></div>
+						                	</td>
 						                	<td th:text="${assignment.substituteContextName}"/>
 											<td>
 												<ul style="list-style-type: none; padding-left: 0px; margin-bottom: 0px;">
 													<li th:each="orgUnit : ${assignment.constraintOrgUnits}" th:text="${orgUnit.name}"></li>
 												</ul>
 											</td>
-											<td>
+											<td th:unless="${assignment.inherited}">
 												<a th:unless="${assignment.isOrgUnitAssignment}" href="#" onclick="substituteService.removeSubstituteAssignment(this);" th:attr="data-assignmentid=${assignment.id}">
 													<em style="color: black;" class="fa fa-fw fa-times"></em>
 												</a>
@@ -49,6 +58,7 @@
 												</a>&nbsp;
 												<em onclick="substituteService.openEditModal(this);"  th:attr="data-id=${assignment.id}, data-substitutename=${assignment.substitute.name}, data-substituteuuid=${assignment.substitute.uuid}, data-contextid=${assignment.substituteContextId}, data-ous=${assignment.constraintOrgUnitsUuids}, data-orgunitassignment=${assignment.isOrgUnitAssignment}" style="cursor:pointer;color: black;" class="fa fa-fw fa-pencil"></em>
 											</td>
+											<td th:if="${assignment.inherited}"></td>
 										</tr>
 					                </tbody>
 			                	</table>
@@ -316,30 +326,11 @@
 						$("#editTree").hide();
 					});
 					
-					var table = $('#substitutes').DataTable({
-						"pageLength" : 50,
-						"bLengthChange": false,
-						"responsive" : true,
-						"autoWidth": false,
-						"columnDefs": [
-							{ "orderable": false, "searchable": false, "targets": 3 }
-						  ],
-						"order": [ 0, 'asc' ],
-                        "stateSave": true,
-                        "stateDuration": -1,
-						"language" : {
-							"search" : "Søg",
-							"lengthMenu" : "_MENU_ stedfortrædere per side",
-							"info" : "Viser _START_ til _END_ af _TOTAL_ stedfortrædere",
-							"zeroRecords" : "Ingen data...",
-							"infoEmpty" : "",
-							"infoFiltered" : "(ud af _MAX_ stedfortrædere)",
-							"paginate" : {
-								"previous" : "Forrige",
-								"next" : "Næste"
-							}
-						}
-					});
+					var table = $('#substitutes').DataTable($.extend(true, {},
+						DTEnhance.standardOptions({ itemNamePlural: 'stedfortrædere', excelTitle: 'Stedfortrædere' }),
+						{ columnDefs: [ { orderable: false, searchable: false, targets: 3 } ] }
+					));
+					DTEnhance.applyEnhancements(table);
 				}
 				
 				this.handleSubstituteContextChange = function() {
@@ -592,7 +583,7 @@
 					var value = $('#addSubstituteAutocompletePerson').val();
 					if (value.length >= 2) {					
 						$.ajax({
-							url: substituteRestUrl + "/search/person?query=" + $('#addSubstituteAutocompletePerson').val(),
+							url: substituteRestUrl + "/search/person?query=" + encodeURIComponent($('#addSubstituteAutocompletePerson').val()),
 							method: "get",
 							success: function(response) {
 								if (response == null || response.length < 1) {

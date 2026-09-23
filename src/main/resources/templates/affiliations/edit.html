@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+<head th:replace="~{fragments/header :: header(datepicker = true)}" />
+<body class="top-navigation">
+	<div id="wrapper">
+	    <nav th:replace="~{fragments/navbar :: navbar-aside(page='affiliations')}" />
+	    <div id="page-wrapper" class="gray-bg">
+	    	<nav th:replace="~{fragments/navbar :: navbar-header}" />
+
+	        <div class="wrapper wrapper-content">
+				<div class="row">
+	                <div class="col-lg-12">
+                        <div class="ibox">
+                            <div class="ibox-title">
+                                <h5><em class="fa fa-handshake-o"></em> &nbsp; Rediger tilhørsforhold</h5>
+                            </div>
+                            <div class="ibox-content form-horizontal">
+								<div th:if="${affiliation.deleted}" class="alert alert-danger" role="alert">
+									Denne person er slettemarkeret i OS2sofd.
+								</div>
+								<div class="form-group row">
+									<label class="col-sm-2 control-label">Navn</label>
+									<div class="col-sm-8">
+										<p class="form-control-static" th:text="${affiliation.personName}"></p>
+									</div>
+								</div>
+								<div class="form-group row">
+									<label class="col-sm-2 control-label">Enhed</label>
+									<div class="col-sm-8">
+										<p class="form-control-static" th:text="${affiliation.orgUnitName}"></p>
+									</div>
+								</div>
+								<div class="form-group row">
+									<label class="col-sm-2 control-label">It-bruger</label>
+									<div class="col-sm-8">
+										<p class="form-control-static" th:text="${affiliation.adUserInfo}"></p>
+									</div>
+								</div>
+								<div class="form-group row">
+									<label class="col-sm-2 control-label">Status</label>
+									<div class="col-sm-8">
+										<p class="form-control-static">
+											<span th:if="${affiliation.deleted}" class="badge badge-danger">Slettemarkeret</span>
+											<span th:if="${!affiliation.deleted and !affiliation.active}" class="badge badge-warning">Inaktiv</span>
+											<span th:if="${!affiliation.deleted and affiliation.active}" class="badge badge-primary">Aktiv</span>
+										</p>
+									</div>
+								</div>
+
+								<hr/>
+
+								<input id="id" type="hidden" th:value="${affiliation.id}"/>
+								<div class="form-group row">
+									<label class="col-sm-2 control-label">Stilling *</label>
+									<div class="col-sm-8">
+										<input type="text" class="form-control" id="position" th:value="${affiliation.positionName}"/>
+									</div>
+								</div>
+								<div class="form-group row">
+									<label class="col-sm-2 control-label">Alternativ stillingsbetegnelse</label>
+									<div class="col-sm-8">
+										<input type="text" class="form-control" id="positionDisplayName" th:value="${affiliation.positionDisplayName}"/>
+									</div>
+								</div>
+								<div class="form-group row">
+									<label class="col-sm-2 control-label">Startdato</label>
+									<div class="col-sm-8">
+										<input type="text" class="form-control date" id="startDate" th:value="${affiliation.startDate != null ? #temporals.format(affiliation.startDate, 'dd/MM/yyyy') : ''}" disabled="disabled"/>
+									</div>
+								</div>
+								<div class="form-group row">
+									<label class="col-sm-2 control-label">Slutdato</label>
+									<div class="col-sm-8">
+										<input type="text" class="form-control date" id="stopDate" th:value="${affiliation.stopDate != null ? #temporals.format(affiliation.stopDate, 'dd/MM/yyyy') : ''}"/>
+									</div>
+								</div>
+								<div class="form-group row">
+									<label class="col-sm-2 control-label">Intern reference</label>
+									<div class="col-sm-8">
+										<input type="text" class="form-control" id="internalReference" th:value="${affiliation.internalReference}"/>
+									</div>
+								</div>
+								<div class="form-group row">
+									<label class="col-sm-2 control-label" th:text="${@managerConfiguration.getEmail().isEnabled()} ? 'Begrundelse for ændring *' : 'Begrundelse for ændring'"></label>
+									<div class="col-sm-8">
+										<textarea rows="4" class="form-control" id="reason" maxlength="1000"></textarea>
+									</div>
+								</div>
+
+								<div class="form-group row">
+									<div class="col-sm-offset-2 col-sm-8">
+										<button id="saveEdit" type="button" class="btn btn-primary" onclick="affiliationEditService.editAffiliation()">Gem</button>
+										<button id="endAffiliation" type="button" class="btn btn-warning" onclick="affiliationEditService.endAffiliation()" th:disabled="${affiliation.stopDate != null and !affiliation.stopDate.isAfter(T(java.time.LocalDate).now())}">Afslut tilhørsforhold</button>
+										<a th:href="@{/affiliations}" class="btn btn-default">Tilbage til oversigt</a>
+									</div>
+								</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+	    </div>
+	</div>
+
+	<div th:replace="~{fragments/footer :: scripts(datepicker = true)}"></div>
+	<script th:inline="javascript">
+		/*<![CDATA[*/
+
+			/*[+
+				var affiliationRestUrl = [[@{/rest/affiliations}]];
+				var mailEnabled = [[${@managerConfiguration.getEmail().isEnabled()}]];
+				var affiliationListUrl = [[@{/affiliations}]];
+				var maxStopDateFutureDays = [[${maxStopDateFutureDays}]];
+			+]*/
+
+			var token = $("meta[name='_csrf']").attr("content");
+			var affiliationEditService;
+			$(document).ready(function () {
+				affiliationEditService = new AffiliationEditService();
+				affiliationEditService.init();
+			});
+
+			function AffiliationEditService() {
+
+				this.init = function() {
+					var stopOptions = {
+						forceParse: false,
+						autoclose: true,
+						weekStart: 1,
+						format: "dd/mm/yyyy",
+						orientation: "bottom",
+						enableOnReadonly: false,
+						language: "da"
+					};
+					if (maxStopDateFutureDays != null) {
+						stopOptions.endDate = "+" + maxStopDateFutureDays + "d";
+					}
+					var self = this;
+					$('#stopDate').datepicker(stopOptions)
+						.on('changeDate clearDate', function () { self.refreshEndButtonState(); });
+					$('#stopDate').on('input', function () { self.refreshEndButtonState(); });
+					$('#startDate').datepicker({
+						forceParse: false,
+						autoclose: true,
+						weekStart: 1,
+						format: "dd/mm/yyyy",
+						orientation: "bottom",
+						enableOnReadonly: false,
+						language: "da"
+					});
+				}
+
+				this.refreshEndButtonState = function() {
+					var val = $("#stopDate").val();
+					var disabled = false;
+					if (val) {
+						var parts = val.split('/');
+						if (parts.length === 3) {
+							var stop = new Date(parseInt(parts[2], 10), parseInt(parts[1], 10) - 1, parseInt(parts[0], 10));
+							stop.setHours(0, 0, 0, 0);
+							var today = new Date();
+							today.setHours(0, 0, 0, 0);
+							disabled = stop <= today;
+						}
+					}
+					$("#endAffiliation").prop("disabled", disabled);
+				}
+
+				this.endAffiliation = function() {
+					var self = this;
+					swal({
+						title : "Afslut tilhørsforhold",
+						text : "Er du sikker på at du vil afslutte tilhørsforholdet med dags dato?",
+						type : "warning",
+						showCancelButton : true,
+						confirmButtonColor : "#DD6B55",
+						confirmButtonText : "Afslut",
+						cancelButtonText : "Annuller",
+						closeOnConfirm : true,
+						closeOnCancel : true
+					},
+					function(isConfirm) {
+						if (isConfirm) {
+							$("#stopDate").datepicker("update", new Date());
+							self.editAffiliation();
+						}
+					});
+				}
+
+				this.editAffiliation = function() {
+					var position = $("#position").val();
+					var reason = $("#reason").val();
+					if (position == null || position === "") {
+						toastr.error("Stillingsbetegnelse skal være udfyldt");
+						return;
+					}
+
+					if (mailEnabled && (reason == null || reason === "")) {
+						toastr.error("Begrundelse skal være udfyldt");
+						return;
+					}
+
+					var payload = {
+						id: $("#id").val(),
+						position: position,
+						positionDisplayName: $("#positionDisplayName").val(),
+						startDate: $("#startDate").val(),
+						stopDate: $("#stopDate").val(),
+						internalReference : $("#internalReference").val(),
+						reason : reason
+					};
+
+					$.ajax({
+						contentType: 'application/json',
+						url: affiliationRestUrl + "/edit",
+						method : "POST",
+						data: JSON.stringify(payload),
+						headers: {
+							'X-CSRF-TOKEN': token
+						},
+						error: function(jqXHR, textStatus, errorThrown) {
+							if (jqXHR.responseText != null && jqXHR.responseText != "" ) {
+								toastr.error(jqXHR.responseText);
+							} else {
+								toastr.error("Der opstod en fejl. Prøv igen.");
+							}
+						},
+						success: function(response) {
+							toastr.success("Tilhørsforhold opdateret");
+							setTimeout(function() { window.location.href = affiliationListUrl; }, 800);
+						}
+					});
+				}
+			}
+		/*]]>*/
+	</script>
+</body>
+</html>
