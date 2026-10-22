@@ -41,10 +41,6 @@ Applikationen læser konfiguration fra `config/application.properties`. I det of
 
 Keystores er ikke en del af repoet. Opsætning af ADFS som IdP er beskrevet i [documentation/ADFSSaml.txt](documentation/ADFSSaml.txt).
 
-## Udvikling
-
-Dette repo er et spejl af det interne udviklingsrepo. Hver udgivelse her svarer til en merge til master i det interne repo. Fejl og ønsker meldes i [OS2sofd/issues](https://github.com/OS2sofd/issues).
-
 ## Licens
 
 Mozilla Public License 2.0. Se [LICENSE](LICENSE).
