@@ -2,7 +2,7 @@
 
 Lederportalen til [OS2sofd](https://github.com/OS2sofd/os2sofd). En selvbetjeningsportal, hvor ledere, stedfortrædere og andre udpegede personer vedligeholder udvalgte medarbejderdata decentralt. Portalen ejer stort set ingen data selv. Alt om personer, enheder, tilhørsforhold, ledere, stedfortrædere og funktioner ligger i OS2sofd Core og tilgås via dets manager-API.
 
-En beskrivelse af roller og moduler set fra brugerens side findes i [documentation/documentation.md](documentation/documentation.md).
+Produktbeskrivelse, funktioner og priser findes på [sofd.io/lederportal](https://www.sofd.io/lederportal/). En beskrivelse af roller og moduler set fra brugerens side findes i [documentation/documentation.md](documentation/documentation.md).
 
 ## Moduler
 
