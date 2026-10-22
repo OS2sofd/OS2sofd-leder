@@ -60,8 +60,14 @@ public class AffiliationRestController {
 			return new ResponseEntity<>("Stopdato skal være efter startdato", HttpStatus.BAD_REQUEST);
 		}
 
+		// a limit on how far ahead the stop date may lie is pointless if the field can be left empty, as an empty
+		// stop date means the affiliation never ends. So the limit also makes the stop date mandatory
 		Integer maxFutureDays = configuration.getModules().getAffiliationModule().getMaxStopDateFutureDays();
-		if (maxFutureDays != null && dto.stopDate() != null && dto.stopDate().isAfter(LocalDate.now().plusDays(maxFutureDays))) {
+		if (maxFutureDays != null && dto.stopDate() == null) {
+			return new ResponseEntity<>("Stopdato skal være udfyldt", HttpStatus.BAD_REQUEST);
+		}
+
+		if (maxFutureDays != null && dto.stopDate().isAfter(LocalDate.now().plusDays(maxFutureDays))) {
 			return new ResponseEntity<>("Stopdato må ikke ligge mere end " + maxFutureDays + " dage frem i tiden", HttpStatus.BAD_REQUEST);
 		}
 

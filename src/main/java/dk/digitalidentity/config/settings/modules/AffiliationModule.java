@@ -18,6 +18,6 @@ public class AffiliationModule {
 	@DbConfiguration(group = "Tilhørsforhold", label = "Kvitterings-emailadresse (efterlad tom for at deaktivere)")
 	private String receiptEmail;
 
-	@DbConfiguration(group = "Tilhørsforhold", label = "Maks. antal dage stopdato kan ligge frem i tiden (tom for ingen grænse)")
+	@DbConfiguration(group = "Tilhørsforhold", label = "Maks. antal dage stopdato kan ligge frem i tiden (tom for ingen grænse, udfyldt gør stopdato obligatorisk)")
 	private Integer maxStopDateFutureDays;
 }
